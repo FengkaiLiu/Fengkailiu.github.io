@@ -164,7 +164,7 @@ section { padding: 0 clamp(24px,5vw,80px); }
 /* === PROJECTS === */
 .projects {
   padding-top: 120px; padding-bottom: 120px; background: var(--bg-warm);
-  margin-left: calc(-1 * clamp(24px,5vw,80px)); margin-right: calc(-1 * clamp(24px,5vw,80px));
+  width: 100vw; position: relative; left: 50%; transform: translateX(-50%);
   padding-left: clamp(48px,8vw,120px); padding-right: clamp(48px,8vw,120px);
 }
 .projects-header { margin-bottom: 48px; }
@@ -260,7 +260,7 @@ footer p { font-size: 12px; color: var(--text-muted); }
   .hero-shapes { width: 100%; opacity: 0.5; }
   .about-grid { grid-template-columns: 1fr; }
   .about-visual { max-height: 300px; }
-  .projects { margin-left: -24px; margin-right: -24px; padding-left: 32px; padding-right: 32px; }
+  .projects { padding-left: 24px; padding-right: 24px; }
   .projects-grid { grid-template-columns: 1fr; }
   .modal { max-height: 92vh; border-radius: 16px; }
   .modal-body { padding: 24px 20px 32px; }
