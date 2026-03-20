@@ -164,7 +164,8 @@ section { padding: 0 clamp(24px,5vw,80px); }
 /* === PROJECTS === */
 .projects {
   padding-top: 120px; padding-bottom: 120px; background: var(--bg-warm);
-  margin: 0 -80px; padding-left: clamp(24px,5vw,80px); padding-right: clamp(24px,5vw,80px);
+  margin-left: calc(-1 * clamp(24px,5vw,80px)); margin-right: calc(-1 * clamp(24px,5vw,80px));
+  padding-left: clamp(24px,5vw,80px); padding-right: clamp(24px,5vw,80px);
 }
 .projects-header { margin-bottom: 48px; }
 .projects-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px,1fr)); gap: 24px; }
@@ -259,7 +260,7 @@ footer p { font-size: 12px; color: var(--text-muted); }
   .hero-shapes { width: 100%; opacity: 0.5; }
   .about-grid { grid-template-columns: 1fr; }
   .about-visual { max-height: 300px; }
-  .projects { margin: 0 -24px; }
+  .projects { margin-left: -24px; margin-right: -24px; }
   .projects-grid { grid-template-columns: 1fr; }
   .modal { max-height: 92vh; border-radius: 16px; }
   .modal-body { padding: 24px 20px 32px; }
