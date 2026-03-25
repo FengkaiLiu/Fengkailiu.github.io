@@ -328,7 +328,7 @@ footer p { font-size: 12px; color: var(--text-muted); }
   <div class="hero-content">
     <div class="hero-greeting"><span class="wave">👋</span> Hey there, I'm</div>
     <h1>Fengkai Liu<br><span class="highlight">Designer</span> &<br>Developer</h1>
-    <p class="hero-desc">I craft delightful digital experiences where clean code meets thoughtful design. Currently exploring the intersection of creativity and technology.</p>
+    <p class="hero-desc">I craft immersive digital experiences where clean code meets thoughtful design — from VR worlds to interactive games, I love building things that feel alive.</p>
     <div class="hero-actions">
       <a href="#projects" class="btn-primary">View My Work <span>→</span></a>
       <a href="#contact" class="btn-secondary">Say Hello</a>
@@ -363,8 +363,8 @@ footer p { font-size: 12px; color: var(--text-muted); }
     </div>
     <div class="reveal">
       <div class="about-text">
-        <p>Hi! I'm Fengkai — a designer and developer passionate about creating products that are both beautiful and functional. I believe great design is invisible; it just works.</p>
-        <p>When I'm not coding or pushing pixels, you'll find me exploring new cities, reading about emerging tech, or experimenting with creative side projects.</p>
+        <p>Hi! I'm Fengkai — a developer and creative technologist passionate about building products that are both beautiful and functional. I believe the best experiences come from blending art with engineering.</p>
+        <p>When I'm not coding or designing virtual worlds, you'll find me producing music, experimenting with photography, or diving into the latest XR technologies.</p>
       </div>
       <div class="tag-cloud">
         <span class="tag">Java</span>
@@ -413,7 +413,7 @@ footer p { font-size: 12px; color: var(--text-muted); }
       <!-- Card 1: VR Music Room -->
       <div class="project-card" onclick="openProject('vrmusicroom')">
         <div class="project-thumb">
-          <img src="https://fengkailiu.github.io/PWpage/vrmusicroom.jpg" alt="VR Music Room">
+          <img src="https://fengkailiu.github.io/PWpage/vrchatroom.png" alt="VR Music Room">
         </div>
         <div class="project-info">
           <div class="project-tags">
@@ -423,7 +423,7 @@ footer p { font-size: 12px; color: var(--text-muted); }
             <span class="project-tag" style="background:var(--amber-light);color:#BA7517">C#</span>
           </div>
           <div class="project-name">VR Music Room</div>
-          <div class="project-desc">A Virtual Reality room that visualizes Spotify music with light effects.</div>
+          <div class="project-desc">A VR room that visualizes Spotify music with dynamic lighting, powered by AI.</div>
           <div class="project-link">View details <span class="arrow">→</span></div>
         </div>
       </div>
@@ -431,7 +431,9 @@ footer p { font-size: 12px; color: var(--text-muted); }
       <!-- Card 2: RoomLink ChillZone -->
       <div class="project-card" onclick="openProject('roomlink')">
         <div class="project-thumb">
-          <img src="https://fengkailiu.github.io/PWpage/vrchatroom.png" alt="RoomLink ChillZone">
+          <div class="project-thumb-bg" style="background:linear-gradient(135deg,#E1F5EE,#FAEEDA)">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none"><rect x="12" y="8" width="40" height="48" rx="4" stroke="#1D9E75" stroke-width="2"/><path d="M20 20h24M20 28h18M20 36h22M20 44h14" stroke="#EF9F27" stroke-width="1.5" stroke-linecap="round"/></svg>
+          </div>
         </div>
         <div class="project-info">
           <div class="project-tags">
@@ -441,7 +443,7 @@ footer p { font-size: 12px; color: var(--text-muted); }
             <span class="project-tag" style="background:var(--amber-light);color:#BA7517">C#</span>
           </div>
           <div class="project-name">RoomLink-ChillZone</div>
-          <div class="project-desc">Self-Design VRChat Map from scratch with Unity and VRChatSDK.</div>
+          <div class="project-desc">A custom VRChat world built from scratch with Unity, featuring 1,000+ interactable objects.</div>
           <div class="project-link">View details <span class="arrow">→</span></div>
         </div>
       </div>
@@ -449,7 +451,9 @@ footer p { font-size: 12px; color: var(--text-muted); }
       <!-- Card 3: Hot Footer -->
       <div class="project-card" onclick="openProject('hotfooter')">
         <div class="project-thumb">
-          <img src="https://fengkailiu.github.io/PWpage/hotfooter.png" alt="Hot Footer">
+          <div class="project-thumb-bg" style="background:linear-gradient(135deg,#FAECE7,#E1F5EE)">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none"><circle cx="32" cy="32" r="20" stroke="#D85A30" stroke-width="2"/><path d="M24 36a8 8 0 0116 0" stroke="#1D9E75" stroke-width="2" fill="none"/><circle cx="26" cy="28" r="2" fill="#D85A30"/><circle cx="38" cy="28" r="2" fill="#D85A30"/></svg>
+          </div>
         </div>
         <div class="project-info">
           <div class="project-tags">
@@ -458,7 +462,7 @@ footer p { font-size: 12px; color: var(--text-muted); }
             <span class="project-tag" style="background:var(--coral-light);color:var(--coral)">C#</span>
           </div>
           <div class="project-name">Hot Footer</div>
-          <div class="project-desc">A 2D platform game made for class project.</div>
+          <div class="project-desc">A 2D platformer with custom sound design and a hidden secret level.</div>
           <div class="project-link">View details <span class="arrow">→</span></div>
         </div>
       </div>
@@ -562,27 +566,27 @@ footer p { font-size: 12px; color: var(--text-muted); }
 <script>
 var projects = {
   vrmusicroom: {
-    gradient: 'url(https://fengkailiu.github.io/PWpage/vrmusicroom.jpg) center/cover',
+    gradient: 'linear-gradient(135deg,#FBEAF0,#EEEDFE)',
     tags: '<span class="project-tag" style="background:var(--pink-light);color:var(--pink)">Unity</span><span class="project-tag" style="background:var(--purple-light);color:var(--purple)">CS/XR</span><span class="project-tag" style="background:var(--teal-light);color:var(--teal)">Music</span><span class="project-tag" style="background:var(--amber-light);color:#BA7517">C#</span>',
     title: 'VR Music Room',
     subtitle: 'A Virtual Reality room that visualizes Spotify music with light effects.',
-    body: '<h3>The problem</h3><p>This is my COOP project, I need to know how to develop an app for VR headsets and also utilise different API to accomplish the goal.</p><h3>The solution</h3><p>I found tutorials online for both AR and VR approaches. I choose to develop in VR for more creativity control and realization of ideas.</p><h3>Key features</h3><ul><li>Utilise Spotify/Last.FM/Gemini API for AI analysis and music sync.</li><li>Create immersive experience, especially visual experience for every song on Spotify.</li></ul><h3>What I learned</h3><p>How to connect different software for a bigger task, and how to optimise software efficiency when designing platform intercommunications.</p>',
+    body: '<h3>The problem</h3><p>Description here...</p><h3>The solution</h3><p>Description here...</p><h3>Key features</h3><ul><li>Feature 1</li><li>Feature 2</li></ul><h3>What I learned</h3><p>Description here...</p>',
     links: { github: 'https://github.com/FengkaiLiu/vrmusicroom' }
   },
   roomlink: {
-    gradient: 'url(https://fengkailiu.github.io/PWpage/vrchatroom.png) center/cover',
+    gradient: 'linear-gradient(135deg,#E1F5EE,#FAEEDA)',
     tags: '<span class="project-tag" style="background:var(--pink-light);color:var(--pink)">Unity</span><span class="project-tag" style="background:var(--purple-light);color:var(--purple)">Game Design</span><span class="project-tag" style="background:var(--teal-light);color:var(--teal)">VRChat</span>',
     title: 'RoomLink-ChillZone',
     subtitle: 'Self-Design VRChat Map from scratch with Unity and VRChatSDK.',
-    body: '<h3>The problem</h3><p>This is my first time making map, I tried to learn tutorials online to get basic concepts of what skills I need to learn and what tools I need to use.</p><h3>The solution</h3><p>I followed tutorials online to know how to use VRChatSDK in Unity, how to use Probuilder/Bakery/Magic light probs etc... I searched online for different functional prefabs to enrich the map environment. Last but not least I optimised the map from 300MB to 50MB to make sure it runs smoothly on VR headsets.</p><h3>Key features</h3><ul><li>1000+ Interactable Furnitures with VRChat Grabable.</li><li>Contains different entertainment object prefabs like pool table/game machine etc...</li></ul><h3>What I learned</h3><p>How to utilise Unity, appSDK to build worlds with different prefabs and plugins.</p>',
-    links: { demo: 'https://vrchat.com/home/world/wrld_1c519374-adfc-4072-9df4-21458d94a13e/info', github: 'https://github.com/FengkaiLiu/VRchatRoomLowpoly' }
+    body: '<h3>The problem</h3><p>Description here...</p><h3>The solution</h3><p>Description here...</p><h3>Key features</h3><ul><li>Feature 1</li><li>Feature 2</li></ul><h3>What I learned</h3><p>Description here...</p>',
+    links: { github: 'https://github.com/FengkaiLiu/roomlink' }
   },
   hotfooter: {
-    gradient: 'url(https://fengkailiu.github.io/PWpage/hotfooter.png) center/cover',
+    gradient: 'linear-gradient(135deg,#FAECE7,#E1F5EE)',
     tags: '<span class="project-tag" style="background:var(--pink-light);color:var(--pink)">Unity</span><span class="project-tag" style="background:var(--purple-light);color:var(--purple)">Game Programming</span><span class="project-tag" style="background:var(--coral-light);color:var(--coral)">C#</span>',
     title: 'Hot Footer',
     subtitle: 'A 2D platform game made for class project.',
-    body: '<h3>The problem</h3><p>This is my first time making a game with collaborators,I need to balance the pace of different teammate and learn how to use different tools to build a simple game in 4 weeks.</p><h3>The solution</h3><p>We discuss on discord and github, I try to learn different tools from Youtube tutorials.</p><h3>Key features</h3><ul><li>2D platform jumping game.</li><li>Two sound effects and secret level.</li></ul><h3>What I learned</h3><p>How to collaborate with teammate, utilize different tools for Unity 3D an 2D.</p>',
+    body: '<h3>The problem</h3><p>Description here...</p><h3>The solution</h3><p>Description here...</p><h3>Key features</h3><ul><li>Feature 1</li><li>Feature 2</li></ul><h3>What I learned</h3><p>Description here...</p>',
     links: { github: 'https://github.com/FengkaiLiu/hotfooter' }
   },
   project4: {
