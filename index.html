@@ -146,8 +146,7 @@ section { padding: 0 clamp(24px,5vw,80px); }
 @keyframes scroll-down { 0%{top:-50%} 100%{top:100%} }
 
 .about { padding-top: 120px; padding-bottom: 120px; }
-.about-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center; margin-top: 40px; }
-.about-visual { aspect-ratio: 4/5; background: var(--bg-warm); border-radius: var(--radius); position: relative; overflow: hidden; }
+.about-grid { display: grid; grid-template-columns: 1fr; gap: 60px; align-items: center; margin-top: 40px; }
 .about-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 32px; }
 .stat { padding: 16px; background: var(--bg-warm); border-radius: var(--radius-sm); text-align: center; }
 .stat-num { font-size: 24px; font-weight: 700; color: var(--coral); }
@@ -284,7 +283,6 @@ footer p { font-size: 12px; color: var(--text-muted); }
   .pf-2 { width: 80px; height: 80px; }
   .pf-3 { width: 80px; height: 100px; }
   .about-grid { grid-template-columns: 1fr; }
-  .about-visual { max-height: 300px; }
   .projects { padding-left: 24px; padding-right: 24px; }
   .project-card { width: calc(100% - 0px); }
   .modal { max-height: 92vh; border-radius: 16px; }
@@ -358,9 +356,6 @@ footer p { font-size: 12px; color: var(--text-muted); }
     <div class="section-title">A curious mind who loves<br>building things</div>
   </div>
   <div class="about-grid">
-    <div class="about-visual reveal">
-      <img src="https://fengkailiu.github.io/PWpage/PWpage4.jpg" alt="Fengkai Liu" style="width:100%;height:100%;object-fit:cover;border-radius:var(--radius);">
-    </div>
     <div class="reveal">
       <div class="about-text">
         <p>Hi! I'm Fengkai — a developer and creative technologist passionate about building products that are both beautiful and functional. I believe the best experiences come from blending art with engineering.</p>
