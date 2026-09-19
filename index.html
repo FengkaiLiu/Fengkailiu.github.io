@@ -465,9 +465,10 @@ footer p { font-size: 12px; color: var(--text-muted); }
         </div>
         <div class="project-info">
           <div class="project-tags">
-            <span class="project-tag" style="background:var(--purple-light);color:var(--purple)">Web</span>
-            <span class="project-tag" style="background:var(--teal-light);color:var(--teal)">Music</span>
-            <span class="project-tag" style="background:var(--pink-light);color:var(--pink)">Visualizer</span>
+            <span class="project-tag" style="background:var(--purple-light);color:var(--purple)">Three.js</span>
+            <span class="project-tag" style="background:var(--pink-light);color:var(--pink)">TextAlive API</span>
+            <span class="project-tag" style="background:var(--teal-light);color:var(--teal)">Web/JS</span>
+            <span class="project-tag" style="background:var(--amber-light);color:#BA7517">Blender</span>
           </div>
           <div class="project-name">Sonare of the Lake</div>
           <div class="project-desc">Sonare of the Lake — Magical Mirai 2026 Programming Contest</div>
@@ -582,11 +583,11 @@ var projects = {
   },
   sonare: {
     gradient: 'url(https://fengkailiu.github.io/PWpage/Sonare.png) center/cover',
-    tags: '<span class="project-tag" style="background:var(--purple-light);color:var(--purple)">Web</span><span class="project-tag" style="background:var(--teal-light);color:var(--teal)">Music</span><span class="project-tag" style="background:var(--pink-light);color:var(--pink)">Visualizer</span>',
+    tags: '<span class="project-tag" style="background:var(--purple-light);color:var(--purple)">Three.js</span><span class="project-tag" style="background:var(--pink-light);color:var(--pink)">TextAlive API</span><span class="project-tag" style="background:var(--teal-light);color:var(--teal)">Web/JS</span><span class="project-tag" style="background:var(--amber-light);color:#BA7517">Blender</span>',
     title: 'Sonare of the Lake',
-    subtitle: 'Sonare of the Lake — Magical Mirai 2026 Programming Contest',
-    body: '<p>A lyric visualizer where the player sails a Vocaloid boat across a stylized lake. Lyrics emerge from the water as schools of luminous particles during verses, then coalesce in the sky during choruses. Built for the Hatsune Miku "Magical Mirai 2026" Programming Contest.</p>',
-    links: {}
+    subtitle: 'A lyric visualizer built for the Hatsune Miku "Magical Mirai 2026" Programming Contest.',
+    body: '<h3>The concept</h3><p>The player sails a Vocaloid-themed boat across a stylized lake. Lyrics emerge from the water as schools of luminous particles during verses, then coalesce in the sky during choruses — turning song structure into navigable geography.</p><h3>How it\'s built</h3><p>A Vite + Three.js (r172) web app driven by the TextAlive App API for lyric, beat, and chord timing. Cannon-es powers buoyancy and boat physics, Troika Three Text handles SDF lyric glyphs, GSAP drives the cinematic camera, and Draco compresses the terrain mesh. All six playable character boats (Miku, Rin, Len, Luka, KAITO, MEIKO) were hand-modeled in Blender from an original cube-chibi template.</p><h3>Key features</h3><ul><li>Six playable Vocaloid boats and six song-selection portals arranged around the lake.</li><li>WASD / arrow-key navigation with physics-based buoyancy and cinematic dive, chase, and sky camera modes.</li><li>Particle-based lyric visualization synced to verse / chorus structure via TextAlive.</li><li>Floating note pickups, wooden-plank obstacles, first-time control hints, and an end-of-song return circle.</li><li>Japanese / English UI toggle and locally subsetted Kiwi Maru + Caveat fonts.</li></ul><h3>Credits</h3><p>Team FBH — Fengkai Liu (lead development, 3D modeling, visual design, QA), Brian Liu (creative direction, coding, QA), and Haolin Wang (original cube-chibi Miku base mesh, used with permission). Per contest guidelines, no generative AI was used for any music, image, illustration, or text in the output.</p>',
+    links: { demo: 'https://magical-mirai-2026-sonare-of-the-la.vercel.app/', github: 'https://github.com/FengkaiLiu/magical-mirai-2026-sonare-of-the-lake' }
   },
   project5: {
     gradient: 'linear-gradient(135deg,#FAEEDA,#E1F5EE)',
