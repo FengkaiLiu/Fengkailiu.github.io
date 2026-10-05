@@ -41,9 +41,9 @@ app.innerHTML = `
     <p class="hero__tagline">beats to code &amp; compose to</p>
     <p class="hero__sub">${profile.tagline}</p>
     <div class="hero__dock liquid liquid--pill" data-liquid-bezel="22">
-      <a class="btn" href="#about">Look around</a>
-      <button class="dock-toggle" type="button" data-ambience hidden aria-pressed="true">
-        <span class="dock-toggle__dot"></span><span data-ambience-label>Rain on</span>
+      <a class="btn" href="#about" data-look>Look around <svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" /></svg></a>
+      <button class="dock-toggle" type="button" data-rain aria-pressed="true" title="Rain on the window, and its sound if audio is on">
+        <span class="dock-toggle__dot"></span><span data-rain-label>Rain on</span>
       </button>
       <span class="hero__dock-note">Record player arrives in Floor 4</span>
     </div>
@@ -81,13 +81,19 @@ initLiquidGlass();
 initSheen();
 
 let ambience: Ambience | null = null;
-const ambienceBtn = document.querySelector<HTMLButtonElement>('[data-ambience]')!;
-const ambienceLabel = ambienceBtn.querySelector<HTMLSpanElement>('[data-ambience-label]')!;
-ambienceBtn.addEventListener('click', () => {
-  if (!ambience) return;
-  ambience.setEnabled(!ambience.enabled);
-  ambienceBtn.setAttribute('aria-pressed', String(ambience.enabled));
-  ambienceLabel.textContent = ambience.enabled ? 'Rain on' : 'Rain off';
+let raining = true;
+const rainBtn = document.querySelector<HTMLButtonElement>('[data-rain]')!;
+rainBtn.addEventListener('click', () => {
+  raining = !raining;
+  room?.setRain(raining);
+  ambience?.setRain(raining);
+  rainBtn.setAttribute("aria-pressed", String(raining));
+});
+
+// "Look around" glides to the first chapter; the camera follows the scroll on its own.
+document.querySelector<HTMLAnchorElement>('[data-look]')!.addEventListener('click', (e) => {
+  e.preventDefault();
+  document.getElementById('about')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
 });
 
 showGate(
@@ -107,7 +113,6 @@ showGate(
   if (sound) {
     playLightsOnChord();
     ambience = startAmbience();
-    ambienceBtn.hidden = false;
   }
 });
 

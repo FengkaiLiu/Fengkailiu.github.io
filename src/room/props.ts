@@ -62,6 +62,8 @@ export interface RoomProps {
   root: Group;
   /** Fades the room's own light sources (0 off, 1 on). */
   setGlow(level: number): void;
+  /** Rain on the window: eases toward on (1) or off (0). */
+  setRain(on: boolean): void;
   tick(now: number, dt: number, audio: number[]): void;
   /** Named spots the camera can visit. */
   anchors: Record<string, Vector3>;
@@ -399,10 +401,15 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   root.add(new Points(dustGeo, dustMat));
 
   let glow = 0;
+  let rain = 1;
+  let rainTarget = 1;
   return {
     root,
     anchors,
     ready: Promise.all(coverLoads).then(() => undefined),
+    setRain(on) {
+      rainTarget = on ? 1 : 0;
+    },
     setGlow(level) {
       glow = level;
       for (const g of glowMats) {
@@ -415,6 +422,8 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
     tick(now, dt, audio) {
       screen.tick(now);
       win.uniforms.uTime.value = now / 1000;
+      rain += (rainTarget - rain) * (1 - Math.exp(-dt * 0.8));
+      win.uniforms.uRain.value = rain;
       vinyl.rotation.y -= dt * 3.5 * glow; // 33 rpm, give or take
       body.scale.y = 0.75 + Math.sin(now / 900) * 0.025;
       const kick = 1 + audio[0] * 0.25;

@@ -197,6 +197,7 @@ export function windowMaterial() {
   return new ShaderMaterial({
     uniforms: {
       uTime: { value: 0 },
+      uRain: { value: 1 },
       uSkyTop: { value: new Color('#0b0b24') },
       uSkyLow: { value: new Color('#3b2457') },
     },
@@ -206,6 +207,7 @@ export function windowMaterial() {
     `,
     fragmentShader: /* glsl */ `
       uniform float uTime;
+      uniform float uRain; // 0 clear night, 1 rain
       uniform vec3 uSkyTop;
       uniform vec3 uSkyLow;
       varying vec2 vUv;
@@ -223,7 +225,7 @@ export function windowMaterial() {
         float h = hash(id);
         float slide = fract(t * (0.03 + h * 0.05) + h);
         vec2 dropPos = vec2((hash(id + 2.0) - 0.5) * 0.6, 0.4 - slide * 0.8);
-        float drop = step(0.6, h) * smoothstep(0.12, 0.06, length((f - dropPos) * vec2(1.0, 0.8)));
+        float drop = uRain * step(0.6, h) * smoothstep(0.12, 0.06, length((f - dropPos) * vec2(1.0, 0.8)));
         vec2 bent = uv + (f - dropPos) * drop * 0.04;
 
         // Sky, moon, city.
@@ -252,7 +254,7 @@ export function windowMaterial() {
         float rid = floor(r.x);
         float streak = step(0.8, hash(vec2(rid, 1.0))) * smoothstep(0.08, 0.0, abs(fract(r.x) - 0.5) - 0.02)
                      * smoothstep(0.7, 1.0, fract(r.y + hash(vec2(rid, 2.0))));
-        col += vec3(0.6, 0.65, 0.9) * streak * 0.25;
+        col += vec3(0.6, 0.65, 0.9) * streak * 0.25 * uRain;
 
         // Drop highlights.
         col += vec3(0.8, 0.85, 1.0) * drop * 0.18;

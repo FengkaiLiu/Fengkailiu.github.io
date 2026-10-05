@@ -54,14 +54,31 @@ export function playLightsOnChord() {
   });
 }
 
-function noiseBuffer(ctx: BaseAudioContext, seconds: number) {
+/** Rain wash: white noise with slow gusts. Brown noise sat below what laptop speakers can play. */
+function rainBuffer(ctx: BaseAudioContext, seconds: number) {
   const buffer = ctx.createBuffer(2, Math.floor(ctx.sampleRate * seconds), ctx.sampleRate);
   for (let ch = 0; ch < 2; ch++) {
     const d = buffer.getChannelData(ch);
-    let brown = 0;
+    const phase = Math.random() * Math.PI * 2;
     for (let i = 0; i < d.length; i++) {
-      brown = (brown + (Math.random() * 2 - 1) * 0.02) / 1.02;
-      d[i] = brown * 3.5 + (Math.random() * 2 - 1) * 0.15;
+      const gust = 0.75 + 0.25 * Math.sin((i / d.length) * Math.PI * 2 * 3 + phase); // loops seamlessly
+      d[i] = (Math.random() * 2 - 1) * gust;
+    }
+  }
+  return buffer;
+}
+
+/** Individual drops tapping the glass: short, bright, decaying noise bursts. */
+function patterBuffer(ctx: BaseAudioContext, seconds: number) {
+  const buffer = ctx.createBuffer(2, Math.floor(ctx.sampleRate * seconds), ctx.sampleRate);
+  for (let ch = 0; ch < 2; ch++) {
+    const d = buffer.getChannelData(ch);
+    for (let i = 0; i < d.length; i++) {
+      if (Math.random() < 0.0004) {
+        const amp = 0.3 + Math.random() * 0.7;
+        const len = 200 + Math.floor(Math.random() * 600);
+        for (let j = 0; j < len && i + j < d.length; j++) d[i + j] += (Math.random() * 2 - 1) * amp * Math.exp(-j / (len / 5));
+      }
     }
   }
   return buffer;
@@ -81,54 +98,65 @@ function crackleBuffer(ctx: BaseAudioContext, seconds: number) {
   return buffer;
 }
 
-export interface Ambience {
-  enabled: boolean;
-  setEnabled(on: boolean): void;
+function loop(ctx: AudioContext, buffer: AudioBuffer) {
+  const src = ctx.createBufferSource();
+  src.buffer = buffer;
+  src.loop = true;
+  src.start();
+  return src;
 }
 
-/** Rain against the window + record crackle. Starts faded in, quietly. */
+export interface Ambience {
+  rain: boolean;
+  setRain(on: boolean): void;
+}
+
+/** Vinyl crackle (always on with sound) plus rain against the window (toggleable). */
 export function startAmbience(): Ambience {
   const { ctx, master } = getAudio();
-  const bus = ctx.createGain();
-  bus.gain.value = 0;
-  bus.connect(master);
 
-  const rain = ctx.createBufferSource();
-  rain.buffer = noiseBuffer(ctx, 4);
-  rain.loop = true;
-  const rainLp = ctx.createBiquadFilter();
-  rainLp.type = 'lowpass';
-  rainLp.frequency.value = 1400;
-  const rainHp = ctx.createBiquadFilter();
-  rainHp.type = 'highpass';
-  rainHp.frequency.value = 250;
-  const rainGain = ctx.createGain();
-  rainGain.gain.value = 0.22;
-  rain.connect(rainHp).connect(rainLp).connect(rainGain).connect(bus);
-
-  const crackle = ctx.createBufferSource();
-  crackle.buffer = crackleBuffer(ctx, 5);
-  crackle.loop = true;
   const crackleHp = ctx.createBiquadFilter();
   crackleHp.type = 'highpass';
   crackleHp.frequency.value = 900;
   const crackleGain = ctx.createGain();
-  crackleGain.gain.value = 0.35;
-  crackle.connect(crackleHp).connect(crackleGain).connect(bus);
+  crackleGain.gain.setValueAtTime(0, ctx.currentTime);
+  crackleGain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 2);
+  loop(ctx, crackleBuffer(ctx, 5)).connect(crackleHp).connect(crackleGain).connect(master);
 
-  rain.start();
-  crackle.start();
+  const rainBus = ctx.createGain();
+  rainBus.gain.value = 0;
+  rainBus.connect(master);
+
+  // Wash: band-limited to the "shhh" range real rain lives in.
+  const washHp = ctx.createBiquadFilter();
+  washHp.type = 'highpass';
+  washHp.frequency.value = 500;
+  const washLp = ctx.createBiquadFilter();
+  washLp.type = 'lowpass';
+  washLp.frequency.value = 6500;
+  const wash = ctx.createGain();
+  wash.gain.value = 0.11;
+  loop(ctx, rainBuffer(ctx, 6)).connect(washHp).connect(washLp).connect(wash).connect(rainBus);
+
+  // Patter: drops on glass, brighter and sparser.
+  const patterBp = ctx.createBiquadFilter();
+  patterBp.type = 'bandpass';
+  patterBp.frequency.value = 3200;
+  patterBp.Q.value = 0.8;
+  const patter = ctx.createGain();
+  patter.gain.value = 0.5;
+  loop(ctx, patterBuffer(ctx, 7)).connect(patterBp).connect(patter).connect(rainBus);
 
   const amb: Ambience = {
-    enabled: false,
-    setEnabled(on) {
-      amb.enabled = on;
+    rain: false,
+    setRain(on) {
+      amb.rain = on;
       const t = ctx.currentTime;
-      bus.gain.cancelScheduledValues(t);
-      bus.gain.setValueAtTime(bus.gain.value, t);
-      bus.gain.linearRampToValueAtTime(on ? 0.5 : 0, t + (on ? 3 : 0.6));
+      rainBus.gain.cancelScheduledValues(t);
+      rainBus.gain.setValueAtTime(rainBus.gain.value, t);
+      rainBus.gain.linearRampToValueAtTime(on ? 1 : 0, t + (on ? 2.5 : 1.2));
     },
   };
-  amb.setEnabled(true);
+  amb.setRain(true);
   return amb;
 }

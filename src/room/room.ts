@@ -31,9 +31,11 @@ export interface Room {
   lightsOn(): void;
   /** Feed analyser bands, each 0..1 (wired in Floor 6). */
   setAudio(bass: number, mid: number, treble: number, level: number): void;
+  setRain(on: boolean): void;
 }
 
 const MAX_DPR = 1.75;
+const MIN_DPR = 0.6;
 const LIGHTS_ON_MS = 2400;
 
 // Film grain + vignette: the lofi finish.
@@ -64,11 +66,16 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   } catch {
     return null;
   }
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio, MAX_DPR));
+  const maxDpr = Math.min(window.devicePixelRatio, MAX_DPR);
+  let dpr = maxDpr;
+  renderer.setPixelRatio(dpr);
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.shadowMap.enabled = true;
   renderer.shadowMap.type = PCFShadowMap;
+  // Nothing that casts a meaningful shadow moves, so the shadow map is drawn once, not every frame.
+  renderer.shadowMap.autoUpdate = false;
+  renderer.shadowMap.needsUpdate = true;
   const canvas = renderer.domElement;
   canvas.className = 'room-canvas';
   canvas.setAttribute('aria-hidden', 'true');
@@ -112,6 +119,7 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   composer.addPass(new OutputPass());
   const grain = new ShaderPass(GrainShader);
   composer.addPass(grain);
+  composer.setPixelRatio(dpr);
 
   const resize = () => {
     const w = window.innerWidth;
@@ -198,6 +206,38 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   const right = new Vector3();
   const up = new Vector3();
 
+  // ---------- Adaptive quality ----------
+  // Every couple of seconds, measure the frame rate. Too slow: render fewer pixels,
+  // and as a last resort drop bloom. Lots of headroom: step back up. This keeps the
+  // room smooth on weak laptops and sharp on strong ones.
+  const fpsMeter = import.meta.env.DEV && new URLSearchParams(location.search).has('fps') ? createFpsMeter() : null;
+  const gov = { frames: 0, time: 0, startAt: 0, cooldownUntil: 0 };
+  const setDpr = (value: number) => {
+    dpr = Math.min(Math.max(value, MIN_DPR), maxDpr);
+    renderer.setPixelRatio(dpr);
+    composer.setPixelRatio(dpr);
+    resize();
+  };
+  const governQuality = (now: number, dt: number) => {
+    if (!gov.startAt) gov.startAt = now + 2500; // ignore the shader-compile hitch at startup
+    if (now < gov.startAt) return;
+    gov.frames++;
+    gov.time += dt;
+    if (gov.time < 2) return;
+    const fps = gov.frames / gov.time;
+    gov.frames = 0;
+    gov.time = 0;
+    if (fps < 45) {
+      if (dpr > MIN_DPR + 0.01) setDpr(dpr * 0.8);
+      else if (bloom.enabled) bloom.enabled = false;
+      gov.cooldownUntil = now + 8000;
+    } else if (fps > 58 && now > gov.cooldownUntil) {
+      if (!bloom.enabled) bloom.enabled = true;
+      else if (dpr < maxDpr - 0.01) setDpr(dpr * 1.12);
+    }
+    fpsMeter?.update(fps, dpr, bloom.enabled);
+  };
+
   const loop = (now: number) => {
     if (!running) return;
     const dt = Math.min((now - last) / 1000, 0.1);
@@ -222,6 +262,7 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     pointer.y += (pointer.ty - pointer.y) * (1 - Math.exp(-dt * 3));
     camera.position.copy(basePos);
     camera.lookAt(lookAt);
+    camera.updateMatrixWorld();
     right.setFromMatrixColumn(camera.matrixWorld, 0);
     up.setFromMatrixColumn(camera.matrixWorld, 1);
     camera.position.addScaledVector(right, pointer.x * 0.12).addScaledVector(up, -pointer.y * 0.08);
@@ -237,6 +278,7 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     room.tick(now, dt, audio);
     grain.uniforms.uTime.value = now / 1000;
     composer.render(dt);
+    governQuality(now, dt);
 
     if (!drawn) {
       drawn = true;
@@ -260,6 +302,9 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     lightsOn() {
       if (lightsStart === -1) lightsStart = performance.now();
     },
+    setRain(on) {
+      room.setRain(on);
+    },
     setAudio(bass, mid, treble, level) {
       audio[0] = bass;
       audio[1] = mid;
@@ -275,4 +320,17 @@ function smoothstep(x: number) {
 
 function easeInOut(x: number) {
   return x < 0.5 ? 4 * x * x * x : 1 - Math.pow(-2 * x + 2, 3) / 2;
+}
+
+/** Dev-only readout (/?fps) to see what the quality governor is doing. */
+function createFpsMeter() {
+  const el = document.createElement('div');
+  el.style.cssText =
+    'position:fixed;left:8px;bottom:8px;z-index:999;padding:4px 8px;border-radius:6px;background:rgba(0,0,0,.6);color:#ffd59e;font:12px/1.4 monospace;pointer-events:none';
+  document.body.append(el);
+  return {
+    update(fps: number, dpr: number, bloom: boolean) {
+      el.textContent = `${fps.toFixed(0)} fps · dpr ${dpr.toFixed(2)} · bloom ${bloom ? 'on' : 'off'}`;
+    },
+  };
 }

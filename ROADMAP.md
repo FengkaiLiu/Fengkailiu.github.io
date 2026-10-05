@@ -26,6 +26,7 @@ Dev helpers (dev server only):
 - `/?lit` turns the lights on instantly and snaps the camera (no easing).
 - `/?shot=sonare` frames one camera shot without scrolling (see `src/room/shots.ts`).
 - `/?at=lab` scrolls to a chapter.
+- `/?fps` shows the frame rate and what the adaptive quality governor is doing.
 
 ## Floors
 

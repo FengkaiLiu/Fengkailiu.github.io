@@ -111,3 +111,25 @@ button {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* Scrollbar: a slim lamp-glow thumb on a transparent track. */
+::-webkit-scrollbar {
+  width: 10px;
+}
+::-webkit-scrollbar-track {
+  background: var(--night-950);
+}
+::-webkit-scrollbar-thumb {
+  border: 3px solid var(--night-950);
+  border-radius: 999px;
+  background: linear-gradient(180deg, var(--lamp-300), var(--rose-400));
+}
+::-webkit-scrollbar-thumb:hover {
+  border-width: 2px;
+}
+@supports not selector(::-webkit-scrollbar) {
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: var(--lamp-300) var(--night-950);
+  }
+}
