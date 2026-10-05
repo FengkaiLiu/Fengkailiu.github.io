@@ -27,6 +27,7 @@ Dev helpers (dev server only):
 - `/?shot=sonare` frames one camera shot without scrolling (see `src/room/shots.ts`).
 - `/?at=lab` scrolls to a chapter.
 - `/?fps` shows the frame rate and what the adaptive quality governor is doing.
+- `/?play` starts the music on load; `/?shot=record` frames the turntable.
 
 ## Floors
 
@@ -36,8 +37,8 @@ Dev helpers (dev server only):
 | 1 | Design system: tokens, rounded Nunito type, liquid glass, buttons, placeholders | ✅ |
 | 2 | 3D lofi room: props, lights, bloom + grain, scroll-driven camera shots | ✅ |
 | 3 | Startup gate (lamp switch, load progress) + lights-on chord, rain and vinyl ambience | ✅ |
-| 3b | Audio engine: shared analyser bus, band extraction (bass / mid / treble / level) | ⬜ |
-| 4 | Record player as the music player: drop the needle, playlist, transport | ⬜ |
+| 3b | Audio engine: shared analyser bus, band extraction (bass / mid / treble / level) | ✅ |
+| 4 | Record player as the music player: glass dock, tonearm + spinning vinyl, playlist, synthesized demo loop | ✅ |
 | 5 | Visualizers: waveform, spectrum, spectrogram, vectorscope, chromagram, BPM/key | ⬜ |
 | 6 | Audio-reactive room: speakers pump, fairy lights = spectrum, laptop shows live FFT, lamp breathes | ⬜ |
 | 7 | Smooth scroll (Lenis + GSAP), nav | ⬜ |
@@ -59,7 +60,7 @@ Dev helpers (dev server only):
 Until these exist, the site shows visible placeholders (dashed boxes with a yellow tag).
 In dev, the browser console lists every placeholder on the page.
 
-- [ ] **Music tracks** for the Aero Player (WAV or high-bitrate MP3/OGG, put in `public/audio/`)
+- [ ] **Music tracks** for the record player: put MP3/OGG files in `public/audio/` and list them in `src/content/tracks.ts` (the synthesized demo loop plays until then)
 - [ ] **Spectrogram easter-egg track** (a track with an image hidden in its spectrum)
 - [ ] **VR Music Room**: room model `.glb` or a 10 to 20 s screen recording, plus headset screenshots
 - [ ] **Sonare of the Lake**: chorus screen recording, one boat `.glb`

@@ -219,7 +219,7 @@ html.is-on .hero__tagline {
 }
 
 .footer {
-  padding: var(--space-7) var(--gutter);
+  padding: var(--space-7) var(--gutter) calc(var(--space-7) + 72px); /* clear the player dock */
   text-align: center;
   font-size: var(--text-small);
   opacity: 0.55;

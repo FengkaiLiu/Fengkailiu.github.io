@@ -31,27 +31,28 @@ export function playLightsOnChord() {
   trem.stop(now + 5);
 
   const notes = [41, 53, 57, 60, 64, 67]; // F2 F3 A3 C4 E4 G4
-  notes.forEach((note, i) => {
-    const t = now + i * 0.045;
-    const f = midiToHz(note);
-    const amp = ctx.createGain();
-    amp.gain.setValueAtTime(0.0001, t);
-    amp.gain.exponentialRampToValueAtTime(note < 50 ? 0.16 : 0.1, t + 0.012);
-    amp.gain.exponentialRampToValueAtTime(0.0001, t + 4.2);
-    amp.connect(out);
-    // Fundamental, a soft bell partial, and a slow wobble of detune for tape feel.
-    for (const [ratio, gain] of [[1, 1], [2, 0.25], [4.01, 0.06]] as const) {
-      const osc = ctx.createOscillator();
-      const g = ctx.createGain();
-      osc.frequency.value = f * ratio;
-      osc.detune.setValueAtTime(-6, t);
-      osc.detune.linearRampToValueAtTime(4, t + 3);
-      g.gain.value = gain;
-      osc.connect(g).connect(amp);
-      osc.start(t);
-      osc.stop(t + 4.3);
-    }
-  });
+  notes.forEach((note, i) => rhodesNote(ctx, out, note, now + i * 0.045, 4.2, note < 50 ? 0.16 : 0.1));
+}
+
+/** One electric-piano note: a fundamental, a soft bell partial, and a slow detune drift for tape feel. */
+export function rhodesNote(ctx: BaseAudioContext, dest: AudioNode, midi: number, t: number, dur: number, vel: number) {
+  const f = midiToHz(midi);
+  const amp = ctx.createGain();
+  amp.gain.setValueAtTime(0.0001, t);
+  amp.gain.exponentialRampToValueAtTime(vel, t + 0.012);
+  amp.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+  amp.connect(dest);
+  for (const [ratio, gain] of [[1, 1], [2, 0.25], [4.01, 0.06]] as const) {
+    const osc = ctx.createOscillator();
+    const g = ctx.createGain();
+    osc.frequency.value = f * ratio;
+    osc.detune.setValueAtTime(-6, t);
+    osc.detune.linearRampToValueAtTime(4, t + Math.min(dur, 3));
+    g.gain.value = gain;
+    osc.connect(g).connect(amp);
+    osc.start(t);
+    osc.stop(t + dur + 0.1);
+  }
 }
 
 /** Rain wash: white noise with slow gusts. Brown noise sat below what laptop speakers can play. */

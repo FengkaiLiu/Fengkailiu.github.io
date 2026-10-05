@@ -8,6 +8,9 @@ import { initLiquidGlass } from './ui/liquidGlass';
 import { showGate } from './ui/gate';
 import { initRoom } from './room/room';
 import { playLightsOnChord, startAmbience, type Ambience } from './audio/lofi';
+import { createPlayer } from './audio/player';
+import { tracks } from './content/tracks';
+import { mountPlayerDock } from './ui/playerDock';
 
 // Always start at the top so the first shot is the whole room.
 history.scrollRestoration = 'manual';
@@ -45,7 +48,6 @@ app.innerHTML = `
       <button class="dock-toggle" type="button" data-rain aria-pressed="true" title="Rain on the window, and its sound if audio is on">
         <span class="dock-toggle__dot"></span><span data-rain-label>Rain on</span>
       </button>
-      <span class="hero__dock-note">Record player arrives in Floor 4</span>
     </div>
     <div class="hero__cue" aria-hidden="true"><span></span></div>
   </header>
@@ -77,7 +79,6 @@ const sections = [...document.querySelectorAll<HTMLElement>('[data-shot]')].map(
 const covers: Record<string, string> = Object.fromEntries(projects.filter((p) => p.cover).map((p) => [p.id, p.cover]));
 const room = initRoom(sections, covers);
 
-initLiquidGlass();
 initSheen();
 
 let ambience: Ambience | null = null;
@@ -89,6 +90,13 @@ rainBtn.addEventListener('click', () => {
   ambience?.setRain(raining);
   rainBtn.setAttribute("aria-pressed", String(raining));
 });
+
+const player = createPlayer(tracks);
+const dock = mountPlayerDock(player, (b, playing) => {
+  room?.setAudio(b.bass, b.mid, b.treble, b.level);
+  room?.setPlaying(playing);
+});
+initLiquidGlass();
 
 // "Look around" glides to the first chapter; the camera follows the scroll on its own.
 document.querySelector<HTMLAnchorElement>('[data-look]')!.addEventListener('click', (e) => {
@@ -110,6 +118,7 @@ showGate(
 ).then(({ sound }) => {
   room?.lightsOn();
   document.documentElement.classList.add('is-on');
+  window.setTimeout(() => dock.show(), 2600);
   if (sound) {
     playLightsOnChord();
     ambience = startAmbience();
@@ -120,4 +129,6 @@ showGate(
 if (import.meta.env.DEV) {
   const at = new URLSearchParams(location.search).get('at');
   if (at) setTimeout(() => document.getElementById(at)?.scrollIntoView({ block: 'center' }), 50);
+  // /?play starts the music right away (headless needs --autoplay-policy=no-user-gesture-required).
+  if (new URLSearchParams(location.search).has('play')) setTimeout(() => void player.play(), 800);
 }

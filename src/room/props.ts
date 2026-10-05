@@ -64,11 +64,17 @@ export interface RoomProps {
   setGlow(level: number): void;
   /** Rain on the window: eases toward on (1) or off (0). */
   setRain(on: boolean): void;
+  /** Music state: moves the tonearm and spins the record. */
+  setPlaying(on: boolean): void;
   tick(now: number, dt: number, audio: number[]): void;
   /** Named spots the camera can visit. */
   anchors: Record<string, Vector3>;
   ready: Promise<void>;
 }
+
+// Tonearm yaw (radians): resting beside the platter, and with the needle on the outer grooves.
+const ARM_PARKED = Math.PI / 2;
+const ARM_PLAYING = 0.75;
 
 export function buildRoom(covers: Record<string, string>): RoomProps {
   const root = new Group();
@@ -337,9 +343,16 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   const vinylSide = std('#111014', { roughness: 0.3 });
   const vinyl = cyl(0.21, 0.21, 0.012, [vinylSide, std('#ffffff', { map: label, roughness: 0.35 }), vinylSide], -2.68, 0.935, -3.6, 48);
   root.add(vinyl);
-  const tonearm = box(0.28, 0.015, 0.025, std('#e0dce8', { metalness: 0.6, roughness: 0.3 }), -2.42, 0.96, -3.48, 0.006);
-  tonearm.rotation.y = 0.5;
-  root.add(tonearm, cyl(0.03, 0.03, 0.05, std('#e0dce8', { metalness: 0.6 }), -2.32, 0.93, -3.42, 16));
+  // Tonearm pivots from its base: parked off the record, swung over the grooves while playing.
+  const armMetal = std('#e0dce8', { metalness: 0.6, roughness: 0.3 });
+  const tonearm = new Group();
+  tonearm.position.set(-2.3, 0.965, -3.78);
+  tonearm.add(box(0.32, 0.014, 0.022, armMetal, -0.16, 0, 0, 0.006));
+  tonearm.add(box(0.045, 0.02, 0.035, std('#2b2836'), -0.32, -0.008, 0, 0.005)); // headshell
+  tonearm.rotation.y = ARM_PARKED;
+  root.add(tonearm, cyl(0.03, 0.03, 0.05, armMetal, -2.3, 0.93, -3.78, 16));
+  // Arm rest post, where the headshell sits when parked
+  root.add(cyl(0.012, 0.012, 0.04, armMetal, -2.3, 0.92, -3.46, 10));
   anchors.record = new Vector3(-2.65, 0.95, -3.6);
 
   // ---------- Bed with a sleeping cat ----------
@@ -448,12 +461,17 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   let glow = 0;
   let rain = 1;
   let rainTarget = 1;
+  let playing = false;
+  let spin = 0;
   return {
     root,
     anchors,
     ready: Promise.all(coverLoads).then(() => undefined),
     setRain(on) {
       rainTarget = on ? 1 : 0;
+    },
+    setPlaying(on) {
+      playing = on;
     },
     setGlow(level) {
       glow = level;
@@ -469,7 +487,12 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
       win.uniforms.uTime.value = now / 1000;
       rain += (rainTarget - rain) * (1 - Math.exp(-dt * 0.8));
       win.uniforms.uRain.value = rain;
-      vinyl.rotation.y -= dt * 3.5 * glow; // 33 rpm, give or take
+      // The arm swings over first; the platter spins up once the needle is down.
+      const armTarget = playing ? ARM_PLAYING : ARM_PARKED;
+      tonearm.rotation.y += (armTarget - tonearm.rotation.y) * (1 - Math.exp(-dt * 3));
+      const needleDown = playing && Math.abs(tonearm.rotation.y - ARM_PLAYING) < 0.05;
+      spin += ((needleDown ? 3.5 : 0) - spin) * (1 - Math.exp(-dt * (needleDown ? 2 : 1.2))); // 33 rpm, give or take
+      vinyl.rotation.y -= dt * spin;
       body.scale.y = 0.75 + Math.sin(now / 900) * 0.025;
       const kick = 1 + audio[0] * 0.25;
       for (const w of woofers) w.scale.set(kick, 1, kick);

@@ -27,11 +27,12 @@ import { DEFAULT_FRAME, shots, type Shot } from './shots';
 export interface Room {
   /** Resolves when textures are loaded and the first frame is drawn. */
   ready: Promise<void>;
-  /** Flip the lamp on: lights fade up, the record starts spinning. */
+  /** Flip the lamp on: lights fade up. */
   lightsOn(): void;
-  /** Feed analyser bands, each 0..1 (wired in Floor 6). */
+  /** Feed analyser bands, each 0..1. */
   setAudio(bass: number, mid: number, treble: number, level: number): void;
   setRain(on: boolean): void;
+  setPlaying(on: boolean): void;
 }
 
 const MAX_DPR = 1.75;
@@ -324,6 +325,9 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     },
     setRain(on) {
       room.setRain(on);
+    },
+    setPlaying(on) {
+      room.setPlaying(on);
     },
     setAudio(bass, mid, treble, level) {
       audio[0] = bass;

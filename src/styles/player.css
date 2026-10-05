@@ -1,0 +1,146 @@
+/* Record player remote: a glass capsule docked at the bottom of the page. */
+
+.player {
+  position: fixed;
+  left: 50%;
+  bottom: max(16px, env(safe-area-inset-bottom));
+  z-index: var(--z-player);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  max-width: calc(100vw - 32px);
+  padding: 8px 8px 8px 10px;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 24px);
+  transition:
+    opacity 0.9s var(--ease-out),
+    transform 1.1s var(--ease-out);
+}
+.player.is-shown {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translate(-50%, 0);
+}
+
+/* A tiny record that spins with the real one. */
+.player__disc {
+  flex: none;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle, var(--lamp-300) 0 4px, var(--rose-400) 4px 9px, transparent 9px),
+    repeating-radial-gradient(circle, #1a1722 0 2px, #26222f 2px 3px);
+  box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.15);
+  animation: player-spin 1.8s linear infinite;
+  animation-play-state: paused;
+}
+.player.is-playing .player__disc {
+  animation-play-state: running;
+}
+@keyframes player-spin {
+  to { transform: rotate(360deg); }
+}
+
+.player__meta {
+  display: grid;
+  min-width: 0;
+  line-height: 1.2;
+}
+.player__title {
+  font-weight: 800;
+  font-size: var(--text-small);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.player__artist {
+  font-size: var(--text-micro);
+  opacity: 0.7;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.player__bars {
+  flex: none;
+  width: 108px;
+  height: 28px;
+  opacity: 0.35;
+  transition: opacity var(--dur) var(--ease-out);
+}
+.player.is-playing .player__bars {
+  opacity: 1;
+}
+
+.player__time {
+  flex: none;
+  min-width: 2.5em;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  opacity: 0.7;
+}
+
+.player__controls {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+.player__btn {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--white);
+  background: transparent;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur-fast) var(--ease-spring);
+}
+.player__btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.player__btn:active {
+  transform: scale(0.92);
+}
+.player__btn svg {
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+.player__btn--main {
+  width: 42px;
+  height: 42px;
+  color: var(--night-900);
+  background: linear-gradient(180deg, var(--lamp-300), var(--lamp-500));
+  box-shadow: 0 4px 18px -4px rgba(255, 157, 77, 0.7);
+}
+.player__btn--main:hover {
+  background: linear-gradient(180deg, #ffe2b8, var(--lamp-500));
+}
+/* Until the first play, the button breathes to invite a press. */
+.player.is-shown:not(.is-playing) .player__btn--main {
+  animation: player-invite 2.6s ease-in-out infinite;
+}
+@keyframes player-invite {
+  50% { box-shadow: 0 4px 28px 2px rgba(255, 157, 77, 0.85); }
+}
+
+@media (max-width: 560px) {
+  .player__bars,
+  .player__time {
+    display: none;
+  }
+  .player {
+    width: calc(100vw - 32px);
+  }
+  .player__meta {
+    flex: 1;
+  }
+}
