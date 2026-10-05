@@ -20,6 +20,8 @@
 
   /* Sun + ink */
   --sun: #fff4cf;
+  --gold-500: #ffc94a;
+  --gold-300: #ffe39a;
   --ink-900: #05223a;
   --ink-700: #23475f;
   --ink-500: #557188;
@@ -41,8 +43,8 @@
   --radius-pill: 999px;
 
   /* Type */
-  --font-display: 'Manrope Variable', 'Segoe UI', system-ui, sans-serif;
-  --font-body: 'Figtree Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-display: 'Nunito Variable', 'Segoe UI Variable Display', system-ui, sans-serif;
+  --font-body: 'Nunito Variable', 'Segoe UI Variable Text', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', monospace;
 
   --text-hero: clamp(3.2rem, 9vw, 8.5rem);

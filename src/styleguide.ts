@@ -3,6 +3,7 @@ import './styles/index.css';
 import './styleguide.css';
 import { placeholder } from './ui/placeholder';
 import { initSheen } from './ui/sheen';
+import { initLiquidGlass } from './ui/liquidGlass';
 
 const swatches: [string, string][] = [
   ['sky-900', '--sky-900'], ['sky-700', '--sky-700'], ['sky-500', '--sky-500'], ['sky-300', '--sky-300'], ['sky-100', '--sky-100'],
@@ -32,9 +33,9 @@ app.innerHTML = `
       <div class="glass glass--pad sg-type">
         <div style="font-family:var(--font-display);font-size:var(--text-hero);font-weight:800;letter-spacing:-.045em;line-height:.95">Hero</div>
         <h1 style="font-size:var(--text-h1)">Heading one</h1>
-        <h2 style="font-size:var(--text-h2)">Heading two, Manrope</h2>
+        <h2 style="font-size:var(--text-h2)">Heading two, Nunito</h2>
         <h3 style="font-size:var(--text-h3)">Heading three</h3>
-        <p>Body text in Figtree. The quick brown fox jumps over the lazy dog, then exports the stems at 48 kHz.</p>
+        <p>Body text in Nunito. The quick brown fox jumps over the lazy dog, then exports the stems at 48 kHz.</p>
         <p style="font-family:var(--font-mono);font-size:var(--text-small)">mono · 128 BPM · A minor · -14 LUFS · fft.size = 2048</p>
       </div>
     </section>
@@ -44,7 +45,7 @@ app.innerHTML = `
       <div class="sg-grid">
         <div class="glass glass--pad"><span class="eyebrow">.glass</span><h3>Light glass</h3><p>Frosted, saturated, with the Aero gloss band and a pointer-tracking sheen.</p></div>
         <div class="glass glass--dark glass--pad"><span class="eyebrow">.glass--dark</span><h3>Dark glass</h3><p>For the underwater sections deeper down the page.</p></div>
-        <div class="glass glass--lg glass--pad"><span class="eyebrow">.glass--lg</span><h3>Large radius</h3><p>For sheets and the expanded player.</p></div>
+        <div class="liquid liquid--pad"><span class="eyebrow">.liquid</span><h3>Liquid glass</h3><p>Clear glass that refracts what is behind it (Chromium). Frosted fallback elsewhere.</p></div>
       </div>
     </section>
 
@@ -83,3 +84,4 @@ phDemo.append(
 );
 
 initSheen();
+initLiquidGlass();
