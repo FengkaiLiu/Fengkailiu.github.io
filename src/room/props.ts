@@ -460,6 +460,27 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   const dustMat = new PointsMaterial({ color: '#ffd59e', size: 0.03, map: dotTexture(), alphaTest: 0.01, transparent: true, opacity: 0.0, depthWrite: false, blending: AdditiveBlending });
   root.add(new Points(dustGeo, dustMat));
 
+  // ---------- Motes drifting in the night outside the diorama ----------
+  // Fills the empty side of wide screens. Only spots in front of the open sides are kept,
+  // since anything behind the two walls would never be seen.
+  const voidCount = 240;
+  const voidGeo = new BufferGeometry();
+  const voidPos = new Float32Array(voidCount * 3);
+  for (let i = 0; i < voidCount; ) {
+    const x = -14 + Math.random() * 24;
+    const y = -2 + Math.random() * 9;
+    const z = -8 + Math.random() * 22;
+    const inside = Math.abs(x) < 4.4 && Math.abs(z) < 4.4 && y > -0.3 && y < 5.2;
+    const hidden = x < -4.2 && z < 4.2;
+    if (inside || hidden || z < -4.4) continue;
+    voidPos.set([x, y, z], i * 3);
+    i++;
+  }
+  voidGeo.setAttribute('position', new BufferAttribute(voidPos, 3));
+  const voidMat = new PointsMaterial({ color: '#b9b4ff', size: 0.07, map: dotTexture(), alphaTest: 0.01, transparent: true, opacity: 0.35, depthWrite: false, blending: AdditiveBlending });
+  const voidPoints = new Points(voidGeo, voidMat);
+  root.add(voidPoints);
+
   let glow = 0;
   let rain = 1;
   let rainTarget = 1;
@@ -484,6 +505,7 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
         else g.mat.color.copy(g.base).multiplyScalar(k);
       }
       dustMat.opacity = level * 0.55;
+      voidMat.opacity = 0.3 + level * 0.25;
     },
     tick(now, dt, audio, eye) {
       // Each typed character re-uploads a 1600x1000 texture; skip it when nobody can read it.
@@ -516,6 +538,10 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
         pos.setX(i, pos.getX(i) + Math.sin(now / 2000 + i) * dt * 0.02);
       }
       pos.needsUpdate = true;
+      // The whole cloud sways slowly; cheaper than moving every mote.
+      const sway = Math.sin(now / 9000);
+      voidPoints.position.set(sway * 0.4, Math.sin(now / 6000) * 0.25, 0);
+      voidPoints.rotation.y = sway * 0.015;
     },
   };
 }

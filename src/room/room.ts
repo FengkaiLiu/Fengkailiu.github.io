@@ -2,7 +2,7 @@
 // scroll-driven camera that glides from object to object.
 import {
   ACESFilmicToneMapping,
-  Color,
+  CanvasTexture,
   DirectionalLight,
   HalfFloatType,
   HemisphereLight,
@@ -10,6 +10,7 @@ import {
   PerspectiveCamera,
   PointLight,
   Scene,
+  SRGBColorSpace,
   SpotLight,
   Vector2,
   Vector3,
@@ -99,7 +100,7 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   document.body.prepend(canvas);
 
   const scene = new Scene();
-  scene.background = new Color('#130f26');
+  scene.background = voidBackdrop();
 
   const camera = new PerspectiveCamera(34, 1, 0.1, 100);
 
@@ -167,12 +168,18 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   });
 
   const desired = { pos: new Vector3(), target: new Vector3(), frame: DEFAULT_FRAME };
-  // On portrait screens, back the camera away from its subject so the shot still fits.
+  // Fit the shot to the screen shape: portrait screens back away so the room still fits,
+  // extra-wide screens push in a little so the room fills the width.
   const portraitPullback = () => {
     const aspect = window.innerWidth / window.innerHeight;
-    if (aspect >= 1) return;
-    const k = Math.min(0.85 / aspect, 1.9);
-    desired.pos.sub(desired.target).multiplyScalar(k).add(desired.target);
+    let k = 1;
+    if (aspect < 1) k = Math.min(0.85 / aspect, 1.9);
+    else {
+      // Only wide establishing shots push in; close-ups (a few meters away) keep their framing.
+      const far = smoothstep(Math.min(Math.max((desired.pos.distanceTo(desired.target) - 4) / 5, 0), 1));
+      k = 1 - (1 - Math.max(Math.min(1.78 / aspect, 1), 0.84)) * far;
+    }
+    if (k !== 1) desired.pos.sub(desired.target).multiplyScalar(k).add(desired.target);
   };
   // Dev helper: /?shot=sonare frames one shot without scrolling.
   const debugShot = import.meta.env.DEV ? new URLSearchParams(location.search).get('shot') : null;
@@ -311,7 +318,9 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     frame += (desired.frame - frame) * k;
     const w = window.innerWidth;
     const h = window.innerHeight;
-    if (w > 820) camera.setViewOffset(w, h, -frame * w, 0, w, h);
+    // The wider the screen, the less the room needs shifting to clear the (left-pinned) text.
+    const wideFrame = Math.max(frame - 0.19 * Math.max(w / h - 1.25, 0), 0);
+    if (w > 820) camera.setViewOffset(w, h, -wideFrame * w, 0, w, h);
     else camera.setViewOffset(w, h, 0, h * 0.14, w, h);
 
     room.tick(now, dt, audio, camera.position);
@@ -375,4 +384,28 @@ function createFpsMeter() {
       el.textContent = `${fps.toFixed(0)} fps · tier ${tier} · dpr ${dpr.toFixed(2)} · bloom ${bloom ? 'on' : 'off'}`;
     },
   };
+}
+
+/** The night outside the diorama: deep violet with a cool moonlit haze on the left, so
+ *  the empty side of wide screens reads as atmosphere rather than flat black. */
+function voidBackdrop() {
+  const c = document.createElement('canvas');
+  c.width = 512;
+  c.height = 256;
+  const g = c.getContext('2d')!;
+  g.fillStyle = '#100c21';
+  g.fillRect(0, 0, c.width, c.height);
+  const glow = (x: number, y: number, r: number, color: string) => {
+    const grad = g.createRadialGradient(x, y, 0, x, y, r);
+    grad.addColorStop(0, color);
+    grad.addColorStop(1, 'rgba(16, 12, 33, 0)');
+    g.fillStyle = grad;
+    g.fillRect(0, 0, c.width, c.height);
+  };
+  glow(70, 90, 230, 'rgba(78, 82, 160, 0.55)'); // moon haze, upper left
+  glow(40, 230, 160, 'rgba(120, 60, 130, 0.35)'); // plum glow, lower left
+  glow(330, 120, 260, 'rgba(50, 36, 92, 0.45)'); // behind the room
+  const tex = new CanvasTexture(c);
+  tex.colorSpace = SRGBColorSpace;
+  return tex;
 }

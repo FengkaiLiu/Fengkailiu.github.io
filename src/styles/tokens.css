@@ -78,6 +78,8 @@
   --space-9: 120px;
   --gutter: clamp(16px, 5vw, 64px);
   --content-max: 1200px;
+  /* Side inset for content laid over the 3D room: grows with the screen, so text hugs the left edge. */
+  --edge: clamp(16px, 6.5vw, 170px);
 
   /* Motion */
   --ease-out: cubic-bezier(0.16, 1, 0.3, 1);

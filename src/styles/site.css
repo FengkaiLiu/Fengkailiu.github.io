@@ -23,9 +23,9 @@
   align-items: flex-start;
   justify-content: center;
   gap: var(--space-4);
-  max-width: var(--content-max);
-  margin-inline: auto;
-  padding: var(--space-9) var(--gutter) 18vh;
+  /* Pinned to the left edge, not a centered column: on wide screens a centered column
+     left the left quarter empty while the room sat on the right. */
+  padding: var(--space-9) var(--edge) 18vh;
 }
 
 /* Hero pieces drift in after the lamp turns on. */
@@ -162,9 +162,7 @@ html.is-on .hero__tagline {
   min-height: 150svh;
   display: flex;
   align-items: center;
-  max-width: var(--content-max);
-  margin-inline: auto;
-  padding: var(--space-8) var(--gutter);
+  padding: var(--space-8) var(--edge);
 }
 
 .chapter__card {
