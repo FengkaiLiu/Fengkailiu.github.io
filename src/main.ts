@@ -11,6 +11,8 @@ import { playLightsOnChord, startAmbience, type Ambience } from './audio/lofi';
 import { createPlayer } from './audio/player';
 import { tracks } from './content/tracks';
 import { mountPlayerDock } from './ui/playerDock';
+import { mountCrate } from './ui/crate';
+import { coverLabel } from './room/textures';
 
 // Always start at the top so the first shot is the whole room.
 history.scrollRestoration = 'manual';
@@ -25,16 +27,19 @@ interface Chapter {
   title: string;
   text?: string;
   tags?: readonly string[];
-  floor: string;
+  floor?: string;
   needs?: readonly string[];
+  /** Built content instead of a placeholder. */
+  custom?: 'crate';
 }
 
 // Chapters read like a record's track list. Each one is replaced by its floor (see ROADMAP.md).
 const chapters: Chapter[] = [
   { id: 'about', shot: 'about', track: 'A1', title: 'Code on one screen, sound on the other.', text: profile.bio[0], floor: 'Floor 9', needs: ['About content on the laptop screen (Floor 9)', 'Portrait photo (optional)'] },
   ...projects.map((p, i) => ({ id: p.id, shot: p.id, track: `A${i + 2}`, title: p.title, text: p.subtitle, tags: p.tags, floor: 'Floors 10 to 14', needs: p.needs })),
-  { id: 'lab', shot: 'lab', track: 'B1', title: 'How this room hears.', text: 'A live map of the audio graph running this page, and an FFT you can play with.', floor: 'Floor 15' },
-  { id: 'contact', shot: 'contact', track: 'B2', title: 'Leave me a beat.', text: 'Sequence a 4-bar loop and send it with your message.', floor: 'Floor 16' },
+  { id: 'records', shot: 'record', track: 'B1', title: 'Liner notes.', text: '3 records I keep coming back to. Pick one and the turntable plays it.', custom: 'crate' },
+  { id: 'lab', shot: 'lab', track: 'B2', title: 'How this room hears.', text: 'A live map of the audio graph running this page, and an FFT you can play with.', floor: 'Floor 15' },
+  { id: 'contact', shot: 'contact', track: 'B3', title: 'Leave me a beat.', text: 'Sequence a 4-bar loop and send it with your message.', floor: 'Floor 16' },
 ];
 
 app.innerHTML = `
@@ -72,6 +77,7 @@ app.innerHTML = `
 
 document.querySelectorAll<HTMLElement>('.chapter').forEach((el, i) => {
   const c = chapters[i];
+  if (c.custom || !c.floor) return;
   el.querySelector('.chapter__slot')!.append(placeholder({ label: `${c.floor}: ${c.title}`, needs: c.needs, tag: c.floor.toUpperCase() }));
 });
 
@@ -91,10 +97,34 @@ rainBtn.addEventListener('click', () => {
   rainBtn.setAttribute("aria-pressed", String(raining));
 });
 
+// Two things can spin the record: the house player (dock) and a Liner notes pick on Spotify.
+// Only one plays at a time; the turntable spins while either does.
+let housePlaying = false;
+let spotifyPlaying = false;
+const syncTurntable = () => room?.setPlaying(housePlaying || spotifyPlaying);
+
 const player = createPlayer(tracks);
 const dock = mountPlayerDock(player, (b, playing) => {
   room?.setAudio(b.bass, b.mid, b.treble, b.level);
-  room?.setPlaying(playing);
+  housePlaying = playing;
+  syncTurntable();
+});
+
+let label: ReturnType<typeof coverLabel> | null = null;
+const crate = mountCrate(document.querySelector<HTMLElement>('#records .chapter__slot')!, {
+  onRecord(pick, cover) {
+    label?.dispose();
+    label = pick ? coverLabel(pick.tint, cover ?? undefined) : null;
+    room?.setLabel(label);
+  },
+  onPlaying(on) {
+    spotifyPlaying = on;
+    if (on && player.state().playing) player.pause();
+    syncTurntable();
+  },
+});
+player.onChange((s) => {
+  if (s.playing) crate.pause();
 });
 initLiquidGlass();
 

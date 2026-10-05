@@ -12,6 +12,7 @@ import {
   Scene,
   SRGBColorSpace,
   SpotLight,
+  type Texture,
   Vector2,
   Vector3,
   WebGLRenderTarget,
@@ -34,6 +35,7 @@ export interface Room {
   setAudio(bass: number, mid: number, treble: number, level: number): void;
   setRain(on: boolean): void;
   setPlaying(on: boolean): void;
+  setLabel(texture: Texture | null): void;
 }
 
 const MAX_DPR = 1.75;
@@ -355,6 +357,9 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     },
     setPlaying(on) {
       room.setPlaying(on);
+    },
+    setLabel(texture) {
+      room.setLabel(texture);
     },
     setAudio(bass, mid, treble, level) {
       audio[0] = bass;

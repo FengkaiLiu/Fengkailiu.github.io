@@ -194,6 +194,36 @@ export function vinylLabel() {
   return toTexture(c);
 }
 
+/** Record label showing a song's cover art (or a plain tinted label while it loads). */
+export function coverLabel(tint: string, image?: CanvasImageSource & { width: number; height: number }) {
+  const { c, ctx } = canvas(512, 512);
+  ctx.fillStyle = '#111014';
+  ctx.fillRect(0, 0, 512, 512);
+  for (let r = 250; r > 120; r -= 6) {
+    ctx.strokeStyle = r % 12 ? '#1d1b23' : '#16141b';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.arc(256, 256, r, 0, Math.PI * 2);
+    ctx.stroke();
+  }
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(256, 256, 110, 0, Math.PI * 2);
+  ctx.clip();
+  ctx.fillStyle = tint;
+  ctx.fillRect(146, 146, 220, 220);
+  if (image) {
+    const s = Math.min(image.width, image.height);
+    ctx.drawImage(image, (image.width - s) / 2, (image.height - s) / 2, s, s, 146, 146, 220, 220);
+  }
+  ctx.restore();
+  ctx.fillStyle = '#111014';
+  ctx.beginPath();
+  ctx.arc(256, 256, 8, 0, Math.PI * 2);
+  ctx.fill();
+  return toTexture(c);
+}
+
 /** Warm wooden floor planks. */
 export function floorTexture() {
   const { c, ctx } = canvas(512, 512);

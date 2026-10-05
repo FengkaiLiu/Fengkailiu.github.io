@@ -1,0 +1,234 @@
+/* Liner notes: sleeve stack on the chapter card, and the crate sheet it opens. */
+
+/* ---------- Fanned sleeves on the card ---------- */
+.sleeves {
+  position: relative;
+  height: 128px;
+  margin: var(--space-2) 0 var(--space-4);
+}
+.sleeve {
+  position: absolute;
+  top: 0;
+  left: calc(var(--i) * 46px);
+  width: 118px;
+  height: 118px;
+  border-radius: 8px;
+  background: linear-gradient(135deg, var(--tint), color-mix(in srgb, var(--tint) 45%, #130f26));
+  background-size: cover;
+  background-position: center;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.18),
+    0 10px 24px -8px rgba(0, 0, 0, 0.6);
+  transform: rotate(calc((var(--i) - 1) * 6deg));
+  transition: transform var(--dur) var(--ease-spring);
+}
+/* A sliver of vinyl peeks out of each sleeve. */
+.sleeve::after {
+  content: '';
+  position: absolute;
+  top: 6px;
+  right: -14px;
+  z-index: -1;
+  width: 106px;
+  height: 106px;
+  border-radius: 50%;
+  background: repeating-radial-gradient(circle, #1a1722 0 2px, #26222f 2px 3px);
+}
+.chapter__card:hover .sleeve {
+  transform: rotate(calc((var(--i) - 1) * 9deg)) translateY(calc(var(--i) * -4px));
+}
+
+/* ---------- Sheet ---------- */
+html.is-sheet,
+html.is-sheet body {
+  overflow: hidden;
+}
+.crate {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-sheet);
+  display: grid;
+  place-items: center;
+  padding: var(--space-5) var(--gutter);
+}
+.crate[hidden] {
+  display: none;
+}
+.crate__scrim {
+  position: absolute;
+  inset: 0;
+  background: rgba(8, 5, 18, 0.62);
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
+  opacity: 0;
+  transition: opacity 0.45s var(--ease-out);
+}
+.crate__panel {
+  position: relative;
+  width: min(100%, 980px);
+  max-height: calc(100svh - 48px);
+  overflow: auto;
+  padding: clamp(var(--space-4), 3vw, var(--space-6));
+  border-radius: var(--radius-lg);
+  opacity: 0;
+  transform: translateY(28px) scale(0.98);
+  transition:
+    opacity 0.45s var(--ease-out),
+    transform 0.6s var(--ease-out);
+}
+.crate.is-open .crate__scrim {
+  opacity: 1;
+}
+.crate.is-open .crate__panel {
+  opacity: 1;
+  transform: none;
+}
+
+.crate__head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: var(--space-4);
+}
+.crate__close {
+  width: 38px;
+  height: 38px;
+  border: 0;
+  border-radius: 50%;
+  color: var(--white);
+  font-size: 1.6rem;
+  line-height: 1;
+  background: rgba(255, 255, 255, 0.1);
+  cursor: pointer;
+}
+.crate__close:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* The three picks, like records flipped through in a crate. */
+.crate__shelf {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: var(--space-3);
+  margin-bottom: var(--space-5);
+}
+.crate__pick {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: 8px;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: var(--radius-sm);
+  color: var(--white);
+  text-align: left;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    transform var(--dur) var(--ease-spring),
+    border-color var(--dur-fast) var(--ease-out);
+}
+.crate__pick:hover {
+  background: rgba(255, 255, 255, 0.09);
+  transform: translateY(-2px);
+}
+.crate__pick[aria-selected='true'] {
+  border-color: var(--lamp-300);
+  background: rgba(255, 213, 158, 0.1);
+}
+.crate__thumb {
+  flex: none;
+  width: 48px;
+  height: 48px;
+  border-radius: 6px;
+  background: linear-gradient(135deg, var(--tint), #241c44);
+  background-size: cover;
+  background-position: center;
+}
+.crate__pick-text {
+  display: grid;
+  min-width: 0;
+  font-size: var(--text-small);
+  line-height: 1.3;
+}
+.crate__pick-text > * {
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.crate__pick-text span {
+  opacity: 0.7;
+}
+
+.crate__detail {
+  display: grid;
+  grid-template-columns: minmax(200px, 340px) 1fr;
+  gap: clamp(var(--space-4), 3vw, var(--space-6));
+  align-items: start;
+}
+.crate__cover {
+  aspect-ratio: 1;
+  border-radius: 12px;
+  background: linear-gradient(135deg, var(--tint, #ff9d4d), #241c44);
+  background-size: cover;
+  background-position: center;
+  box-shadow: 0 24px 50px -18px rgba(0, 0, 0, 0.7);
+}
+.crate__info {
+  display: grid;
+  gap: var(--space-3);
+}
+.crate__title {
+  font-size: var(--text-h3);
+  font-weight: 900;
+  line-height: 1.15;
+}
+.crate__meta {
+  font-size: var(--text-small);
+  opacity: 0.75;
+}
+/* The note reads like a handwritten card tucked into the sleeve. */
+.crate__note {
+  font-family: var(--font-hand);
+  font-size: 1.45rem;
+  line-height: 1.3;
+  color: var(--lamp-300);
+}
+.crate__credits {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  line-height: 1.7;
+  opacity: 0.7;
+}
+.crate__embed iframe {
+  display: block;
+  border: 0;
+  border-radius: 12px;
+}
+.crate__link {
+  justify-self: start;
+  font-size: var(--text-small);
+  font-weight: 700;
+  color: var(--lamp-300);
+}
+
+@media (max-width: 720px) {
+  .crate__shelf {
+    grid-template-columns: 1fr;
+  }
+  .crate__detail {
+    grid-template-columns: 1fr;
+  }
+  .crate__cover {
+    width: min(100%, 260px);
+  }
+}
+
+/* Denser than the chapter glass, so the sheet reads as its own layer. Two classes, to beat .liquid--live. */
+.crate__panel.liquid {
+  background: rgba(22, 16, 44, 0.8);
+}

@@ -66,6 +66,8 @@ export interface RoomProps {
   setRain(on: boolean): void;
   /** Music state: moves the tonearm and spins the record. */
   setPlaying(on: boolean): void;
+  /** Show a song cover on the record label; null restores the house label. */
+  setLabel(texture: Texture | null): void;
   /** `eye` is the camera position: the laptop only types while it is close enough to read. */
   tick(now: number, dt: number, audio: number[], eye: Vector3): void;
   /** Named spots the camera can visit. */
@@ -342,8 +344,9 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   root.add(box(0.72, 0.1, 0.52, std('#b07a5c', { roughness: 0.6 }), -2.6, 0.85, -3.6, 0.02));
   root.add(cyl(0.22, 0.22, 0.025, std('#c9c6d6', { metalness: 0.6, roughness: 0.3 }), -2.68, 0.915, -3.6, 48));
   const label = vinylLabel();
+  const labelMat = std('#ffffff', { map: label, roughness: 0.35 });
   const vinylSide = std('#111014', { roughness: 0.3 });
-  const vinyl = cyl(0.21, 0.21, 0.012, [vinylSide, std('#ffffff', { map: label, roughness: 0.35 }), vinylSide], -2.68, 0.935, -3.6, 48);
+  const vinyl = cyl(0.21, 0.21, 0.012, [vinylSide, labelMat, vinylSide], -2.68, 0.935, -3.6, 48);
   root.add(vinyl);
   // Tonearm pivots from its base: parked off the record, swung over the grooves while playing.
   const armMetal = std('#e0dce8', { metalness: 0.6, roughness: 0.3 });
@@ -496,6 +499,10 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
     },
     setPlaying(on) {
       playing = on;
+    },
+    setLabel(texture) {
+      labelMat.map = texture ?? label;
+      labelMat.needsUpdate = true;
     },
     setGlow(level) {
       glow = level;
