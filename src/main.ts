@@ -4,6 +4,9 @@ import { profile } from './content/profile';
 import { projects } from './content/projects';
 import { placeholder } from './ui/placeholder';
 import { initSheen } from './ui/sheen';
+import { initSky } from './scene/sky';
+
+initSky();
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 

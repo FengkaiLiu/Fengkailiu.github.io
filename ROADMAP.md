@@ -16,13 +16,15 @@ npm run build     # type-check + production build into dist/
 
 `legacy/index.html` is the old site, kept only for reference.
 
+Dev helpers: `/styleguide.html` shows every design-system piece. `/?scroll=0.8` previews the background at a given scroll depth.
+
 ## Floors
 
 | # | Floor | Status |
 |---|---|---|
 | 0 | Scaffold: Vite + TS, content migrated, Pages workflow | ✅ |
-| 1 | Design system: tokens, fonts, glass, buttons, placeholder component | ⬜ |
-| 2 | Sky + water shader background (scroll dives underwater) | ⬜ |
+| 1 | Design system: tokens, fonts, glass, buttons, placeholder component | ✅ |
+| 2 | Sky + water shader background (scroll dives underwater) | ✅ |
 | 3 | Audio engine: shared AudioContext + analyser, Enter gate, startup chime | ⬜ |
 | 4 | Aero Player: glass capsule, playlist, transport | ⬜ |
 | 5 | Visualizers: waveform, spectrum, spectrogram, vectorscope, chromagram, BPM/key | ⬜ |

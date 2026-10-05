@@ -1,5 +1,19 @@
 /* Page-level layout for the main site. Grows floor by floor. */
 
+.sky-canvas {
+  position: fixed;
+  inset: 0;
+  z-index: var(--z-bg);
+  width: 100%;
+  height: 100%;
+  opacity: 0;
+  transition: opacity 1.2s var(--ease-out);
+  pointer-events: none;
+}
+.sky-canvas.is-ready {
+  opacity: 1;
+}
+
 .hero {
   min-height: 100svh;
   display: flex;
