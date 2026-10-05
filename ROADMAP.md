@@ -1,10 +1,11 @@
-# Resonance City: Build Roadmap
+# Fengkai's Room: Build Roadmap
 
-**Concept.** A solarpunk city that runs on sound, seen through Frutiger Aero glass.
-Scrolling moves through one day in the city, from dawn to an aurora night. The world
-itself is the visualizer: the skyline is a live spectrum analyzer, the turbines spin
-with the bass, the night aurora becomes a spectrogram, and circuit-board roots under
-the grass carry pulses of data (the CS layer).
+**Concept.** A cozy lofi bedroom at night, "beats to code & compose to". The page is a
+3D room rendered live (Three.js); scrolling glides the camera from object to object,
+Apple-style, and each chapter is something in the room: the laptop (About, it types
+real code), shelf objects and wall posters (projects), the MIDI keyboard and speakers
+(Lab), and the rainy window (Contact). The record player becomes the music player,
+the speakers pulse with the bass, and chapters are labeled like tracks on a record.
 
 Built floor by floor. **One floor = one commit** on the `redesign` branch.
 The live site stays on `main` until Floor 19.
@@ -22,7 +23,9 @@ npm run build     # type-check + production build into dist/
 Dev helpers (dev server only):
 - `/styleguide.html` shows every design-system piece.
 - `/?nogate` skips the startup gate.
-- `/?day=0.8` previews any time of day (0 pre-dawn, 0.35 noon, 0.78 golden hour, 1 night).
+- `/?lit` turns the lights on instantly and snaps the camera (no easing).
+- `/?shot=sonare` frames one camera shot without scrolling (see `src/room/shots.ts`).
+- `/?at=lab` scrolls to a chapter.
 
 ## Floors
 
@@ -30,14 +33,14 @@ Dev helpers (dev server only):
 |---|---|---|
 | 0 | Scaffold: Vite + TS, content migrated, Pages workflow | ✅ |
 | 1 | Design system: tokens, rounded Nunito type, liquid glass, buttons, placeholders | ✅ |
-| 2 | Resonance City background: day cycle driven by scroll | ✅ |
-| 3 | Startup gate (power orb, load progress, chime, sunrise) + shared AudioContext | ✅ |
+| 2 | 3D lofi room: props, lights, bloom + grain, scroll-driven camera shots | ✅ |
+| 3 | Startup gate (lamp switch, load progress) + lights-on chord, rain and vinyl ambience | ✅ |
 | 3b | Audio engine: shared analyser bus, band extraction (bass / mid / treble / level) | ⬜ |
-| 4 | Aero Player: liquid glass capsule, playlist, transport | ⬜ |
+| 4 | Record player as the music player: drop the needle, playlist, transport | ⬜ |
 | 5 | Visualizers: waveform, spectrum, spectrogram, vectorscope, chromagram, BPM/key | ⬜ |
-| 6 | Audio-reactive world: skyline = spectrum, turbines = bass, aurora = spectrogram, traces = treble | ⬜ |
+| 6 | Audio-reactive room: speakers pump, fairy lights = spectrum, laptop shows live FFT, lamp breathes | ⬜ |
 | 7 | Smooth scroll (Lenis + GSAP), nav | ⬜ |
-| 8 | Hero interaction: touch the city to play notes | ⬜ |
+| 8 | Room interactions: click the keyboard to play notes, pet the cat, flip the lamp | ⬜ |
 | 9 | About: mixer channel strip | ⬜ |
 | 10 | Project chapter engine: pinned scroll chapters + expandable liquid glass sheet | ⬜ |
 | 11 | Chapter: VR Music Room | ⬜ |
@@ -63,6 +66,8 @@ In dev, the browser console lists every placeholder on the page.
 - [ ] **Hot Footer**: Unity WebGL build or gameplay GIF
 - [ ] **Project 5**: all content
 - [ ] **Portrait / photos** for About (optional)
+- [ ] **Poster art** for Project 5 (the empty frame on the back wall)
+- [ ] **Optional `.glb` models** to swap in for the procedural props (headset, boat, handheld, your own synth)
 
 ## Browser notes
 

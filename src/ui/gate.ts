@@ -1,7 +1,6 @@
-// Startup gate: loads everything behind a glossy power orb, then the click
-// unlocks audio, plays the chime, and the world rises into morning.
+// Startup gate: loads everything behind a glowing switch. The click is the user gesture
+// that unlocks audio; what happens next (lights, sound) is up to the caller.
 import { unlockAudio } from '../audio/context';
-import { playStartupChime } from '../audio/chime';
 
 export interface GateTask {
   label: string;
@@ -11,7 +10,14 @@ export interface GateTask {
 const RING = 2 * Math.PI * 54;
 const MIN_LOAD_MS = 1400; // long enough to see the ring fill, short enough not to annoy
 
-export function showGate(tasks: GateTask[]): Promise<{ sound: boolean }> {
+export interface GateCopy {
+  eyebrow: string;
+  title: string;
+  hint: string;
+  ready: string;
+}
+
+export function showGate(tasks: GateTask[], copy: GateCopy): Promise<{ sound: boolean }> {
   document.documentElement.classList.add('is-gated');
 
   const gate = document.createElement('div');
@@ -21,19 +27,19 @@ export function showGate(tasks: GateTask[]): Promise<{ sound: boolean }> {
   gate.setAttribute('aria-label', 'Start the portfolio');
   gate.innerHTML = `
     <div class="gate__inner">
-      <span class="eyebrow gate__eyebrow">Fengkai Liu · Portfolio</span>
-      <h1 class="gate__title">Resonance City</h1>
-      <button class="orb" type="button" disabled aria-label="Power on">
+      <span class="eyebrow gate__eyebrow">${copy.eyebrow}</span>
+      <h1 class="gate__title">${copy.title}</h1>
+      <button class="orb" type="button" disabled aria-label="Turn on the lamp">
         <svg class="orb__ring" viewBox="0 0 120 120" aria-hidden="true">
           <circle class="orb__track" cx="60" cy="60" r="54" />
           <circle class="orb__progress" cx="60" cy="60" r="54" stroke-dasharray="${RING}" stroke-dashoffset="${RING}" />
         </svg>
         <span class="orb__ball">
-          <svg class="orb__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v8" /><path d="M6.3 6.8a8 8 0 1 0 11.4 0" /></svg>
+          <svg class="orb__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4" /><path d="M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z" /></svg>
         </span>
       </button>
       <p class="gate__status" aria-live="polite">Starting up</p>
-      <p class="gate__hint">Best with sound on</p>
+      <p class="gate__hint">${copy.hint}</p>
       <button class="gate__silent" type="button" disabled>Enter without sound</button>
     </div>
   `;
@@ -69,7 +75,7 @@ export function showGate(tasks: GateTask[]): Promise<{ sound: boolean }> {
 
   Promise.all(all).then(() => {
     done = total;
-    status.textContent = 'Ready. Press to power on';
+    status.textContent = copy.ready;
     orb.disabled = false;
     silent.disabled = false;
     gate.classList.add('is-ready');
@@ -84,7 +90,6 @@ export function showGate(tasks: GateTask[]): Promise<{ sound: boolean }> {
       if (sound) {
         try {
           await unlockAudio();
-          playStartupChime();
         } catch (err) {
           console.warn('[gate] audio unavailable', err);
         }

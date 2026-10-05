@@ -6,18 +6,19 @@ import { placeholder } from './ui/placeholder';
 import { initSheen } from './ui/sheen';
 import { initLiquidGlass } from './ui/liquidGlass';
 import { showGate } from './ui/gate';
-import { initWorld } from './scene/world';
+import { initRoom } from './room/room';
+import { playLightsOnChord, startAmbience, type Ambience } from './audio/lofi';
 
-// Always start at the top so the sunrise plays from morning.
+// Always start at the top so the first shot is the whole room.
 history.scrollRestoration = 'manual';
 window.scrollTo(0, 0);
 
-const world = initWorld();
 const app = document.querySelector<HTMLDivElement>('#app')!;
 
 interface Chapter {
   id: string;
-  eyebrow: string;
+  shot: string;
+  track: string;
   title: string;
   text?: string;
   tags?: readonly string[];
@@ -25,35 +26,36 @@ interface Chapter {
   needs?: readonly string[];
 }
 
-// Chapters not built yet. Each one is replaced by its floor (see ROADMAP.md).
+// Chapters read like a record's track list. Each one is replaced by its floor (see ROADMAP.md).
 const chapters: Chapter[] = [
-  { id: 'about', eyebrow: 'About', title: 'Code on one fader, sound on the other.', text: profile.bio[0], floor: 'Floor 9', needs: ['Mixer channel strip (built in Floor 9)', 'Portrait photo (optional)'] },
-  ...projects.map((p) => ({ id: p.id, eyebrow: 'Project', title: p.title, text: p.subtitle, tags: p.tags, floor: 'Floors 10 to 14', needs: p.needs })),
-  { id: 'lab', eyebrow: 'Lab', title: 'How this city hears.', text: 'A live map of the audio graph running this page, and an FFT you can play with.', floor: 'Floor 15' },
-  { id: 'contact', eyebrow: 'Contact', title: 'Leave me a beat.', text: 'Sequence a 4-bar loop and send it with your message.', floor: 'Floor 16' },
+  { id: 'about', shot: 'about', track: 'A1', title: 'Code on one screen, sound on the other.', text: profile.bio[0], floor: 'Floor 9', needs: ['About content on the laptop screen (Floor 9)', 'Portrait photo (optional)'] },
+  ...projects.map((p, i) => ({ id: p.id, shot: p.id, track: `A${i + 2}`, title: p.title, text: p.subtitle, tags: p.tags, floor: 'Floors 10 to 14', needs: p.needs })),
+  { id: 'lab', shot: 'lab', track: 'B1', title: 'How this room hears.', text: 'A live map of the audio graph running this page, and an FFT you can play with.', floor: 'Floor 15' },
+  { id: 'contact', shot: 'contact', track: 'B2', title: 'Leave me a beat.', text: 'Sequence a 4-bar loop and send it with your message.', floor: 'Floor 16' },
 ];
 
 app.innerHTML = `
-  <header class="hero" id="top">
+  <header class="hero" id="top" data-shot="hero">
     <span class="hero__chip liquid liquid--pill" data-liquid-bezel="14">${profile.role}</span>
     <h1 class="hero__name">${profile.name}</h1>
-    <p class="hero__tagline">${profile.tagline}</p>
+    <p class="hero__tagline">beats to code &amp; compose to</p>
+    <p class="hero__sub">${profile.tagline}</p>
     <div class="hero__dock liquid liquid--pill" data-liquid-bezel="22">
-      <a class="btn btn--leaf" href="#about">Explore the city</a>
-      <span class="hero__dock-note">Aero Player arrives in Floor 4</span>
+      <a class="btn" href="#about">Look around</a>
+      <button class="dock-toggle" type="button" data-ambience hidden aria-pressed="true">
+        <span class="dock-toggle__dot"></span><span data-ambience-label>Rain on</span>
+      </button>
+      <span class="hero__dock-note">Record player arrives in Floor 4</span>
     </div>
     <div class="hero__cue" aria-hidden="true"><span></span></div>
   </header>
   <main>
     ${chapters
       .map(
-        (c, i) => `
-      <section class="chapter" id="${c.id}" data-index="${i}">
+        (c) => `
+      <section class="chapter" id="${c.id}" data-shot="${c.shot}">
         <article class="chapter__card liquid liquid--pad">
-          <div class="chapter__meta">
-            <span class="eyebrow">${c.eyebrow}</span>
-            <span class="chapter__clock" data-clock></span>
-          </div>
+          <span class="chapter__track">${c.track}</span>
           <h2 class="chapter__title">${c.title}</h2>
           ${c.text ? `<p class="chapter__text">${c.text}</p>` : ''}
           ${c.tags ? `<div class="chapter__tags">${c.tags.map((t) => `<span class="chip">${t}</span>`).join('')}</div>` : ''}
@@ -63,7 +65,7 @@ app.innerHTML = `
       )
       .join('')}
   </main>
-  <footer class="footer">Built from scratch by ${profile.name} · Resonance City</footer>
+  <footer class="footer">Built from scratch by ${profile.name} · lights off at your own risk</footer>
 `;
 
 document.querySelectorAll<HTMLElement>('.chapter').forEach((el, i) => {
@@ -71,51 +73,46 @@ document.querySelectorAll<HTMLElement>('.chapter').forEach((el, i) => {
   el.querySelector('.chapter__slot')!.append(placeholder({ label: `${c.floor}: ${c.title}`, needs: c.needs, tag: c.floor.toUpperCase() }));
 });
 
-// Each chapter shows the city's clock at that point in the day.
-const clockStops: [number, number][] = [
-  [0.2, 7.5], [0.35, 12], [0.6, 15.5], [0.78, 18], [0.9, 19.5], [1.0, 22],
-];
-const clockAt = (day: number) => {
-  for (let i = 1; i < clockStops.length; i++) {
-    const [d1, h1] = clockStops[i];
-    const [d0, h0] = clockStops[i - 1];
-    if (day <= d1) return h0 + ((day - d0) / (d1 - d0)) * (h1 - h0);
-  }
-  return 22;
-};
-const updateClocks = () => {
-  const max = document.documentElement.scrollHeight - window.innerHeight;
-  document.querySelectorAll<HTMLElement>('.chapter').forEach((el) => {
-    const progress = Math.min(Math.max((el.offsetTop + el.offsetHeight / 2 - window.innerHeight / 2) / max, 0), 1);
-    const h = clockAt(0.2 + progress * 0.8);
-    const hh = Math.floor(h);
-    const mm = Math.floor((h - hh) * 60 / 5) * 5;
-    el.querySelector('[data-clock]')!.textContent = `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')} in the city`;
-  });
-};
-updateClocks();
-window.addEventListener('resize', updateClocks);
+const sections = [...document.querySelectorAll<HTMLElement>('[data-shot]')].map((el) => ({ el, shot: el.dataset.shot! }));
+const covers: Record<string, string> = Object.fromEntries(projects.filter((p) => p.cover).map((p) => [p.id, p.cover]));
+const room = initRoom(sections, covers);
 
 initLiquidGlass();
 initSheen();
 
-const preloadImages = (urls: string[]) =>
-  Promise.all(
-    urls.filter(Boolean).map(
-      (src) =>
-        new Promise<void>((resolve) => {
-          const img = new Image();
-          img.onload = img.onerror = () => resolve();
-          img.src = src;
-        }),
-    ),
-  );
-
-showGate([
-  { label: 'Type loaded', run: document.fonts.ready },
-  { label: 'Sky compiled', run: world?.ready ?? Promise.resolve() },
-  { label: 'Projects gathered', run: preloadImages(projects.map((p) => p.cover)) },
-]).then(() => {
-  world?.powerOn();
-  document.documentElement.classList.add('is-on');
+let ambience: Ambience | null = null;
+const ambienceBtn = document.querySelector<HTMLButtonElement>('[data-ambience]')!;
+const ambienceLabel = ambienceBtn.querySelector<HTMLSpanElement>('[data-ambience-label]')!;
+ambienceBtn.addEventListener('click', () => {
+  if (!ambience) return;
+  ambience.setEnabled(!ambience.enabled);
+  ambienceBtn.setAttribute('aria-pressed', String(ambience.enabled));
+  ambienceLabel.textContent = ambience.enabled ? 'Rain on' : 'Rain off';
 });
+
+showGate(
+  [
+    { label: 'Fonts unpacked', run: document.fonts.ready },
+    { label: 'Room assembled', run: room?.ready ?? Promise.resolve() },
+  ],
+  {
+    eyebrow: 'Portfolio · CS + Music Technology',
+    title: "Fengkai's Room",
+    hint: 'best with headphones',
+    ready: 'Ready. Turn on the lamp',
+  },
+).then(({ sound }) => {
+  room?.lightsOn();
+  document.documentElement.classList.add('is-on');
+  if (sound) {
+    playLightsOnChord();
+    ambience = startAmbience();
+    ambienceBtn.hidden = false;
+  }
+});
+
+// Dev helper: /?nogate&lit&at=sonare jumps straight to a chapter with the lights on.
+if (import.meta.env.DEV) {
+  const at = new URLSearchParams(location.search).get('at');
+  if (at) setTimeout(() => document.getElementById(at)?.scrollIntoView({ block: 'center' }), 50);
+}

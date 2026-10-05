@@ -18,6 +18,16 @@
   --leaf-500: #5cd33c;
   --leaf-300: #b4f07a;
 
+  /* Lofi night room */
+  --night-950: #0b0918;
+  --night-900: #130f26;
+  --night-700: #241c44;
+  --plum-500: #6b4d9e;
+  --lamp-500: #ff9d4d;
+  --lamp-300: #ffd59e;
+  --rose-400: #ff8fb1;
+  --moon-300: #a9c4ff;
+
   /* Sun + ink */
   --sun: #fff4cf;
   --gold-500: #ffc94a;
@@ -46,6 +56,7 @@
   --font-display: 'Nunito Variable', 'Segoe UI Variable Display', system-ui, sans-serif;
   --font-body: 'Nunito Variable', 'Segoe UI Variable Text', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', monospace;
+  --font-hand: 'Caveat Variable', 'Segoe Print', cursive;
 
   --text-hero: clamp(3.2rem, 9vw, 8.5rem);
   --text-h1: clamp(2.4rem, 5.5vw, 4.75rem);

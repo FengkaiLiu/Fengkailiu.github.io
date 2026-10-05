@@ -1,4 +1,4 @@
-/* Startup gate and its Aero power orb. */
+/* Startup gate: a dark room and a glowing lamp switch. */
 
 html.is-gated,
 html.is-gated body {
@@ -12,11 +12,8 @@ html.is-gated body {
   display: grid;
   place-items: center;
   padding: var(--gutter);
-  background: radial-gradient(circle at 50% 45%, rgba(4, 16, 48, 0.15), rgba(2, 8, 28, 0.6) 75%);
-  transition:
-    opacity 1.4s var(--ease-out),
-    backdrop-filter 1.4s var(--ease-out);
-  backdrop-filter: blur(2px);
+  background: radial-gradient(circle at 50% 45%, rgba(10, 6, 24, 0.35), rgba(6, 4, 16, 0.82) 75%);
+  transition: opacity 1.6s var(--ease-out);
 }
 
 .gate__inner {
@@ -25,25 +22,25 @@ html.is-gated body {
   gap: var(--space-4);
   text-align: center;
   transition:
-    transform 1.4s var(--ease-out),
-    opacity 0.9s var(--ease-out),
-    filter 1.4s var(--ease-out);
+    transform 1.6s var(--ease-out),
+    opacity 1s var(--ease-out),
+    filter 1.6s var(--ease-out);
 }
 
 .gate__eyebrow {
-  opacity: 0.7;
+  opacity: 0.65;
 }
 
 .gate__title {
-  font-size: clamp(2.2rem, 6vw, 4.2rem);
+  font-size: clamp(2.4rem, 6.5vw, 4.6rem);
   font-weight: 900;
   letter-spacing: -0.02em;
   margin-bottom: var(--space-5);
-  background: linear-gradient(180deg, #ffffff 30%, #bfeaff 100%);
+  background: linear-gradient(180deg, #fff3e0 20%, var(--lamp-300) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
-  filter: drop-shadow(0 4px 30px rgba(120, 200, 255, 0.35));
+  filter: drop-shadow(0 4px 30px rgba(255, 179, 92, 0.35));
 }
 
 .gate__status {
@@ -51,12 +48,13 @@ html.is-gated body {
   font-family: var(--font-mono);
   font-size: var(--text-small);
   letter-spacing: 0.04em;
-  opacity: 0.85;
+  opacity: 0.8;
 }
 
 .gate__hint {
-  font-size: var(--text-small);
-  opacity: 0.55;
+  font-family: var(--font-hand);
+  font-size: 1.35rem;
+  opacity: 0.6;
 }
 
 .gate__silent {
@@ -72,27 +70,26 @@ html.is-gated body {
   transition: opacity var(--dur) var(--ease-out);
 }
 .gate.is-ready .gate__silent {
-  opacity: 0.6;
+  opacity: 0.55;
 }
 .gate.is-ready .gate__silent:hover {
   opacity: 1;
 }
 
-/* Leaving: the orb swells and dissolves while the world brightens behind it. */
+/* Leaving: the switch glows out while the room lights fade up behind it. */
 .gate.is-leaving {
   opacity: 0;
   pointer-events: none;
-  backdrop-filter: blur(0);
 }
 .gate.is-leaving .gate__inner {
-  transform: scale(1.35);
+  transform: scale(1.2);
   opacity: 0;
   filter: blur(8px);
 }
 
-/* ---------- Power orb ---------- */
+/* ---------- Lamp switch ---------- */
 .orb {
-  --size: clamp(132px, 22vw, 176px);
+  --size: clamp(132px, 22vw, 172px);
   position: relative;
   display: grid;
   place-items: center;
@@ -124,12 +121,12 @@ html.is-gated body {
   stroke-width: 3;
 }
 .orb__track {
-  stroke: rgba(255, 255, 255, 0.14);
+  stroke: rgba(255, 255, 255, 0.1);
 }
 .orb__progress {
-  stroke: var(--aqua-300);
+  stroke: var(--lamp-300);
   stroke-linecap: round;
-  filter: drop-shadow(0 0 6px rgba(134, 236, 247, 0.9));
+  filter: drop-shadow(0 0 6px rgba(255, 179, 92, 0.9));
 }
 
 .orb__ball {
@@ -141,53 +138,48 @@ html.is-gated body {
   border-radius: 50%;
   overflow: hidden;
   background:
-    radial-gradient(circle at 50% 120%, rgba(180, 240, 122, 0.95), transparent 60%),
-    radial-gradient(circle at 50% 40%, #2fb6ef, #0a5fb8 70%, #053a7a);
+    radial-gradient(circle at 50% 115%, rgba(255, 143, 177, 0.9), transparent 60%),
+    radial-gradient(circle at 50% 38%, #ffd59e, #ff9d4d 62%, #c4562f);
   box-shadow:
-    inset 0 -10px 24px rgba(180, 240, 122, 0.45),
-    inset 0 2px 1px rgba(255, 255, 255, 0.6),
-    0 0 0 1px rgba(255, 255, 255, 0.35),
-    0 10px 40px -6px rgba(24, 198, 230, 0.6);
-  filter: saturate(0.35) brightness(0.75);
+    inset 0 -10px 24px rgba(255, 143, 177, 0.45),
+    inset 0 2px 1px rgba(255, 255, 255, 0.55),
+    0 0 0 1px rgba(255, 255, 255, 0.25),
+    0 10px 40px -6px rgba(255, 157, 77, 0.55);
+  filter: saturate(0.2) brightness(0.45);
   transition:
-    filter 0.8s var(--ease-out),
+    filter 0.9s var(--ease-out),
     transform var(--dur) var(--ease-spring),
     box-shadow var(--dur) var(--ease-out);
 }
-/* Glossy cap */
 .orb__ball::before {
   content: '';
   position: absolute;
-  top: 4%;
-  left: 14%;
-  right: 14%;
-  height: 46%;
+  top: 5%;
+  left: 16%;
+  right: 16%;
+  height: 42%;
   border-radius: 50% 50% 45% 45% / 60% 60% 40% 40%;
-  background: linear-gradient(180deg, rgba(255, 255, 255, 0.85), rgba(255, 255, 255, 0.05));
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.6), rgba(255, 255, 255, 0.02));
 }
 
 .orb__icon {
   position: relative;
-  width: 36%;
-  height: 36%;
+  width: 38%;
+  height: 38%;
   fill: none;
   stroke: #fff;
-  stroke-width: 2.4;
+  stroke-width: 1.9;
   stroke-linecap: round;
-  filter: drop-shadow(0 1px 3px rgba(0, 40, 90, 0.6));
+  stroke-linejoin: round;
+  filter: drop-shadow(0 1px 3px rgba(90, 30, 10, 0.6));
 }
 
 .gate.is-ready .orb__ball {
   filter: none;
-  animation: orb-breathe 2.6s ease-in-out infinite;
+  animation: orb-breathe 2.8s ease-in-out infinite;
 }
 .gate.is-ready .orb:hover .orb__ball {
   transform: scale(1.06);
-  box-shadow:
-    inset 0 -10px 24px rgba(180, 240, 122, 0.6),
-    inset 0 2px 1px rgba(255, 255, 255, 0.7),
-    0 0 0 1px rgba(255, 255, 255, 0.5),
-    0 14px 60px -4px rgba(24, 198, 230, 0.9);
 }
 .gate.is-ready .orb:active .orb__ball {
   transform: scale(0.96);
@@ -196,9 +188,9 @@ html.is-gated body {
 @keyframes orb-breathe {
   50% {
     box-shadow:
-      inset 0 -10px 24px rgba(180, 240, 122, 0.55),
-      inset 0 2px 1px rgba(255, 255, 255, 0.6),
-      0 0 0 1px rgba(255, 255, 255, 0.45),
-      0 10px 70px 0 rgba(24, 198, 230, 0.75);
+      inset 0 -10px 24px rgba(255, 143, 177, 0.55),
+      inset 0 2px 1px rgba(255, 255, 255, 0.55),
+      0 0 0 1px rgba(255, 255, 255, 0.35),
+      0 10px 80px 4px rgba(255, 157, 77, 0.7);
   }
 }
