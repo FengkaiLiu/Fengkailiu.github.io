@@ -114,7 +114,7 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   const target = new WebGLRenderTarget(1, 1, { samples: 4, type: HalfFloatType });
   const composer = new EffectComposer(renderer, target);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new Vector2(1, 1), 0.7, 0.55, 0.9);
+  const bloom = new UnrealBloomPass(new Vector2(1, 1), 0.7, 0.42, 0.9);
   composer.addPass(bloom);
   composer.addPass(new OutputPass());
   const grain = new ShaderPass(GrainShader);

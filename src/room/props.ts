@@ -29,7 +29,7 @@ import {
   type Texture,
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
-import { codeScreen, floorTexture, keysTexture, loadImage, placeholderPoster, vinylLabel, windowMaterial } from './textures';
+import { codeScreen, floorTexture, keysTexture, laptopDeckGlow, laptopDeckTexture, loadImage, placeholderPoster, vinylLabel, windowMaterial } from './textures';
 
 const std = (color: string, extra: Partial<ConstructorParameters<typeof MeshStandardMaterial>[0]> = {}) =>
   new MeshStandardMaterial({ color, roughness: 0.85, metalness: 0, ...extra });
@@ -143,12 +143,23 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   const screen = codeScreen();
   const shell = std('#8f8aa6', { roughness: 0.45, metalness: 0.3 });
   root.add(box(0.9, 0.035, 0.6, shell, 0.8, deskY + 0.018, -3.15, 0.015));
+  // Keyboard deck: keys, trackpad, and a faint warm backlight.
+  const deck = new Mesh(
+    new PlaneGeometry(0.86, 0.56),
+    new MeshStandardMaterial({ map: laptopDeckTexture(), roughness: 0.55, metalness: 0.2, emissive: '#ffb56b', emissiveMap: laptopDeckGlow(), emissiveIntensity: 0.05 }),
+  );
+  deck.rotation.x = -Math.PI / 2;
+  deck.position.set(0.8, deskY + 0.0365, -3.15);
+  deck.receiveShadow = true;
+  addGlow(deck.material as MeshStandardMaterial, 0.35);
+  root.add(deck);
   const lid = new Group();
   lid.position.set(0.8, deskY + 0.035, -3.45);
   lid.rotation.x = -0.32;
   const lidBody = box(0.9, 0.6, 0.025, shell, 0, 0.3, 0, 0.015);
-  const screenMat = new MeshStandardMaterial({ color: '#000000', emissive: '#ffffff', emissiveMap: screen.texture, emissiveIntensity: 0.05 });
-  addGlow(screenMat, 0.85); // kept under the bloom threshold so the code stays crisp
+  // Unlit material: the screen shows its pixels as-is, unaffected by the lamp or shading.
+  const screenMat = new MeshBasicMaterial({ map: screen.texture, color: new Color('#ffffff') });
+  addGlow(screenMat, 0.84); // kept under the bloom threshold so the code stays crisp
   const display = new Mesh(new PlaneGeometry(0.84, 0.53), screenMat);
   display.position.set(0, 0.3, 0.014);
   lid.add(lidBody, display);
@@ -201,7 +212,7 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   shade.rotation.z = -0.5;
   root.add(shade);
   const bulbMat = new MeshBasicMaterial({ color: new Color('#ffd59e') });
-  addGlow(bulbMat, 3.2);
+  addGlow(bulbMat, 2.6);
   const bulb = new Mesh(new SphereGeometry(0.055, 16, 12), bulbMat);
   bulb.position.set(1.68, deskY + 0.58, -3.2);
   root.add(bulb);
@@ -261,18 +272,51 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   anchors.sonare = boat.position.clone();
 
   // Handheld console (Hot Footer) on the lower shelf
+  // A pastel landscape handheld, propped on a little stand, with a cartridge beside it.
   const handheld = new Group();
-  handheld.position.set(-2.4, shelfY - 0.47, -3.8);
-  handheld.rotation.x = -0.15;
-  handheld.add(box(0.3, 0.19, 0.045, std('#ff6b81', { roughness: 0.5 }), 0, 0, 0, 0.03));
-  const handheldScreen = new MeshStandardMaterial({ color: '#000000', emissive: '#ffffff', emissiveIntensity: 0.05 });
-  addGlow(handheldScreen, 0.9);
-  const hs = new Mesh(new PlaneGeometry(0.15, 0.11), handheldScreen);
-  hs.position.z = 0.024;
+  handheld.position.set(-2.4, shelfY - 0.475, -3.78);
+  handheld.rotation.set(-0.18, 0.18, 0);
+  const plastic = std('#ff8fa3', { roughness: 0.45 });
+  const dark = std('#26232f', { roughness: 0.6 });
+  handheld.add(box(0.38, 0.2, 0.045, plastic, 0, 0, 0, 0.045));
+  // Grips: slightly fatter ends, like a real console.
+  handheld.add(box(0.07, 0.18, 0.055, plastic, -0.16, -0.004, -0.003, 0.03));
+  handheld.add(box(0.07, 0.18, 0.055, plastic, 0.16, -0.004, -0.003, 0.03));
+  // Screen in a dark bezel.
+  handheld.add(box(0.21, 0.135, 0.008, dark, 0, 0.012, 0.022, 0.012));
+  const handheldScreen = new MeshBasicMaterial({ color: new Color('#ffffff') });
+  addGlow(handheldScreen, 0.8);
+  const hs = new Mesh(new PlaneGeometry(0.184, 0.104), handheldScreen);
+  hs.position.set(0, 0.014, 0.0265);
   handheld.add(hs);
-  handheld.add(cyl(0.018, 0.018, 0.01, std('#2b2836'), 0.11, -0.02, 0.025, 12).rotateX(Math.PI / 2));
-  handheld.add(cyl(0.018, 0.018, 0.01, std('#2b2836'), -0.11, -0.02, 0.025, 12).rotateX(Math.PI / 2));
+  // D-pad
+  handheld.add(box(0.052, 0.017, 0.012, dark, -0.15, 0.012, 0.027, 0.004));
+  handheld.add(box(0.017, 0.052, 0.012, dark, -0.15, 0.012, 0.027, 0.004));
+  // A / B buttons on a diagonal
+  const btn = (color: string, x: number, y: number) =>
+    cyl(0.0125, 0.0125, 0.012, std(color, { roughness: 0.35 }), x, y, 0.027, 16).rotateX(Math.PI / 2);
+  handheld.add(btn('#ffd166', 0.165, 0.03), btn('#7fb8ff', 0.135, 0.002));
+  // Start / select pills and a speaker grille
+  handheld.add(box(0.026, 0.008, 0.006, dark, -0.02, -0.078, 0.024, 0.004));
+  handheld.add(box(0.026, 0.008, 0.006, dark, 0.02, -0.078, 0.024, 0.004));
+  for (let i = 0; i < 6; i++) {
+    handheld.add(cyl(0.0035, 0.0035, 0.004, dark, 0.135 + (i % 3) * 0.012, -0.055 - Math.floor(i / 3) * 0.012, 0.024, 8).rotateX(Math.PI / 2));
+  }
+  // Shoulder buttons
+  handheld.add(box(0.07, 0.014, 0.03, std('#e8738a'), -0.14, 0.1, -0.004, 0.006));
+  handheld.add(box(0.07, 0.014, 0.03, std('#e8738a'), 0.14, 0.1, -0.004, 0.006));
   root.add(shadowed(handheld));
+  // Clear acrylic stand behind it
+  const stand = box(0.14, 0.12, 0.012, std('#ffffff', { transparent: true, opacity: 0.25, roughness: 0.1 }), -2.4, shelfY - 0.54, -3.83, 0.004);
+  stand.rotation.x = 0.45;
+  root.add(stand);
+  // Game cartridge lying beside it
+  const cart = new Group();
+  cart.position.set(-2.12, shelfY - 0.583, -3.74);
+  cart.rotation.y = -0.4;
+  cart.add(box(0.07, 0.012, 0.08, std('#3a3450'), 0, 0, 0, 0.004));
+  cart.add(box(0.05, 0.002, 0.045, std('#ffd166'), 0, 0.007, 0.008, 0.001));
+  root.add(shadowed(cart));
   anchors.hotfooter = handheld.position.clone();
 
   // Little cactus on the lower shelf
@@ -351,7 +395,8 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   const coverLoads = Object.entries(covers).map(async ([id, url]) => {
     const tex = await loadImage(url);
     if (id === 'hotfooter') {
-      handheldScreen.emissiveMap = tex;
+      fitCover(tex, 0.184 / 0.104);
+      handheldScreen.map = tex;
       handheldScreen.needsUpdate = true;
       return;
     }

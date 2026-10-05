@@ -9,7 +9,7 @@ export interface Shot {
 
 export const shots: Record<string, Shot> = {
   hero: { pos: [8.4, 6.2, 8.4], target: [-0.5, 1.9, -0.6], frame: 0.2 },
-  about: { pos: [2.4, 2.55, -0.85], target: [0.75, 1.8, -3.4] },
+  about: { pos: [1.85, 2.3, -1.5], target: [0.8, 1.82, -3.4] },
   vrmusicroom: { pos: [0.4, 3.1, -0.15], target: [-3.95, 3.05, -0.15] },
   sonare: { pos: [0.4, 3.3, 1.1], target: [-3.95, 3.2, 1.1] },
   roomlink: { pos: [0.4, 3.05, 2.35], target: [-3.95, 3.0, 2.35] },

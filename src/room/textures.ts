@@ -17,8 +17,11 @@ function toTexture(c: HTMLCanvasElement) {
 
 /** Laptop screen: a code editor that keeps typing. The CS part of the room. */
 export function codeScreen() {
-  const { c, ctx } = canvas(1024, 640);
+  // Drawn at 1600x1000 for sharpness; layout coordinates stay in a 1024x640 space.
+  const { c, ctx } = canvas(1600, 1000);
+  const scale = 1600 / 1024;
   const texture = toTexture(c);
+  texture.anisotropy = 16;
   const lines: [string, string][][] = [
     [['#7f8bb3', '// fengkai.ts']],
     [['#c792ea', 'const '], ['#ffcb6b', 'me'], ['#89ddff', ' = {']],
@@ -36,7 +39,8 @@ export function codeScreen() {
   let lastStep = 0;
 
   const draw = (now: number) => {
-    ctx.fillStyle = '#141526';
+    ctx.setTransform(scale, 0, 0, scale, 0, 0);
+    ctx.fillStyle = '#11121f';
     ctx.fillRect(0, 0, c.width, c.height);
     ctx.fillStyle = '#1d1f36';
     ctx.fillRect(0, 0, c.width, 44);
@@ -46,7 +50,7 @@ export function codeScreen() {
       ctx.arc(28 + i * 26, 22, 8, 0, Math.PI * 2);
       ctx.fill();
     }
-    ctx.font = '600 30px "JetBrains Mono Variable", monospace';
+    ctx.font = '700 31px "JetBrains Mono Variable", monospace';
     let budget = typed;
     let cursor = { x: 40, y: 100 };
     lines.forEach((line, li) => {
@@ -73,12 +77,70 @@ export function codeScreen() {
   return {
     texture,
     tick(now: number) {
-      if (now - lastStep < 70) return;
+      if (now - lastStep < 90) return;
       lastStep = now;
-      typed = typed >= total + 40 ? 0 : typed + 1; // pause, then retype
+      typed = typed >= total + 70 ? 0 : typed + 1; // hold the finished code a few seconds, then retype
       draw(now);
     },
   };
+}
+
+// Laptop deck layout, in a 1024x640 canvas (top edge = hinge side).
+const DECK_ROWS = [14, 14, 13, 12, 11];
+function deckKeys(draw: (x: number, y: number, w: number, h: number) => void) {
+  const left = 70;
+  const width = 1024 - left * 2;
+  const keyH = 50;
+  const gap = 10;
+  DECK_ROWS.forEach((count, row) => {
+    const keyW = (width - gap * (count - 1)) / count;
+    for (let i = 0; i < count; i++) draw(left + i * (keyW + gap), 40 + row * (keyH + gap), keyW, keyH);
+  });
+  // Bottom row: modifiers around a long space bar.
+  const y = 40 + DECK_ROWS.length * (keyH + gap);
+  draw(left, y, 90, keyH);
+  draw(left + 100, y, 90, keyH);
+  draw(left + 200, y, 484, keyH);
+  draw(left + 694, y, 90, keyH);
+  draw(left + 794, y, 90, keyH);
+}
+
+function roundRect(ctx: CanvasRenderingContext2D, x: number, y: number, w: number, h: number, r: number) {
+  ctx.beginPath();
+  ctx.roundRect(x, y, w, h, r);
+  ctx.fill();
+}
+
+/** Laptop keyboard deck: dark keys on the aluminium shell, plus a trackpad. */
+export function laptopDeckTexture() {
+  const { c, ctx } = canvas(1024, 640);
+  ctx.fillStyle = '#9a95b3';
+  ctx.fillRect(0, 0, 1024, 640);
+  ctx.fillStyle = '#7d7896';
+  roundRect(ctx, 52, 24, 920, 410, 18); // keyboard well
+  ctx.fillStyle = '#211e2c';
+  deckKeys((x, y, w, h) => roundRect(ctx, x, y, w, h, 8));
+  ctx.fillStyle = '#8a85a3';
+  roundRect(ctx, 352, 458, 320, 160, 16); // trackpad
+  ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+  ctx.lineWidth = 2;
+  ctx.strokeRect(353, 459, 318, 158);
+  return toTexture(c);
+}
+
+/** Backlight: a soft glow leaking around each key. */
+export function laptopDeckGlow() {
+  const { c, ctx } = canvas(1024, 640);
+  ctx.fillStyle = '#000';
+  ctx.fillRect(0, 0, 1024, 640);
+  ctx.strokeStyle = '#ffffff';
+  ctx.lineWidth = 3;
+  deckKeys((x, y, w, h) => {
+    ctx.beginPath();
+    ctx.roundRect(x, y, w, h, 8);
+    ctx.stroke();
+  });
+  return toTexture(c);
 }
 
 /** MIDI keyboard keys, seen from above. */
