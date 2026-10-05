@@ -1,0 +1,709 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fengkai Liu — Designer, Developer, Creator</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,500;1,500&display=swap" rel="stylesheet">
+<style>
+:root {
+  --bg: #FFFBF5;
+  --bg-warm: #FFF5EB;
+  --bg-card: #FFFFFF;
+  --text: #2C2017;
+  --text-secondary: #8B7E74;
+  --text-muted: #B5A99B;
+  --coral: #D85A30;
+  --coral-light: #FAECE7;
+  --coral-dark: #993C1D;
+  --teal: #1D9E75;
+  --teal-light: #E1F5EE;
+  --teal-dark: #0F6E56;
+  --pink: #D4537E;
+  --pink-light: #FBEAF0;
+  --amber: #EF9F27;
+  --amber-light: #FAEEDA;
+  --purple: #7F77DD;
+  --purple-light: #EEEDFE;
+  --border: rgba(139,126,116,0.12);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --font: 'Inter', -apple-system, sans-serif;
+  --font-display: 'Playfair Display', Georgia, serif;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+body { font-family: var(--font); background: var(--bg); color: var(--text); overflow-x: hidden; }
+::selection { background: var(--coral-light); color: var(--coral-dark); }
+
+nav {
+  position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+  padding: 0 clamp(24px,5vw,80px); height: 64px;
+  display: flex; align-items: center; justify-content: space-between;
+  background: rgba(255,251,245,0.85); backdrop-filter: blur(20px);
+  border-bottom: 1px solid var(--border); transition: transform 0.3s;
+}
+.nav-logo { font-weight: 600; font-size: 15px; letter-spacing: -0.3px; color: var(--text); text-decoration: none; }
+.nav-logo span { color: var(--coral); }
+.nav-links { display: flex; gap: 28px; align-items: center; }
+.nav-links a {
+  font-size: 13px; color: var(--text-secondary); text-decoration: none;
+  font-weight: 500; transition: color 0.2s; position: relative;
+}
+.nav-links a:hover { color: var(--coral); }
+.nav-links a::after {
+  content:''; position: absolute; bottom: -4px; left: 0; right: 0;
+  height: 2px; background: var(--coral); border-radius: 1px;
+  transform: scaleX(0); transition: transform 0.25s;
+}
+.nav-links a:hover::after { transform: scaleX(1); }
+.nav-cta {
+  font-size: 12px !important; padding: 8px 18px;
+  background: var(--text) !important; color: #fff !important;
+  border-radius: 100px; transition: transform 0.15s, opacity 0.2s !important;
+}
+.nav-cta:hover { transform: scale(1.03); opacity: 0.9; }
+.nav-cta::after { display: none !important; }
+.menu-btn { display: none; background: none; border: none; cursor: pointer; padding: 8px; }
+.menu-btn svg { width: 22px; height: 22px; stroke: var(--text); }
+
+section { padding: 0 clamp(24px,5vw,80px); }
+.section-label {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 12px; font-weight: 600; letter-spacing: 2px; text-transform: uppercase;
+  color: var(--coral); margin-bottom: 16px;
+}
+.section-label::before { content:''; width: 8px; height: 8px; border-radius: 50%; background: var(--coral); }
+.section-title {
+  font-family: var(--font-display); font-size: clamp(28px,4vw,42px);
+  font-weight: 500; line-height: 1.2; margin-bottom: 12px;
+}
+.section-desc { font-size: 15px; color: var(--text-secondary); line-height: 1.7; max-width: 520px; }
+
+.hero {
+  min-height: 100vh; display: flex; align-items: center;
+  padding-top: 64px; position: relative; overflow: hidden;
+}
+.hero-content { position: relative; z-index: 2; max-width: 600px; }
+.hero-greeting { font-size: 14px; font-weight: 500; color: var(--coral); margin-bottom: 16px; display: flex; align-items: center; gap: 8px; }
+.wave { display: inline-block; animation: wave 2.5s ease-in-out infinite; transform-origin: 70% 70%; }
+@keyframes wave { 0%,100%{transform:rotate(0)} 10%{transform:rotate(14deg)} 20%{transform:rotate(-8deg)} 30%{transform:rotate(14deg)} 40%{transform:rotate(-4deg)} 50%{transform:rotate(10deg)} 60%{transform:rotate(0)} }
+.hero h1 {
+  font-family: var(--font-display); font-size: clamp(40px,6vw,68px);
+  font-weight: 500; line-height: 1.08; letter-spacing: -1px; margin-bottom: 20px;
+}
+.hero h1 .highlight { color: var(--coral); position: relative; display: inline-block; }
+.hero h1 .highlight::after {
+  content:''; position: absolute; bottom: 4px; left: -4px; right: -4px;
+  height: 12px; background: var(--coral-light); border-radius: 4px; z-index: -1;
+}
+.hero-desc { font-size: 17px; line-height: 1.7; color: var(--text-secondary); max-width: 460px; margin-bottom: 32px; }
+.hero-actions { display: flex; gap: 12px; flex-wrap: wrap; }
+.btn-primary {
+  padding: 14px 32px; border-radius: 100px; font-size: 14px; font-weight: 600;
+  background: var(--coral); color: #fff; text-decoration: none; border: none; cursor: pointer;
+  transition: transform 0.15s, box-shadow 0.2s; display: inline-flex; align-items: center; gap: 8px;
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 8px 24px rgba(216,90,48,0.25); }
+.btn-secondary {
+  padding: 14px 32px; border-radius: 100px; font-size: 14px; font-weight: 600;
+  background: transparent; color: var(--text); text-decoration: none;
+  border: 1.5px solid var(--border); cursor: pointer; transition: border-color 0.2s, background 0.2s;
+}
+.btn-secondary:hover { border-color: var(--text-secondary); background: var(--bg-warm); }
+.hero-shapes { position: absolute; top: 0; right: 0; bottom: 0; width: 50%; pointer-events: none; }
+.shape { position: absolute; border-radius: 50%; animation: float 6s ease-in-out infinite; }
+.shape-1 { width: 280px; height: 280px; background: var(--coral-light); top: 15%; right: 5%; }
+.shape-2 { width: 160px; height: 160px; background: var(--teal-light); top: 55%; right: 30%; animation-delay: -2s; }
+.shape-4 { width: 60px; height: 60px; background: var(--pink-light); top: 70%; right: 10%; animation-delay: -1s; }
+.shape-5 { width: 40px; height: 40px; background: var(--purple-light); top: 40%; right: 15%; animation-delay: -3s; border-radius: 8px; animation-name: float-rotate; }
+@keyframes float { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-20px)} }
+@keyframes float-rotate { 0%,100%{transform:translateY(0) rotate(0)} 50%{transform:translateY(-20px) rotate(15deg)} }
+.photo-frame {
+  position: absolute; border-radius: 14px; overflow: hidden;
+  background: var(--bg-card); padding: 6px; box-shadow: 0 8px 32px rgba(44,32,23,0.1);
+  animation: float-tilt 7s ease-in-out infinite; pointer-events: none;
+}
+.photo-frame img { width: 100%; height: 100%; object-fit: cover; border-radius: 10px; display: block; }
+.pf-1 { width: 200px; height: 150px; top: 10%; right: 8%; z-index: 3; --r: -4deg; }
+.pf-2 { width: 140px; height: 140px; top: 48%; right: 32%; z-index: 2; border-radius: 50%; --r: 5deg; }
+.pf-2 img { border-radius: 50%; }
+.pf-3 { width: 130px; height: 170px; top: 58%; right: 6%; z-index: 1; --r: 3deg; }
+@keyframes float-tilt {
+  0%,100%{transform:translateY(0) rotate(var(--r, -4deg))}
+  50%{transform:translateY(-16px) rotate(calc(var(--r, -4deg) + 4deg))}
+}
+.scroll-hint {
+  position: absolute; bottom: 40px; left: clamp(24px,5vw,80px);
+  display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-muted);
+}
+.scroll-line { width: 1px; height: 40px; background: var(--border); position: relative; overflow: hidden; }
+.scroll-line::after {
+  content:''; position: absolute; top: -100%; left: 0; width: 100%; height: 50%;
+  background: var(--coral); animation: scroll-down 2s ease-in-out infinite;
+}
+@keyframes scroll-down { 0%{top:-50%} 100%{top:100%} }
+
+.about { padding-top: 120px; padding-bottom: 120px; }
+.about-grid { display: grid; grid-template-columns: 1fr; gap: 60px; align-items: center; margin-top: 40px; }
+.about-stats { display: grid; grid-template-columns: repeat(3,1fr); gap: 16px; margin-top: 32px; }
+.stat { padding: 16px; background: var(--bg-warm); border-radius: var(--radius-sm); text-align: center; }
+.stat-num { font-size: 24px; font-weight: 700; color: var(--coral); }
+.stat-label { font-size: 11px; color: var(--text-secondary); margin-top: 4px; }
+.about-text { font-size: 15px; line-height: 1.8; color: var(--text-secondary); }
+.about-text p + p { margin-top: 16px; }
+.tag-cloud { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 24px; }
+.tag {
+  padding: 6px 14px; border-radius: 100px; font-size: 12px; font-weight: 500;
+  border: 1px solid var(--border); color: var(--text-secondary); transition: all 0.2s;
+}
+.tag:hover { border-color: var(--coral); color: var(--coral); background: var(--coral-light); }
+
+/* === PROJECTS CAROUSEL === */
+.projects {
+  padding-top: 120px; padding-bottom: 120px; background: var(--bg-warm);
+  width: 100vw; position: relative; left: 50%; transform: translateX(-50%);
+  padding-left: clamp(48px,8vw,120px); padding-right: clamp(48px,8vw,120px);
+}
+.projects-header { display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 48px; flex-wrap: wrap; gap: 20px; }
+.projects-header-text { flex: 1; min-width: 240px; }
+.carousel-nav { display: flex; gap: 10px; align-items: center; }
+.carousel-btn {
+  width: 48px; height: 48px; border-radius: 50%; border: 1.5px solid var(--border);
+  background: var(--bg-card); cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: all 0.2s; color: var(--text); flex-shrink: 0;
+}
+.carousel-btn:hover { border-color: var(--coral); color: var(--coral); background: var(--coral-light); }
+.carousel-btn:disabled { opacity: 0.3; cursor: default; pointer-events: none; }
+.carousel-btn svg { width: 20px; height: 20px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.carousel-counter { font-size: 13px; color: var(--text-muted); font-weight: 500; min-width: 44px; text-align: center; }
+
+.carousel-track-wrapper { overflow: hidden; margin: 0 -8px; padding: 8px; }
+.carousel-track {
+  display: flex; gap: 24px;
+  transition: transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1);
+}
+.project-card {
+  background: var(--bg-card); border-radius: var(--radius); overflow: hidden;
+  border: 1px solid var(--border); transition: transform 0.25s, box-shadow 0.3s;
+  cursor: pointer; flex-shrink: 0; width: calc(33.333% - 16px);
+}
+.project-card:hover { transform: translateY(-4px); box-shadow: 0 16px 48px rgba(44,32,23,0.08); }
+.project-thumb { aspect-ratio: 16/10; position: relative; overflow: hidden; }
+.project-thumb img { width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s; }
+.project-card:hover .project-thumb img { transform: scale(1.05); }
+.project-thumb-bg { width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: transform 0.4s; }
+.project-card:hover .project-thumb-bg { transform: scale(1.05); }
+.project-info { padding: 20px; }
+.project-tags { display: flex; gap: 6px; margin-bottom: 12px; flex-wrap: wrap; }
+.project-tag { font-size: 11px; font-weight: 500; padding: 3px 10px; border-radius: 100px; }
+.project-name { font-size: 17px; font-weight: 600; margin-bottom: 6px; }
+.project-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; }
+.project-link {
+  display: inline-flex; align-items: center; gap: 6px;
+  font-size: 13px; font-weight: 600; color: var(--coral); margin-top: 12px;
+}
+.project-link .arrow { transition: transform 0.2s; display: inline-block; }
+.project-card:hover .project-link .arrow { transform: translateX(4px); }
+
+/* Dots */
+.carousel-dots { display: flex; justify-content: center; gap: 8px; margin-top: 32px; }
+.carousel-dot {
+  width: 8px; height: 8px; border-radius: 50%; background: var(--border);
+  border: none; cursor: pointer; transition: all 0.3s; padding: 0;
+}
+.carousel-dot.active { background: var(--coral); width: 24px; border-radius: 4px; }
+
+/* === MODAL === */
+.modal-overlay {
+  display: none; position: fixed; inset: 0; z-index: 300;
+  background: rgba(44,32,23,0.5); backdrop-filter: blur(8px);
+  align-items: center; justify-content: center; padding: 24px;
+  opacity: 0; transition: opacity 0.3s;
+}
+.modal-overlay.open { display: flex; opacity: 1; }
+.modal {
+  background: var(--bg); border-radius: 20px; width: 100%; max-width: 720px;
+  max-height: 85vh; overflow-y: auto; position: relative;
+  transform: translateY(20px) scale(0.97); transition: transform 0.35s ease;
+}
+.modal-overlay.open .modal { transform: translateY(0) scale(1); }
+.modal-close {
+  position: sticky; top: 0; float: right; z-index: 10;
+  margin: 16px 16px 0 0; width: 36px; height: 36px; border-radius: 50%;
+  background: var(--bg-card); border: 1px solid var(--border);
+  font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center;
+  transition: background 0.2s; color: var(--text);
+}
+.modal-close:hover { background: var(--coral-light); }
+.modal-hero { width: 100%; aspect-ratio: 2/1; border-radius: 20px 20px 0 0; }
+.modal-body { padding: 32px 36px 40px; }
+.modal-body .project-tags { margin-bottom: 16px; }
+.modal-body h2 { font-family: var(--font-display); font-size: 28px; font-weight: 500; margin-bottom: 8px; line-height: 1.2; }
+.modal-body .subtitle { font-size: 15px; color: var(--text-secondary); margin-bottom: 24px; }
+.modal-body h3 { font-size: 14px; font-weight: 600; margin: 24px 0 8px; color: var(--coral); text-transform: uppercase; letter-spacing: 1px; }
+.modal-body p { font-size: 15px; line-height: 1.8; color: var(--text-secondary); }
+.modal-body ul { padding-left: 20px; margin-top: 8px; }
+.modal-body li { font-size: 14px; line-height: 1.8; color: var(--text-secondary); margin-bottom: 4px; }
+.modal-links { display: flex; gap: 12px; margin-top: 28px; flex-wrap: wrap; }
+.modal-links a {
+  padding: 10px 24px; border-radius: 100px; font-size: 13px; font-weight: 600;
+  text-decoration: none; transition: all 0.2s; display: inline-flex; align-items: center; gap: 6px;
+}
+.modal-links .ml-primary { background: var(--coral); color: #fff; }
+.modal-links .ml-primary:hover { box-shadow: 0 6px 20px rgba(216,90,48,0.25); }
+.modal-links .ml-secondary { border: 1.5px solid var(--border); color: var(--text); }
+.modal-links .ml-secondary:hover { border-color: var(--text-secondary); }
+
+.contact { padding-top: 100px; padding-bottom: 80px; text-align: center; }
+.contact-inner { max-width: 560px; margin: 0 auto; }
+.contact-emoji { font-size: 48px; margin-bottom: 20px; }
+.contact-links { display: flex; justify-content: center; gap: 12px; margin-top: 32px; flex-wrap: wrap; }
+.contact-link {
+  padding: 12px 24px; border-radius: 100px; font-size: 13px; font-weight: 500;
+  text-decoration: none; border: 1.5px solid var(--border); color: var(--text);
+  transition: all 0.2s; display: inline-flex; align-items: center; gap: 8px;
+}
+.contact-link:hover { border-color: var(--coral); color: var(--coral); background: var(--coral-light); }
+.contact-link svg { width: 16px; height: 16px; }
+
+footer { padding: 24px clamp(24px,5vw,80px); text-align: center; border-top: 1px solid var(--border); }
+footer p { font-size: 12px; color: var(--text-muted); }
+
+@media(max-width:1024px) {
+  .project-card { width: calc(50% - 12px); }
+}
+@media(max-width:768px) {
+  .nav-links { display: none; }
+  .menu-btn { display: block; }
+  .hero-shapes { width: 100%; opacity: 0.5; }
+  .photo-frame { opacity: 0.4; }
+  .pf-1 { width: 120px; height: 90px; }
+  .pf-2 { width: 80px; height: 80px; }
+  .pf-3 { width: 80px; height: 100px; }
+  .about-grid { grid-template-columns: 1fr; }
+  .projects { padding-left: 24px; padding-right: 24px; }
+  .project-card { width: calc(100% - 0px); }
+  .modal { max-height: 92vh; border-radius: 16px; }
+  .modal-body { padding: 24px 20px 32px; }
+}
+.mobile-menu {
+  display: none; position: fixed; inset: 0; z-index: 200;
+  background: rgba(255,251,245,0.97); backdrop-filter: blur(20px);
+  flex-direction: column; align-items: center; justify-content: center; gap: 24px;
+}
+.mobile-menu.open { display: flex; }
+.mobile-menu a { font-size: 20px; font-weight: 500; color: var(--text); text-decoration: none; padding: 8px 0; }
+.mobile-menu a:hover { color: var(--coral); }
+.mobile-close { position: absolute; top: 20px; right: 24px; background: none; border: none; font-size: 28px; cursor: pointer; color: var(--text); }
+
+.reveal { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+.reveal.visible { opacity: 1; transform: none; }
+</style>
+</head>
+<body>
+
+<nav>
+  <a href="#" class="nav-logo">fengkai<span>.</span></a>
+  <div class="nav-links">
+    <a href="#about">About</a>
+    <a href="#projects">Projects</a>
+    <a href="#contact" class="nav-cta">Get in Touch</a>
+  </div>
+  <button class="menu-btn" onclick="document.querySelector('.mobile-menu').classList.add('open')">
+    <svg fill="none" viewBox="0 0 24 24" stroke-width="2"><path stroke-linecap="round" d="M4 7h16M4 12h16M4 17h16"/></svg>
+  </button>
+</nav>
+<div class="mobile-menu">
+  <button class="mobile-close" onclick="this.parentElement.classList.remove('open')">&times;</button>
+  <a href="#about" onclick="this.parentElement.classList.remove('open')">About</a>
+  <a href="#projects" onclick="this.parentElement.classList.remove('open')">Projects</a>
+  <a href="#contact" onclick="this.parentElement.classList.remove('open')">Contact</a>
+</div>
+
+<section class="hero" id="hero">
+  <div class="hero-content">
+    <div class="hero-greeting"><span class="wave">👋</span> Hey there, I'm</div>
+    <h1>Fengkai Liu<br><span class="highlight">Designer</span> &<br>Developer</h1>
+    <p class="hero-desc">I craft immersive digital experiences where clean code meets thoughtful design — from VR worlds to interactive games, I love building things that feel alive.</p>
+    <div class="hero-actions">
+      <a href="#projects" class="btn-primary">View My Work <span>→</span></a>
+      <a href="#contact" class="btn-secondary">Say Hello</a>
+    </div>
+  </div>
+  <div class="hero-shapes">
+    <div class="shape shape-1"></div>
+    <div class="shape shape-2"></div>
+    <div class="shape shape-4"></div>
+    <div class="shape shape-5"></div>
+    <div class="photo-frame pf-1" style="animation-delay:-0.5s">
+      <img src="https://fengkailiu.github.io/PWpage/PWpage1.jpg" alt="Photo 1">
+    </div>
+    <div class="photo-frame pf-2" style="animation-delay:-2.5s">
+      <img src="https://fengkailiu.github.io/PWpage/PWpage2.jpg" alt="Photo 2">
+    </div>
+    <div class="photo-frame pf-3" style="animation-delay:-4s">
+      <img src="https://fengkailiu.github.io/PWpage/PWpage3.jpg" alt="Photo 3">
+    </div>
+  </div>
+  <div class="scroll-hint"><div class="scroll-line"></div><span>Scroll</span></div>
+</section>
+
+<section class="about" id="about">
+  <div class="reveal">
+    <div class="section-label">About me</div>
+    <div class="section-title">A curious mind who loves<br>building things</div>
+  </div>
+  <div class="about-grid">
+    <div class="reveal">
+      <div class="about-text">
+        <p>Hi! I'm Fengkai — a developer and creative technologist passionate about building products that are both beautiful and functional. I believe the best experiences come from blending art with engineering.</p>
+        <p>When I'm not coding or designing virtual worlds, you'll find me producing music, experimenting with photography, or diving into the latest XR technologies.</p>
+      </div>
+      <div class="tag-cloud">
+        <span class="tag">Java</span>
+        <span class="tag">Python</span>
+        <span class="tag">C#</span>
+        <span class="tag">C(DSP)</span>
+        <span class="tag">CSS</span>
+        <span class="tag">HTML</span>
+        <span class="tag">Unity</span>
+        <span class="tag">Adobe PS/PR</span>
+        <span class="tag">MAXmsp</span>
+        <span class="tag">FL Studio</span>
+        <span class="tag">Photography</span>
+      </div>
+      <div class="about-stats">
+        <div class="stat"><div class="stat-num">5+</div><div class="stat-label">Projects</div></div>
+        <div class="stat"><div class="stat-num">2</div><div class="stat-label">Intern/COOP Exp</div></div>
+        <div class="stat"><div class="stat-num">∞</div><div class="stat-label">Curiosity</div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- Projects -->
+<section class="projects" id="projects">
+  <div class="projects-header reveal">
+    <div class="projects-header-text">
+      <div class="section-label">Selected work</div>
+      <div class="section-title">Projects I'm proud of</div>
+      <div class="section-desc">Click any project to see the full story.</div>
+    </div>
+    <div class="carousel-nav">
+      <button class="carousel-btn" id="prev-btn" onclick="slideCarousel(-1)">
+        <svg viewBox="0 0 24 24"><path d="M15 18l-6-6 6-6"/></svg>
+      </button>
+      <span class="carousel-counter" id="carousel-counter">1 / 2</span>
+      <button class="carousel-btn" id="next-btn" onclick="slideCarousel(1)">
+        <svg viewBox="0 0 24 24"><path d="M9 18l6-6-6-6"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="carousel-track-wrapper">
+    <div class="carousel-track" id="carousel-track">
+
+      <!-- Card 1: VR Music Room -->
+      <div class="project-card" onclick="openProject('vrmusicroom')">
+        <div class="project-thumb">
+          <img src="https://fengkailiu.github.io/PWpage/vrmusicroom.jpg" alt="VR Music Room">
+        </div>
+        <div class="project-info">
+          <div class="project-tags">
+            <span class="project-tag" style="background:var(--pink-light);color:var(--pink)">Unity</span>
+            <span class="project-tag" style="background:var(--purple-light);color:var(--purple)">CS/XR</span>
+            <span class="project-tag" style="background:var(--teal-light);color:var(--teal)">Music</span>
+            <span class="project-tag" style="background:var(--amber-light);color:#BA7517">C#</span>
+          </div>
+          <div class="project-name">VR Music Room</div>
+          <div class="project-desc">A VR room that visualizes Spotify music with dynamic lighting, powered by AI.</div>
+          <div class="project-link">View details <span class="arrow">→</span></div>
+        </div>
+      </div>
+
+      <!-- Card 2: RoomLink ChillZone -->
+      <div class="project-card" onclick="openProject('roomlink')">
+        <div class="project-thumb">
+          <img src="https://fengkailiu.github.io/PWpage/vrchatroom.png" alt="VR Music Room">
+        </div>
+        <div class="project-info">
+          <div class="project-tags">
+            <span class="project-tag" style="background:var(--pink-light);color:var(--pink)">Unity</span>
+            <span class="project-tag" style="background:var(--purple-light);color:var(--purple)">CS/Game Design</span>
+            <span class="project-tag" style="background:var(--teal-light);color:var(--teal)">Game Map</span>
+            <span class="project-tag" style="background:var(--amber-light);color:#BA7517">C#</span>
+          </div>
+          <div class="project-name">RoomLink-ChillZone</div>
+          <div class="project-desc">A custom VRChat world built from scratch with Unity, featuring 1,000+ interactable objects.</div>
+          <div class="project-link">View details <span class="arrow">→</span></div>
+        </div>
+      </div>
+
+      <!-- Card 3: Hot Footer -->
+      <div class="project-card" onclick="openProject('hotfooter')">
+        <div class="project-thumb">
+          <img src="https://fengkailiu.github.io/PWpage/hotfooter.png" alt="VR Music Room">
+        </div>
+        <div class="project-info">
+          <div class="project-tags">
+            <span class="project-tag" style="background:var(--pink-light);color:var(--pink)">Unity</span>
+            <span class="project-tag" style="background:var(--purple-light);color:var(--purple)">Game Programming</span>
+            <span class="project-tag" style="background:var(--coral-light);color:var(--coral)">C#</span>
+          </div>
+          <div class="project-name">Hot Footer</div>
+          <div class="project-desc">A 2D platformer with custom sound design and a hidden secret level.</div>
+          <div class="project-link">View details <span class="arrow">→</span></div>
+        </div>
+      </div>
+
+      <!-- Card 4: Placeholder -->
+      <div class="project-card" onclick="openProject('sonare')">
+        <div class="project-thumb">
+          <img src="https://fengkailiu.github.io/PWpage/Sonare.png" alt="Sonare of the Lake">
+        </div>
+        <div class="project-info">
+          <div class="project-tags">
+            <span class="project-tag" style="background:var(--purple-light);color:var(--purple)">Three.js</span>
+            <span class="project-tag" style="background:var(--pink-light);color:var(--pink)">TextAlive API</span>
+            <span class="project-tag" style="background:var(--teal-light);color:var(--teal)">Web/JS</span>
+            <span class="project-tag" style="background:var(--amber-light);color:#BA7517">Blender</span>
+          </div>
+          <div class="project-name">Sonare of the Lake</div>
+          <div class="project-desc">Sonare of the Lake — Magical Mirai 2026 Programming Contest</div>
+          <div class="project-link">View details <span class="arrow">→</span></div>
+        </div>
+      </div>
+
+      <!-- Card 5: Placeholder -->
+      <div class="project-card" onclick="openProject('project5')">
+        <div class="project-thumb">
+          <div class="project-thumb-bg" style="background:linear-gradient(135deg,#FAEEDA,#E1F5EE)">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none"><path d="M16 48L32 16l16 32z" stroke="#EF9F27" stroke-width="2" fill="none"/><circle cx="32" cy="36" r="3" fill="#1D9E75"/></svg>
+          </div>
+        </div>
+        <div class="project-info">
+          <div class="project-tags">
+            <span class="project-tag" style="background:var(--amber-light);color:#BA7517">Coming Soon</span>
+          </div>
+          <div class="project-name">Project 5</div>
+          <div class="project-desc">Description coming soon — stay tuned for updates!</div>
+          <div class="project-link">View details <span class="arrow">→</span></div>
+        </div>
+      </div>
+
+      <!-- Card 6: Placeholder -->
+      <div class="project-card" onclick="openProject('project6')">
+        <div class="project-thumb">
+          <div class="project-thumb-bg" style="background:linear-gradient(135deg,#E1F5EE,#EEEDFE)">
+            <svg width="64" height="64" viewBox="0 0 64 64" fill="none"><rect x="14" y="14" width="36" height="36" rx="18" stroke="#1D9E75" stroke-width="2"/><path d="M28 28l4 4 8-8" stroke="#1D9E75" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" fill="none"/></svg>
+          </div>
+        </div>
+        <div class="project-info">
+          <div class="project-tags">
+            <span class="project-tag" style="background:var(--teal-light);color:var(--teal)">Coming Soon</span>
+          </div>
+          <div class="project-name">Project 6</div>
+          <div class="project-desc">Description coming soon — stay tuned for updates!</div>
+          <div class="project-link">View details <span class="arrow">→</span></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="carousel-dots" id="carousel-dots"></div>
+</section>
+
+<div class="modal-overlay" id="modal-overlay" onclick="if(event.target===this)closeProject()">
+  <div class="modal">
+    <button class="modal-close" onclick="closeProject()">✕</button>
+    <div class="modal-hero" id="modal-hero"></div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<section class="contact" id="contact">
+  <div class="contact-inner reveal">
+    <div class="contact-emoji">✌️</div>
+    <div class="section-label" style="justify-content:center">Let's connect</div>
+    <div class="section-title" style="text-align:center">Want to know more about me?<br>I'm excited to be your friend!</div>
+    <p class="section-desc" style="text-align:center;margin:12px auto 0">I'm always open to interesting conversations, collaborations, or just a friendly hello.</p>
+    <div class="contact-links">
+      <a href="mailto:liu.fengk@northeastern.edu" class="contact-link">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="M22 7l-10 7L2 7"/></svg>
+        Email
+      </a>
+      <a href="https://github.com/FengkaiLiu" class="contact-link" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.3 3.438 9.8 8.205 11.385.6.113.82-.258.82-.577 0-.285-.01-1.04-.015-2.04-3.338.724-4.042-1.61-4.042-1.61-.546-1.385-1.335-1.755-1.335-1.755-1.087-.744.084-.729.084-.729 1.205.084 1.838 1.236 1.838 1.236 1.07 1.835 2.809 1.305 3.495.998.108-.776.417-1.305.76-1.605-2.665-.3-5.466-1.332-5.466-5.93 0-1.31.465-2.38 1.235-3.22-.135-.303-.54-1.523.105-3.176 0 0 1.005-.322 3.3 1.23.96-.267 1.98-.399 3-.405 1.02.006 2.04.138 3 .405 2.28-1.552 3.285-1.23 3.285-1.23.645 1.653.24 2.873.12 3.176.765.84 1.23 1.91 1.23 3.22 0 4.61-2.805 5.625-5.475 5.92.42.36.81 1.096.81 2.22 0 1.605-.015 2.896-.015 3.286 0 .315.21.69.825.57C20.565 21.795 24 17.295 24 12 24 5.37 18.63 0 12 0z"/></svg>
+        GitHub
+      </a>
+      <a href="https://www.linkedin.com/in/fengkai-liu-a62579293" class="contact-link" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433a2.062 2.062 0 01-2.063-2.065 2.064 2.064 0 112.063 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>
+        LinkedIn
+      </a>
+      <a href="https://www.instagram.com/harrydn_kaikai/" class="contact-link" target="_blank">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 1.17.054 1.97.24 2.43.403a4.088 4.088 0 011.47.957c.453.453.777.91.957 1.47.163.46.349 1.26.404 2.43.058 1.266.07 1.646.07 4.85s-.012 3.584-.07 4.85c-.055 1.17-.241 1.97-.404 2.43a4.088 4.088 0 01-.957 1.47 4.088 4.088 0 01-1.47.957c-.46.163-1.26.349-2.43.404-1.266.058-1.646.07-4.85.07s-3.584-.012-4.85-.07c-1.17-.055-1.97-.241-2.43-.404a4.088 4.088 0 01-1.47-.957 4.088 4.088 0 01-.957-1.47c-.163-.46-.349-1.26-.404-2.43C2.175 15.584 2.163 15.204 2.163 12s.012-3.584.07-4.85c.055-1.17.241-1.97.404-2.43a4.088 4.088 0 01.957-1.47A4.088 4.088 0 015.064 2.293c.46-.163 1.26-.349 2.43-.404C8.756 1.831 9.136 1.82 12 1.82zM12 0C8.741 0 8.333.014 7.053.072 5.775.13 4.902.333 4.14.63a5.876 5.876 0 00-2.126 1.384A5.876 5.876 0 00.63 4.14C.333 4.902.13 5.775.072 7.053.014 8.333 0 8.741 0 12s.014 3.667.072 4.947c.058 1.278.261 2.151.558 2.913a5.876 5.876 0 001.384 2.126 5.876 5.876 0 002.126 1.384c.762.297 1.635.5 2.913.558C8.333 23.986 8.741 24 12 24s3.667-.014 4.947-.072c1.278-.058 2.151-.261 2.913-.558a5.876 5.876 0 002.126-1.384 5.876 5.876 0 001.384-2.126c.297-.762.5-1.635.558-2.913.058-1.28.072-1.688.072-4.947s-.014-3.667-.072-4.947c-.058-1.278-.261-2.151-.558-2.913a5.876 5.876 0 00-1.384-2.126A5.876 5.876 0 0019.86.63C19.098.333 18.225.13 16.947.072 15.667.014 15.259 0 12 0zm0 5.838a6.162 6.162 0 100 12.324 6.162 6.162 0 000-12.324zM12 16a4 4 0 110-8 4 4 0 010 8zm6.406-11.845a1.44 1.44 0 100 2.881 1.44 1.44 0 000-2.881z"/></svg>
+        Instagram
+      </a>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <p>Built with care by Fengkai Liu · © 2026 · Hosted on GitHub Pages</p>
+</footer>
+
+<script>
+var projects = {
+  vrmusicroom: {
+    gradient: 'url(https://fengkailiu.github.io/PWpage/vrmusicroom.jpg) center/cover',
+    tags: '<span class="project-tag" style="background:var(--pink-light);color:var(--pink)">Unity</span><span class="project-tag" style="background:var(--purple-light);color:var(--purple)">CS/XR</span><span class="project-tag" style="background:var(--teal-light);color:var(--teal)">Music</span><span class="project-tag" style="background:var(--amber-light);color:#BA7517">C#</span>',
+    title: 'VR Music Room',
+    subtitle: 'A Virtual Reality room that visualizes Spotify music with light effects.',
+    body: '<h3>The problem</h3><p>For my CO-OP project, I needed to develop an immersive VR application that could connect multiple APIs to create a unified experience — something I had never done before.</p><h3>The solution</h3><p>After researching both AR and VR approaches, I chose VR development for its greater creative control and immersive potential. I built a virtual room that reacts to music in real time, syncing lighting and visual effects to whatever song is playing on Spotify.</p><h3>Key features</h3><ul><li>Integrated Spotify, Last.fm, and Gemini APIs for AI-driven music analysis and real-time synchronization. Created immersive visual experiences with dynamic lighting that responds uniquely to every song.</li></ul><h3>What I learned</h3><p>This project taught me how to architect cross-platform communication between multiple services and optimize performance when handling real-time data streams across different APIs.</p>',
+    links: { github: 'https://github.com/FengkaiLiu/vrmusicroom' }
+  },
+  roomlink: {
+    gradient: 'url(https://fengkailiu.github.io/PWpage/vrchatroom.png) center/cover',
+    tags: '<span class="project-tag" style="background:var(--pink-light);color:var(--pink)">Unity</span><span class="project-tag" style="background:var(--purple-light);color:var(--purple)">Game Design</span><span class="project-tag" style="background:var(--teal-light);color:var(--teal)">VRChat</span>',
+    title: 'RoomLink-ChillZone',
+    subtitle: 'Self-Design VRChat Map from scratch with Unity and VRChatSDK.',
+    body: '<h3>The problem</h3><p>As my first time building a virtual world, I needed to learn the entire pipeline — from 3D environment design to SDK integration — essentially from zero.</p><h3>The solution</h3><p>I followed online tutorials to learn VRChat SDK within Unity, along with tools like ProBuilder, Bakery, and Magic Light Probes. I sourced and integrated various interactive prefabs to create a rich environment, then optimized the map from 300MB down to 50MB to ensure smooth performance on standalone VR headsets.</p><h3>Key features</h3><ul><li>Over 1,000 interactable furniture pieces with VRChat grab functionality. Built-in entertainment objects including a pool table, arcade machines, and more.</li></ul><h3>What I learned</h3><p>How to leverage Unity alongside third-party SDKs, prefabs, and plugins to build fully interactive virtual worlds — and the importance of aggressive optimization for mobile VR.</p>',
+    links: { demo: 'https://vrchat.com/home/world/wrld_1c519374-adfc-4072-9df4-21458d94a13e/info', github: 'https://github.com/FengkaiLiu/VRchatRoomLowpoly' }
+  },
+  hotfooter: {
+    gradient: 'url(https://fengkailiu.github.io/PWpage/hotfooter.png) center/cover',
+    tags: '<span class="project-tag" style="background:var(--pink-light);color:var(--pink)">Unity</span><span class="project-tag" style="background:var(--purple-light);color:var(--purple)">Game Programming</span><span class="project-tag" style="background:var(--coral-light);color:var(--coral)">C#</span>',
+    title: 'Hot Footer',
+    subtitle: 'A 2D platform game made for class project.',
+    body: '<h3>The problem</h3><p>This was my first collaborative game project. I needed to coordinate with teammates at different skill levels while learning new tools — all within a tight four-week deadline.</p><h3>The solution</h3><p>We organized our workflow through Discord and GitHub, dividing responsibilities clearly. I picked up the necessary Unity 2D tools through YouTube tutorials and documentation, focusing on level design and gameplay mechanics.</p><h3>Key features</h3><ul><li>2D platformer with challenging jump mechanics and multiple levels. Custom sound effects and a hidden secret level for extra replayability.</li></ul><h3>What I learned</h3><p>How to collaborate effectively with a team using version control, and how to rapidly learn and apply new tools under a tight deadline.</p>',
+    links: { github: 'https://github.com/GameDevGroup4/Unity-Project' }
+  },
+  sonare: {
+    gradient: 'url(https://fengkailiu.github.io/PWpage/Sonare.png) center/cover',
+    tags: '<span class="project-tag" style="background:var(--purple-light);color:var(--purple)">Three.js</span><span class="project-tag" style="background:var(--pink-light);color:var(--pink)">TextAlive API</span><span class="project-tag" style="background:var(--teal-light);color:var(--teal)">Web/JS</span><span class="project-tag" style="background:var(--amber-light);color:#BA7517">Blender</span>',
+    title: 'Sonare of the Lake',
+    subtitle: 'A lyric visualizer built for the Hatsune Miku "Magical Mirai 2026" Programming Contest.',
+    body: '<h3>The concept</h3><p>The player sails a Vocaloid-themed boat across a stylized lake. Lyrics emerge from the water as schools of luminous particles during verses, then coalesce in the sky during choruses — turning song structure into navigable geography.</p><h3>How it\'s built</h3><p>A Vite + Three.js (r172) web app driven by the TextAlive App API for lyric, beat, and chord timing. Cannon-es powers buoyancy and boat physics, Troika Three Text handles SDF lyric glyphs, GSAP drives the cinematic camera, and Draco compresses the terrain mesh. All six playable character boats (Miku, Rin, Len, Luka, KAITO, MEIKO) were hand-modeled in Blender from an original cube-chibi template.</p><h3>Key features</h3><ul><li>Six playable Vocaloid boats and six song-selection portals arranged around the lake.</li><li>WASD / arrow-key navigation with physics-based buoyancy and cinematic dive, chase, and sky camera modes.</li><li>Particle-based lyric visualization synced to verse / chorus structure via TextAlive.</li><li>Floating note pickups, wooden-plank obstacles, first-time control hints, and an end-of-song return circle.</li><li>Japanese / English UI toggle and locally subsetted Kiwi Maru + Caveat fonts.</li></ul><h3>Credits</h3><p>Team FBH — Fengkai Liu (lead development, 3D modeling, visual design, QA), Brian Liu (creative direction, coding, QA), and Haolin Wang (original cube-chibi Miku base mesh, used with permission). Per contest guidelines, no generative AI was used for any music, image, illustration, or text in the output.</p>',
+    links: { demo: 'https://magical-mirai-2026-sonare-of-the-la.vercel.app/', github: 'https://github.com/FengkaiLiu/magical-mirai-2026-sonare-of-the-lake' }
+  },
+  project5: {
+    gradient: 'linear-gradient(135deg,#FAEEDA,#E1F5EE)',
+    tags: '<span class="project-tag" style="background:var(--amber-light);color:#BA7517">Coming Soon</span>',
+    title: 'Project 5',
+    subtitle: 'Coming soon — stay tuned!',
+    body: '<p>Details will be added soon.</p>',
+    links: {}
+  },
+  project6: {
+    gradient: 'linear-gradient(135deg,#E1F5EE,#EEEDFE)',
+    tags: '<span class="project-tag" style="background:var(--teal-light);color:var(--teal)">Coming Soon</span>',
+    title: 'Project 6',
+    subtitle: 'Coming soon — stay tuned!',
+    body: '<p>Details will be added soon.</p>',
+    links: {}
+  }
+};
+
+function openProject(id) {
+  var p = projects[id]; if (!p) return;
+  var overlay = document.getElementById('modal-overlay');
+  document.getElementById('modal-hero').style.background = p.gradient;
+  document.getElementById('modal-body').innerHTML = '<div class="project-tags">' + p.tags + '</div>'
+    + '<h2>' + p.title + '</h2>'
+    + '<p class="subtitle">' + p.subtitle + '</p>'
+    + p.body
+    + '<div class="modal-links">'
+    + (p.links.demo ? '<a href="' + p.links.demo + '" target="_blank" class="ml-primary">Live Demo ↗</a>' : '')
+    + (p.links.github ? '<a href="' + p.links.github + '" target="_blank" class="ml-secondary">Source Code ↗</a>' : '')
+    + '</div>';
+  document.body.style.overflow = 'hidden';
+  overlay.style.display = 'flex';
+  requestAnimationFrame(function(){ overlay.classList.add('open'); });
+}
+function closeProject() {
+  var overlay = document.getElementById('modal-overlay');
+  overlay.classList.remove('open');
+  document.body.style.overflow = '';
+  setTimeout(function(){ overlay.style.display = 'none'; }, 300);
+}
+document.addEventListener('keydown', function(e){ if(e.key==='Escape') closeProject(); });
+
+// === Carousel ===
+var currentPage = 0;
+var cardsPerPage = 3;
+var track = document.getElementById('carousel-track');
+var cards = track.querySelectorAll('.project-card');
+var totalCards = cards.length;
+
+function getCardsPerPage() {
+  if (window.innerWidth <= 768) return 1;
+  if (window.innerWidth <= 1024) return 2;
+  return 3;
+}
+function getTotalPages() { return Math.ceil(totalCards / cardsPerPage); }
+
+function updateCarousel() {
+  cardsPerPage = getCardsPerPage();
+  var totalPages = getTotalPages();
+  if (currentPage >= totalPages) currentPage = totalPages - 1;
+  if (currentPage < 0) currentPage = 0;
+
+  var card = cards[0];
+  var gap = 24;
+  var cardWidth = card.offsetWidth + gap;
+  var offset = currentPage * cardsPerPage * cardWidth;
+  track.style.transform = 'translateX(-' + offset + 'px)';
+
+  document.getElementById('prev-btn').disabled = currentPage === 0;
+  document.getElementById('next-btn').disabled = currentPage >= totalPages - 1;
+  document.getElementById('carousel-counter').textContent = (currentPage + 1) + ' / ' + totalPages;
+
+  var dotsEl = document.getElementById('carousel-dots');
+  dotsEl.innerHTML = '';
+  for (var i = 0; i < totalPages; i++) {
+    var dot = document.createElement('button');
+    dot.className = 'carousel-dot' + (i === currentPage ? ' active' : '');
+    dot.setAttribute('data-page', i);
+    dot.onclick = function() { currentPage = parseInt(this.getAttribute('data-page')); updateCarousel(); };
+    dotsEl.appendChild(dot);
+  }
+}
+
+function slideCarousel(dir) {
+  var totalPages = getTotalPages();
+  currentPage += dir;
+  if (currentPage < 0) currentPage = 0;
+  if (currentPage >= totalPages) currentPage = totalPages - 1;
+  updateCarousel();
+}
+
+window.addEventListener('resize', function() { updateCarousel(); });
+updateCarousel();
+
+// Scroll reveal
+var observer = new IntersectionObserver(function(entries){
+  entries.forEach(function(e){ if(e.isIntersecting) e.target.classList.add('visible'); });
+}, { threshold: 0.1, rootMargin: '0px 0px -40px 0px' });
+document.querySelectorAll('.reveal').forEach(function(el){ observer.observe(el); });
+
+var lastScroll = 0;
+window.addEventListener('scroll', function(){
+  var nav = document.querySelector('nav');
+  var s = window.scrollY;
+  nav.style.transform = (s > lastScroll && s > 100) ? 'translateY(-100%)' : 'translateY(0)';
+  lastScroll = s;
+});
+
+document.querySelectorAll('a[href^="#"]').forEach(function(a){
+  a.addEventListener('click', function(e){
+    e.preventDefault();
+    var t = document.querySelector(this.getAttribute('href'));
+    if(t) t.scrollIntoView({ behavior:'smooth', block:'start' });
+  });
+});
+</script>
+</body>
+</html>
