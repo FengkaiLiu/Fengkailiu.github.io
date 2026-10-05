@@ -148,7 +148,7 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   lid.rotation.x = -0.32;
   const lidBody = box(0.9, 0.6, 0.025, shell, 0, 0.3, 0, 0.015);
   const screenMat = new MeshStandardMaterial({ color: '#000000', emissive: '#ffffff', emissiveMap: screen.texture, emissiveIntensity: 0.05 });
-  addGlow(screenMat, 1.25);
+  addGlow(screenMat, 0.85); // kept under the bloom threshold so the code stays crisp
   const display = new Mesh(new PlaneGeometry(0.84, 0.53), screenMat);
   display.position.set(0, 0.3, 0.014);
   lid.add(lidBody, display);

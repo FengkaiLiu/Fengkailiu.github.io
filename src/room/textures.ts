@@ -11,7 +11,7 @@ function canvas(w: number, h: number) {
 function toTexture(c: HTMLCanvasElement) {
   const t = new CanvasTexture(c);
   t.colorSpace = SRGBColorSpace;
-  t.anisotropy = 4;
+  t.anisotropy = 8;
   return t;
 }
 

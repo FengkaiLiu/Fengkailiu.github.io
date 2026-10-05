@@ -35,7 +35,7 @@ export interface Room {
 }
 
 const MAX_DPR = 1.75;
-const MIN_DPR = 0.6;
+const MIN_DPR = 0.8;
 const LIGHTS_ON_MS = 2400;
 
 // Film grain + vignette: the lofi finish.
@@ -212,11 +212,32 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   // room smooth on weak laptops and sharp on strong ones.
   const fpsMeter = import.meta.env.DEV && new URLSearchParams(location.search).has('fps') ? createFpsMeter() : null;
   const gov = { frames: 0, time: 0, startAt: 0, cooldownUntil: 0 };
-  const setDpr = (value: number) => {
-    dpr = Math.min(Math.max(value, MIN_DPR), maxDpr);
-    renderer.setPixelRatio(dpr);
-    composer.setPixelRatio(dpr);
-    resize();
+  // Cheapest visual losses first; resolution (which blurs text) drops last.
+  const tiers = [
+    { dpr: maxDpr, msaa: 4, bloom: true },
+    { dpr: Math.min(maxDpr, 1.25), msaa: 4, bloom: true },
+    { dpr: Math.min(maxDpr, 1.25), msaa: 0, bloom: true },
+    { dpr: Math.min(maxDpr, 1.0), msaa: 0, bloom: true },
+    { dpr: Math.min(maxDpr, 1.0), msaa: 0, bloom: false },
+    { dpr: MIN_DPR, msaa: 0, bloom: false },
+  ];
+  let tier = 0;
+  const applyTier = (next: number) => {
+    tier = next;
+    const t = tiers[tier];
+    for (const rt of [composer.renderTarget1, composer.renderTarget2]) {
+      if (rt.samples !== t.msaa) {
+        rt.samples = t.msaa;
+        rt.dispose(); // re-created with the new sample count on next use
+      }
+    }
+    bloom.enabled = t.bloom;
+    if (Math.abs(t.dpr - dpr) > 0.01) {
+      dpr = t.dpr;
+      renderer.setPixelRatio(dpr);
+      composer.setPixelRatio(dpr);
+      resize();
+    }
   };
   const governQuality = (now: number, dt: number) => {
     if (!gov.startAt) gov.startAt = now + 2500; // ignore the shader-compile hitch at startup
@@ -227,15 +248,14 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     const fps = gov.frames / gov.time;
     gov.frames = 0;
     gov.time = 0;
-    if (fps < 45) {
-      if (dpr > MIN_DPR + 0.01) setDpr(dpr * 0.8);
-      else if (bloom.enabled) bloom.enabled = false;
+    if (fps < 45 && tier < tiers.length - 1) {
+      applyTier(tier + 1);
       gov.cooldownUntil = now + 8000;
-    } else if (fps > 58 && now > gov.cooldownUntil) {
-      if (!bloom.enabled) bloom.enabled = true;
-      else if (dpr < maxDpr - 0.01) setDpr(dpr * 1.12);
+    } else if (fps > 58 && now > gov.cooldownUntil && tier > 0) {
+      applyTier(tier - 1);
+      gov.cooldownUntil = now + 4000;
     }
-    fpsMeter?.update(fps, dpr, bloom.enabled);
+    fpsMeter?.update(fps, dpr, bloom.enabled, tier);
   };
 
   const loop = (now: number) => {
@@ -329,8 +349,8 @@ function createFpsMeter() {
     'position:fixed;left:8px;bottom:8px;z-index:999;padding:4px 8px;border-radius:6px;background:rgba(0,0,0,.6);color:#ffd59e;font:12px/1.4 monospace;pointer-events:none';
   document.body.append(el);
   return {
-    update(fps: number, dpr: number, bloom: boolean) {
-      el.textContent = `${fps.toFixed(0)} fps · dpr ${dpr.toFixed(2)} · bloom ${bloom ? 'on' : 'off'}`;
+    update(fps: number, dpr: number, bloom: boolean, tier: number) {
+      el.textContent = `${fps.toFixed(0)} fps · tier ${tier} · dpr ${dpr.toFixed(2)} · bloom ${bloom ? 'on' : 'off'}`;
     },
   };
 }
