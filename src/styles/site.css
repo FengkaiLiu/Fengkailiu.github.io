@@ -1,0 +1,30 @@
+/* Page-level layout for the main site. Grows floor by floor. */
+
+.hero {
+  min-height: 100svh;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-4);
+  padding-block: var(--space-9);
+}
+
+.hero__name {
+  font-size: var(--text-hero);
+  font-weight: 800;
+  letter-spacing: -0.045em;
+  line-height: 0.95;
+}
+
+.hero__tagline {
+  max-width: 34ch;
+  font-size: clamp(1.1rem, 1.6vw, 1.35rem);
+  opacity: 0.92;
+}
+
+.stubs {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: var(--space-5);
+  padding-block: var(--space-8) var(--space-9);
+}

@@ -1,0 +1,83 @@
+/* Liquid Aero design tokens. Every color, size, and curve in the site comes from here. */
+
+:root {
+  /* Sky */
+  --sky-900: #04356e;
+  --sky-700: #0a6fd6;
+  --sky-500: #2a9df4;
+  --sky-300: #7fd0ff;
+  --sky-100: #e2f5ff;
+
+  /* Water */
+  --aqua-700: #0b7fa6;
+  --aqua-500: #18c6e6;
+  --aqua-300: #86ecf7;
+
+  /* Leaf (the Aero green) */
+  --leaf-700: #2e9a2a;
+  --leaf-500: #5cd33c;
+  --leaf-300: #b4f07a;
+
+  /* Sun + ink */
+  --sun: #fff4cf;
+  --ink-900: #05223a;
+  --ink-700: #23475f;
+  --ink-500: #557188;
+  --white: #ffffff;
+
+  /* Glass */
+  --glass-top: rgba(255, 255, 255, 0.34);
+  --glass-bottom: rgba(255, 255, 255, 0.1);
+  --glass-dark-top: rgba(6, 40, 72, 0.5);
+  --glass-dark-bottom: rgba(4, 28, 52, 0.3);
+  --glass-border: rgba(255, 255, 255, 0.5);
+  --glass-blur: 22px;
+  --glass-shadow: 0 18px 50px -12px rgba(4, 53, 110, 0.35);
+
+  /* Shape */
+  --radius-sm: 12px;
+  --radius: 22px;
+  --radius-lg: 34px;
+  --radius-pill: 999px;
+
+  /* Type */
+  --font-display: 'Manrope Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-body: 'Figtree Variable', 'Segoe UI', system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', monospace;
+
+  --text-hero: clamp(3.2rem, 9vw, 8.5rem);
+  --text-h1: clamp(2.4rem, 5.5vw, 4.75rem);
+  --text-h2: clamp(1.7rem, 3.4vw, 2.75rem);
+  --text-h3: clamp(1.2rem, 1.8vw, 1.5rem);
+  --text-body: 1.0625rem;
+  --text-small: 0.875rem;
+  --text-micro: 0.75rem;
+
+  /* Space */
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 72px;
+  --space-9: 120px;
+  --gutter: clamp(16px, 5vw, 64px);
+  --content-max: 1200px;
+
+  /* Motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --dur-fast: 160ms;
+  --dur: 320ms;
+  --dur-slow: 700ms;
+
+  /* Layers */
+  --z-bg: -1;
+  --z-content: 1;
+  --z-player: 50;
+  --z-nav: 60;
+  --z-sheet: 80;
+  --z-gate: 100;
+}

@@ -1,0 +1,56 @@
+.sg {
+  display: grid;
+  gap: var(--space-8);
+  padding-block: var(--space-8);
+}
+.sg-head {
+  display: grid;
+  gap: var(--space-3);
+}
+.sg-title {
+  font-size: var(--text-h3);
+  margin-bottom: var(--space-4);
+}
+.sg-swatches {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: var(--space-3);
+}
+.sg-swatch {
+  display: grid;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+}
+.sg-swatch i {
+  height: 64px;
+  border-radius: var(--radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+}
+.sg-type {
+  display: grid;
+  gap: var(--space-4);
+}
+.sg-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: var(--space-5);
+}
+.sg-grid .glass {
+  display: grid;
+  gap: var(--space-2);
+  align-content: start;
+}
+.sg-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-4);
+}
+code {
+  font-family: var(--font-mono);
+  font-size: 0.9em;
+  padding: 1px 6px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.18);
+}

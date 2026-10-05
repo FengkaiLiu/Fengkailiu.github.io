@@ -1,0 +1,180 @@
+/* Glass surfaces, glossy buttons, chips. The Aero look, rebuilt with modern CSS. */
+
+/* ---------- Glass panel ---------- */
+.glass {
+  --mx: 50%;
+  --my: 0%;
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border-radius: var(--radius);
+  border: 1px solid var(--glass-border);
+  background: linear-gradient(180deg, var(--glass-top), var(--glass-bottom));
+  backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  -webkit-backdrop-filter: blur(var(--glass-blur)) saturate(180%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.75),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.15),
+    var(--glass-shadow);
+  /* Keeps white text legible when the panel sits over bright sky. */
+  text-shadow: 0 1px 14px rgba(4, 53, 110, 0.45);
+}
+
+/* Upper gloss band: the classic Aero highlight, softened into a curve. */
+.glass::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0 0 auto 0;
+  height: 55%;
+  border-radius: inherit;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.38), rgba(255, 255, 255, 0) 100%);
+  mask: radial-gradient(140% 100% at 50% 0%, #000 60%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Specular sheen that follows the pointer (see src/ui/sheen.ts). */
+.glass::after {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(420px circle at var(--mx) var(--my), rgba(255, 255, 255, 0.28), transparent 45%);
+  opacity: 0;
+  transition: opacity var(--dur) var(--ease-out);
+  pointer-events: none;
+}
+.glass:hover::after {
+  opacity: 1;
+}
+
+.glass--dark {
+  border-color: rgba(160, 225, 255, 0.28);
+  background: linear-gradient(180deg, var(--glass-dark-top), var(--glass-dark-bottom));
+  box-shadow:
+    inset 0 1px 0 rgba(180, 235, 255, 0.35),
+    var(--glass-shadow);
+}
+.glass--dark::before {
+  background: linear-gradient(180deg, rgba(180, 235, 255, 0.16), transparent);
+}
+
+.glass--lg {
+  border-radius: var(--radius-lg);
+}
+
+.glass--pad {
+  padding: clamp(var(--space-5), 3vw, var(--space-7));
+}
+
+/* ---------- Buttons ---------- */
+.btn {
+  --btn-a: var(--aqua-500);
+  --btn-b: var(--sky-700);
+  --btn-glow: rgba(24, 198, 230, 0.55);
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0.85em 1.6em;
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  border-radius: var(--radius-pill);
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+  color: var(--white);
+  text-decoration: none;
+  text-shadow: 0 1px 2px rgba(0, 40, 80, 0.35);
+  cursor: pointer;
+  background: linear-gradient(180deg, var(--btn-a), var(--btn-b));
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.8),
+    inset 0 -6px 14px -6px rgba(255, 255, 255, 0.45),
+    0 8px 24px -8px var(--btn-glow);
+  transition:
+    transform var(--dur) var(--ease-spring),
+    box-shadow var(--dur) var(--ease-out),
+    filter var(--dur) var(--ease-out);
+}
+
+/* Glossy top half */
+.btn::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 1px 6% 50% 6%;
+  border-radius: var(--radius-pill) var(--radius-pill) 40% 40% / var(--radius-pill) var(--radius-pill) 100% 100%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.75), rgba(255, 255, 255, 0.08));
+  pointer-events: none;
+}
+
+.btn:hover {
+  transform: translateY(-2px) scale(1.02);
+  filter: brightness(1.08) saturate(1.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    inset 0 -6px 14px -6px rgba(255, 255, 255, 0.55),
+    0 14px 34px -8px var(--btn-glow);
+}
+.btn:active {
+  transform: translateY(1px) scale(0.98);
+  filter: brightness(0.96);
+}
+
+.btn--leaf {
+  --btn-a: var(--leaf-300);
+  --btn-b: var(--leaf-700);
+  --btn-glow: rgba(92, 211, 60, 0.55);
+}
+
+.btn--glass {
+  --btn-glow: rgba(255, 255, 255, 0.25);
+  text-shadow: 0 1px 8px rgba(4, 53, 110, 0.6);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.3), rgba(255, 255, 255, 0.08));
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+}
+
+.btn--icon {
+  padding: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  justify-content: center;
+}
+.btn--icon svg {
+  width: 1.1rem;
+  height: 1.1rem;
+}
+
+/* ---------- Chips ---------- */
+.chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 0.3em 0.85em;
+  border-radius: var(--radius-pill);
+  border: 1px solid rgba(255, 255, 255, 0.45);
+  background: rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  white-space: nowrap;
+}
+.chip::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--chip-dot, var(--aqua-300));
+  box-shadow: 0 0 8px var(--chip-dot, var(--aqua-300));
+}
+.chip--code { --chip-dot: var(--sky-300); }
+.chip--sound { --chip-dot: var(--leaf-300); }
+.chip--visual { --chip-dot: var(--sun); }

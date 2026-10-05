@@ -1,0 +1,57 @@
+/* Placeholder boxes: loud on purpose, so nothing unfinished slips into launch. */
+
+.ph {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: var(--space-3);
+  min-height: 180px;
+  padding: var(--space-5);
+  border-radius: var(--radius);
+  border: 2px dashed rgba(255, 255, 255, 0.7);
+  color: var(--white);
+  background:
+    repeating-linear-gradient(-45deg, rgba(255, 255, 255, 0.07) 0 14.14px, rgba(255, 255, 255, 0) 14.14px 28.28px),
+    rgba(4, 53, 110, 0.28);
+  background-size: 40px 40px, auto;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  animation: ph-drift 3s linear infinite;
+}
+
+.ph[data-ratio] {
+  min-height: 0;
+  aspect-ratio: var(--ph-ratio);
+}
+
+.ph__tag {
+  align-self: flex-start;
+  padding: 2px 10px;
+  border-radius: var(--radius-pill);
+  background: var(--sun);
+  color: var(--ink-900);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.12em;
+}
+
+.ph__label {
+  font-family: var(--font-display);
+  font-weight: 700;
+  font-size: var(--text-h3);
+}
+
+.ph__needs {
+  margin: 0;
+  padding-left: 1.1em;
+  font-size: var(--text-small);
+  opacity: 0.9;
+}
+
+@keyframes ph-drift {
+  to {
+    background-position: 40px 0, 0 0;
+  }
+}
