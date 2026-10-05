@@ -221,3 +221,20 @@
 .chip--code { --chip-dot: var(--sky-300); }
 .chip--sound { --chip-dot: var(--leaf-300); }
 .chip--visual { --chip-dot: var(--sun); }
+
+/* ---------- Effect budget ----------
+   Glass over the live 3D canvas is re-blurred every frame. When the room drops to a
+   lower quality tier (src/room/room.ts sets data-fx), the glass gets cheaper too. */
+html[data-fx='lite'] .liquid,
+html[data-fx='lite'] .glass,
+html[data-fx='lite'] .ph {
+  backdrop-filter: blur(8px) !important;
+  -webkit-backdrop-filter: blur(8px) !important;
+}
+html[data-fx='min'] .liquid,
+html[data-fx='min'] .glass,
+html[data-fx='min'] .ph {
+  backdrop-filter: none !important;
+  -webkit-backdrop-filter: none !important;
+  background-color: rgba(20, 15, 40, 0.82);
+}

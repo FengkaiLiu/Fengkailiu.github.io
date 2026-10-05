@@ -66,13 +66,15 @@ export interface RoomProps {
   setRain(on: boolean): void;
   /** Music state: moves the tonearm and spins the record. */
   setPlaying(on: boolean): void;
-  tick(now: number, dt: number, audio: number[]): void;
+  /** `eye` is the camera position: the laptop only types while it is close enough to read. */
+  tick(now: number, dt: number, audio: number[], eye: Vector3): void;
   /** Named spots the camera can visit. */
   anchors: Record<string, Vector3>;
   ready: Promise<void>;
 }
 
 // Tonearm yaw (radians): resting beside the platter, and with the needle on the outer grooves.
+const LAPTOP = new Vector3(0.8, 1.8, -3.4);
 const ARM_PARKED = Math.PI / 2;
 const ARM_PLAYING = 0.75;
 
@@ -463,6 +465,7 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   let rainTarget = 1;
   let playing = false;
   let spin = 0;
+  let screenDrawn = false;
   return {
     root,
     anchors,
@@ -482,8 +485,12 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
       }
       dustMat.opacity = level * 0.55;
     },
-    tick(now, dt, audio) {
-      screen.tick(now);
+    tick(now, dt, audio, eye) {
+      // Each typed character re-uploads a 1600x1000 texture; skip it when nobody can read it.
+      if (!screenDrawn || eye.distanceToSquared(LAPTOP) < 3.2 * 3.2) {
+        screen.tick(now);
+        screenDrawn = true;
+      }
       win.uniforms.uTime.value = now / 1000;
       rain += (rainTarget - rain) * (1 - Math.exp(-dt * 0.8));
       win.uniforms.uRain.value = rain;

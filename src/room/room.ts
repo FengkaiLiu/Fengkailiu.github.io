@@ -67,8 +67,24 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   } catch {
     return null;
   }
-  const maxDpr = Math.min(window.devicePixelRatio, MAX_DPR);
-  let dpr = maxDpr;
+  // Quality tiers, cheapest visual losses first. Each caps the total pixels rendered, so a
+  // big window renders at a lower density instead of choking the GPU; small windows stay crisp.
+  // fx: how fancy the HTML glass over the canvas may be (it re-blurs every frame).
+  const tiers = [
+    { megapixels: 3.2, msaa: 4, bloom: true, fx: 'full' },
+    { megapixels: 2.2, msaa: 4, bloom: true, fx: 'full' },
+    { megapixels: 1.6, msaa: 0, bloom: true, fx: 'lite' },
+    { megapixels: 1.15, msaa: 0, bloom: true, fx: 'lite' },
+    { megapixels: 0.85, msaa: 0, bloom: false, fx: 'min' },
+    { megapixels: 0.6, msaa: 0, bloom: false, fx: 'min' },
+  ] as const;
+  let tier = 0;
+  const dprFor = (t: number) => {
+    const cssPixels = window.innerWidth * window.innerHeight;
+    const budget = Math.sqrt((tiers[t].megapixels * 1e6) / cssPixels);
+    return Math.max(Math.min(window.devicePixelRatio, MAX_DPR, budget), MIN_DPR);
+  };
+  let dpr = dprFor(tier);
   renderer.setPixelRatio(dpr);
   renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
@@ -125,6 +141,9 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   const resize = () => {
     const w = window.innerWidth;
     const h = window.innerHeight;
+    dpr = dprFor(tier);
+    renderer.setPixelRatio(dpr);
+    composer.setPixelRatio(dpr);
     renderer.setSize(w, h);
     composer.setSize(w, h);
     bloom.resolution.set(w / 2, h / 2);
@@ -134,7 +153,11 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     camera.updateProjectionMatrix();
   };
   resize();
-  window.addEventListener('resize', resize);
+  window.addEventListener('resize', () => {
+    // A new window size means a new pixel count: tiers that failed before may fit now.
+    failed.clear();
+    resize();
+  });
 
   // ---------- Scroll-driven camera ----------
   const vec = (v: [number, number, number]) => new Vector3(...v);
@@ -208,21 +231,12 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   const up = new Vector3();
 
   // ---------- Adaptive quality ----------
-  // Every couple of seconds, measure the frame rate. Too slow: render fewer pixels,
-  // and as a last resort drop bloom. Lots of headroom: step back up. This keeps the
-  // room smooth on weak laptops and sharp on strong ones.
+  // Measure the frame rate every second. Too slow: drop a tier (two if far too slow).
+  // A tier that failed is never retried until the window is resized, so quality settles
+  // instead of bouncing up and down (each switch reallocates buffers and hitches).
   const fpsMeter = import.meta.env.DEV && new URLSearchParams(location.search).has('fps') ? createFpsMeter() : null;
-  const gov = { frames: 0, time: 0, startAt: 0, cooldownUntil: 0 };
-  // Cheapest visual losses first; resolution (which blurs text) drops last.
-  const tiers = [
-    { dpr: maxDpr, msaa: 4, bloom: true },
-    { dpr: Math.min(maxDpr, 1.25), msaa: 4, bloom: true },
-    { dpr: Math.min(maxDpr, 1.25), msaa: 0, bloom: true },
-    { dpr: Math.min(maxDpr, 1.0), msaa: 0, bloom: true },
-    { dpr: Math.min(maxDpr, 1.0), msaa: 0, bloom: false },
-    { dpr: MIN_DPR, msaa: 0, bloom: false },
-  ];
-  let tier = 0;
+  const gov = { frames: 0, time: 0, startAt: 0, goodStreak: 0 };
+  const failed = new Set<number>();
   const applyTier = (next: number) => {
     tier = next;
     const t = tiers[tier];
@@ -233,28 +247,32 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
       }
     }
     bloom.enabled = t.bloom;
-    if (Math.abs(t.dpr - dpr) > 0.01) {
-      dpr = t.dpr;
-      renderer.setPixelRatio(dpr);
-      composer.setPixelRatio(dpr);
-      resize();
-    }
+    document.documentElement.dataset.fx = t.fx;
+    resize();
   };
+  document.documentElement.dataset.fx = tiers[tier].fx;
   const governQuality = (now: number, dt: number) => {
-    if (!gov.startAt) gov.startAt = now + 2500; // ignore the shader-compile hitch at startup
-    if (now < gov.startAt) return;
+    if (!gov.startAt) gov.startAt = now + 2000; // ignore the shader-compile hitch at startup
+    if (now < gov.startAt || document.hidden) return;
     gov.frames++;
     gov.time += dt;
-    if (gov.time < 2) return;
+    if (gov.time < 1) return;
     const fps = gov.frames / gov.time;
     gov.frames = 0;
     gov.time = 0;
-    if (fps < 45 && tier < tiers.length - 1) {
-      applyTier(tier + 1);
-      gov.cooldownUntil = now + 8000;
-    } else if (fps > 58 && now > gov.cooldownUntil && tier > 0) {
-      applyTier(tier - 1);
-      gov.cooldownUntil = now + 4000;
+    if (fps < 50 && tier < tiers.length - 1) {
+      failed.add(tier);
+      applyTier(Math.min(tier + (fps < 32 ? 2 : 1), tiers.length - 1));
+      gov.goodStreak = 0;
+    } else if (fps > 57) {
+      // Climb only after sustained headroom, and never back into a tier that failed.
+      gov.goodStreak++;
+      if (gov.goodStreak >= 5 && tier > 0 && !failed.has(tier - 1)) {
+        applyTier(tier - 1);
+        gov.goodStreak = 0;
+      }
+    } else {
+      gov.goodStreak = 0;
     }
     fpsMeter?.update(fps, dpr, bloom.enabled, tier);
   };
@@ -296,7 +314,7 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     if (w > 820) camera.setViewOffset(w, h, -frame * w, 0, w, h);
     else camera.setViewOffset(w, h, 0, h * 0.14, w, h);
 
-    room.tick(now, dt, audio);
+    room.tick(now, dt, audio, camera.position);
     grain.uniforms.uTime.value = now / 1000;
     composer.render(dt);
     governQuality(now, dt);
