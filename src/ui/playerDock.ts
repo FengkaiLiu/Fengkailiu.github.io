@@ -5,7 +5,7 @@ import type { Player, PlayerState } from '../audio/player';
 
 const BARS = 18;
 
-export function mountPlayerDock(player: Player, onBands: (b: Bands, playing: boolean) => void) {
+export function mountPlayerDock(player: Player, onBands: (b: Bands, playing: boolean) => void, opts: { canSkip: boolean }) {
   const dock = document.createElement('div');
   dock.className = 'player liquid liquid--pill';
   dock.dataset.liquidBezel = '18';
@@ -34,11 +34,14 @@ export function mountPlayerDock(player: Player, onBands: (b: Bands, playing: boo
   toggleBtn.addEventListener('click', () => void player.toggle());
   $('[data-prev]').addEventListener('click', () => void player.prev());
   $('[data-next]').addEventListener('click', () => void player.next());
+  // Skip buttons only make sense once there is more than one track to skip to.
+  if (!opts.canSkip) dock.querySelectorAll<HTMLElement>('[data-prev], [data-next]').forEach((b) => (b.hidden = true));
 
   const render = (s: PlayerState) => {
     dock.classList.toggle('is-playing', s.playing);
     $('[data-title]').textContent = s.track.title;
-    $('[data-artist]').textContent = s.track.artist;
+    $('[data-artist]').textContent = s.guest ? `${s.track.artist} · Liner notes preview` : s.track.artist;
+    dock.classList.toggle('is-guest', Boolean(s.guest));
     $('[data-time]').textContent = s.time === null ? (s.playing ? 'live' : '') : `${fmt(s.time)}${s.duration ? ` / ${fmt(s.duration)}` : ''}`;
     toggleBtn.innerHTML = icon(s.playing ? 'pause' : 'play');
     toggleBtn.setAttribute('aria-label', s.playing ? 'Pause' : 'Play');

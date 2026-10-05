@@ -144,3 +144,7 @@
     flex: 1;
   }
 }
+
+.player__btn[hidden] {
+  display: none;
+}

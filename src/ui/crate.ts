@@ -1,232 +1,171 @@
-// "Liner notes": three recommended songs. The chapter card shows a stack of sleeves; opening
-// the crate shows each pick's cover, note and credits, and plays it in a Spotify embed. The
-// record player in the room follows along: the label shows the cover, the arm drops on play.
-import { records, spotifyUri, type RecordPick } from '../content/records';
+// "Liner notes": three recommended songs inside the chapter card. The card expands in place
+// into an album stack; arrows flip between sleeves. "Spin it" plays the song's official 30 s
+// preview through the room's turntable, so the arm drops, the label shows the cover, and the
+// speakers react, then the room goes quiet again.
+import { records, resolvePick, type ResolvedPick } from '../content/records';
+import type { Player } from '../audio/player';
 import { placeholder } from './placeholder';
 
 export interface CrateHooks {
-  /** A pick was selected (cover image loaded, or null while there is none) or the crate closed. */
-  onRecord(pick: RecordPick | null, cover: HTMLImageElement | null): void;
-  /** Spotify started or stopped playing. */
-  onPlaying(playing: boolean): void;
+  /** Show this cover on the turntable label, or null to restore the house label. */
+  setLabel(tint: string, cover: HTMLImageElement | null): void;
+  clearLabel(): void;
 }
 
-interface SpotifyController {
-  loadUri(uri: string): void;
-  play(): void;
-  pause(): void;
-  addListener(event: 'playback_update', fn: (e: { data: { isPaused: boolean } }) => void): void;
-}
-interface SpotifyApi {
-  createController(el: HTMLElement, opts: { uri: string; width: string; height: number }, cb: (c: SpotifyController) => void): void;
-}
-declare global {
-  interface Window {
-    onSpotifyIframeApiReady?: (api: SpotifyApi) => void;
-  }
-}
-
-let apiPromise: Promise<SpotifyApi> | null = null;
-function spotifyApi() {
-  apiPromise ??= new Promise((resolve) => {
-    window.onSpotifyIframeApiReady = resolve;
-    const s = document.createElement('script');
-    s.src = 'https://open.spotify.com/embed/iframe-api/v1';
-    s.async = true;
-    document.head.append(s);
-  });
-  return apiPromise;
-}
-
-// Cover art straight from Spotify (oEmbed), unless the pick sets its own image.
-const coverCache = new Map<string, Promise<HTMLImageElement | null>>();
-function coverFor(pick: RecordPick) {
-  if (!coverCache.has(pick.id)) {
-    coverCache.set(
-      pick.id,
-      (async () => {
-        let url = pick.cover;
-        if (!url && pick.spotify) {
-          try {
-            const res = await fetch(`https://open.spotify.com/oembed?url=${encodeURIComponent(pick.spotify)}`);
-            url = (await res.json()).thumbnail_url;
-          } catch {
-            return null;
-          }
-        }
-        if (!url) return null;
-        return new Promise<HTMLImageElement | null>((resolve) => {
-          const img = new Image();
-          img.crossOrigin = 'anonymous';
-          img.onload = () => resolve(img);
-          img.onerror = () => resolve(null);
-          img.src = url!;
-        });
-      })(),
-    );
-  }
-  return coverCache.get(pick.id)!;
-}
-
+const SPIN_SECONDS = 30;
 const esc = (s: string) => s.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!);
 
-export function mountCrate(slot: HTMLElement, hooks: CrateHooks) {
-  // ---------- Collapsed: a fanned stack of sleeves on the chapter card ----------
-  slot.innerHTML = `
-    <div class="sleeves" aria-hidden="true">
-      ${records.map((r, i) => `<span class="sleeve" style="--tint:${r.tint};--i:${i}" data-sleeve="${r.id}"></span>`).join('')}
-    </div>
-    <button class="btn" type="button" data-open-crate>Open the crate</button>
-  `;
-  const opener = slot.querySelector<HTMLButtonElement>('[data-open-crate]')!;
+const images = new Map<string, Promise<HTMLImageElement | null>>();
+const loadImage = (url: string) => {
+  if (!images.has(url)) {
+    images.set(
+      url,
+      new Promise((resolve) => {
+        const img = new Image();
+        img.crossOrigin = 'anonymous'; // Apple's artwork CDN allows it; needed to draw it onto the 3D label
+        img.onload = () => resolve(img);
+        img.onerror = () => resolve(null);
+        img.src = url;
+      }),
+    );
+  }
+  return images.get(url)!;
+};
 
-  // ---------- Expanded sheet ----------
-  const sheet = document.createElement('div');
-  sheet.className = 'crate';
-  sheet.hidden = true;
-  sheet.setAttribute('role', 'dialog');
-  sheet.setAttribute('aria-modal', 'true');
-  sheet.setAttribute('aria-label', 'Liner notes: songs I recommend');
-  sheet.innerHTML = `
-    <div class="crate__scrim" data-close></div>
-    <div class="crate__panel liquid" data-liquid-bezel="26">
-      <header class="crate__head">
-        <span class="chapter__track">LINER NOTES</span>
-        <button class="crate__close" type="button" data-close aria-label="Close">×</button>
-      </header>
-      <div class="crate__shelf" role="tablist" aria-label="Records">
-        ${records
-          .map(
-            (r) => `
-          <button class="crate__pick" type="button" role="tab" data-pick="${r.id}" style="--tint:${r.tint}">
-            <span class="crate__thumb" data-thumb></span>
-            <span class="crate__pick-text"><b>${esc(r.title)}</b><span>${esc(r.artist)}</span></span>
-          </button>`,
-          )
-          .join('')}
+export function mountCrate(slot: HTMLElement, player: Player, hooks: CrateHooks) {
+  slot.innerHTML = `
+    <div class="crate">
+      <div class="sleeves" aria-hidden="true">
+        ${records.map((r, i) => `<span class="sleeve" style="--tint:${r.tint};--i:${i}" data-sleeve="${r.id}"></span>`).join('')}
       </div>
-      <div class="crate__detail" role="tabpanel">
-        <div class="crate__cover" data-cover></div>
-        <div class="crate__info">
-          <h3 class="crate__title" data-title></h3>
-          <p class="crate__meta" data-meta></p>
-          <p class="crate__note" data-note></p>
-          <ul class="crate__credits" data-credits></ul>
-          <div class="crate__embed" data-embed><div data-embed-host></div></div>
-          <div class="crate__missing" data-missing></div>
-          <a class="crate__link" data-link target="_blank" rel="noopener">Open in Spotify ↗</a>
+      <button class="btn crate__toggle" type="button" aria-expanded="false" aria-controls="crate-body">Open the crate</button>
+      <div class="crate__body" id="crate-body" inert>
+        <div class="crate__inner">
+          <div class="crate__stack" role="group" aria-roledescription="carousel" aria-label="Recommended records">
+            <div class="crate__deck">
+              ${records
+                .map(
+                  (r, i) => `
+                <div class="album" data-album="${r.id}" style="--tint:${r.tint}" aria-hidden="${i !== 0}">
+                  <span class="album__disc"></span>
+                  <span class="album__cover" data-cover></span>
+                </div>`,
+                )
+                .join('')}
+            </div>
+          </div>
+          <div class="crate__nav">
+            <button class="crate__arrow" type="button" data-step="-1" aria-label="Previous record">‹</button>
+            <p class="crate__count" aria-live="polite" data-count></p>
+            <button class="crate__arrow" type="button" data-step="1" aria-label="Next record">›</button>
+          </div>
+          <div class="crate__info">
+            <h3 class="crate__title" data-title></h3>
+            <p class="crate__meta" data-meta></p>
+            <p class="crate__note" data-note></p>
+            <ul class="crate__credits" data-credits></ul>
+          </div>
+          <div class="crate__actions">
+            <button class="btn crate__spin" type="button" data-spin>Spin it · ${SPIN_SECONDS}s</button>
+            <a class="crate__link" data-link target="_blank" rel="noopener">Full song ↗</a>
+          </div>
+          <div data-missing></div>
         </div>
       </div>
     </div>
   `;
-  document.body.append(sheet);
 
-  const $ = <T extends Element>(sel: string) => sheet.querySelector<T>(sel)!;
-  const embedBox = $<HTMLElement>('[data-embed]');
-  const missing = $<HTMLElement>('[data-missing]');
+  const $ = <T extends Element>(sel: string) => slot.querySelector<T>(sel)!;
+  const card = slot.closest<HTMLElement>('.chapter__card')!;
+  const toggle = $<HTMLButtonElement>('.crate__toggle');
+  const body = $<HTMLElement>('.crate__body');
+  const spinBtn = $<HTMLButtonElement>('[data-spin]');
   const link = $<HTMLAnchorElement>('[data-link]');
-  let controller: SpotifyController | null = null;
-  let controllerReady: Promise<SpotifyController> | null = null;
-  let current: RecordPick | null = null;
-  let playing = false;
+  const albums = [...slot.querySelectorAll<HTMLElement>('[data-album]')];
+  let index = 0;
+  let resolved: ResolvedPick | null = null;
 
-  const setPlaying = (on: boolean) => {
-    if (on === playing) return;
-    playing = on;
-    hooks.onPlaying(on);
+  // Covers fill in on the sleeves and albums as Apple answers.
+  records.forEach(async (r) => {
+    const info = await resolvePick(r);
+    if (!info.cover) return;
+    const url = `url("${info.cover}")`;
+    slot.querySelector<HTMLElement>(`[data-sleeve="${r.id}"]`)!.style.backgroundImage = url;
+    slot.querySelector<HTMLElement>(`[data-album="${r.id}"] [data-cover]`)!.style.backgroundImage = url;
+  });
+
+  const spinningHere = () => {
+    const s = player.state();
+    return s.playing && s.guest?.id === records[index].id;
   };
 
-  const ensureController = (uri: string) => {
-    controllerReady ??= spotifyApi().then(
-      (api) =>
-        new Promise<SpotifyController>((resolve) => {
-          api.createController($<HTMLElement>('[data-embed-host]'), { uri, width: '100%', height: 152 }, (c) => {
-            c.addListener('playback_update', (e) => setPlaying(!e.data.isPaused));
-            controller = c;
-            resolve(c);
-          });
-        }),
-    );
-    return controllerReady;
-  };
-
-  const select = async (pick: RecordPick) => {
-    current = pick;
-    sheet.querySelectorAll<HTMLElement>('[data-pick]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.pick === pick.id)));
-    $('[data-title]').textContent = pick.title;
-    $('[data-meta]').textContent = [pick.artist, pick.album, pick.year].filter(Boolean).join(' · ');
-    $('[data-note]').textContent = pick.note;
-    $('[data-credits]').innerHTML = pick.credits.map((c) => `<li>${esc(c)}</li>`).join('');
-    const cover = $<HTMLElement>('[data-cover]');
-    cover.style.setProperty('--tint', pick.tint);
-    cover.style.backgroundImage = '';
-
-    const uri = spotifyUri(pick.spotify);
-    embedBox.hidden = !uri;
-    link.hidden = !uri;
-    missing.replaceChildren();
-    if (uri) {
-      link.href = pick.spotify!;
-      setPlaying(false);
-      if (controller) controller.loadUri(uri);
-      else void ensureController(uri);
-    } else {
-      controller?.pause();
-      missing.append(placeholder({ label: `Liner notes: ${pick.title}`, needs: ['Spotify share link for this song', 'Your note and the credits (src/content/records.ts)'] }));
-    }
-
-    hooks.onRecord(pick, null);
-    const img = await coverFor(pick);
-    if (current !== pick || !img) return;
-    cover.style.backgroundImage = `url("${img.src}")`;
-    hooks.onRecord(pick, img);
-  };
-
-  // Thumbnails fill in as their covers arrive.
-  const loadThumbs = () =>
-    records.forEach(async (r) => {
-      const img = await coverFor(r);
-      if (!img) return;
-      const url = `url("${img.src}")`;
-      sheet.querySelector<HTMLElement>(`[data-pick="${r.id}"] [data-thumb]`)!.style.backgroundImage = url;
-      slot.querySelector<HTMLElement>(`[data-sleeve="${r.id}"]`)!.style.backgroundImage = url;
+  const render = async () => {
+    // Stack order: the current record in front, the next ones peeking out behind it.
+    albums.forEach((el, i) => {
+      const pos = (i - index + records.length) % records.length;
+      el.dataset.pos = String(pos);
+      el.setAttribute('aria-hidden', String(pos !== 0));
     });
-  loadThumbs();
-
-  const open = () => {
-    sheet.hidden = false;
-    document.documentElement.classList.add('is-sheet');
-    requestAnimationFrame(() => sheet.classList.add('is-open'));
-    void select(current ?? records[0]);
-    $<HTMLButtonElement>('.crate__close').focus();
+    $('[data-count]').textContent = `${index + 1} / ${records.length}`;
+    const pick = records[index];
+    const info = await resolvePick(pick);
+    if (records[index] !== pick) return; // flipped again while loading
+    resolved = info;
+    $('[data-title]').textContent = info.title;
+    $('[data-meta]').textContent = `${info.artist} · ${info.album} · ${info.year}`;
+    $('[data-note]').textContent = pick.note;
+    $('[data-credits]').innerHTML = info.credits.map((c) => `<li>${esc(c)}</li>`).join('');
+    spinBtn.disabled = !info.preview;
+    link.hidden = !info.link;
+    if (info.link) link.href = info.link;
+    const missing = $<HTMLElement>('[data-missing]');
+    missing.replaceChildren();
+    if (info.missing) missing.append(placeholder({ label: `Liner notes pick ${index + 1}`, needs: ['Apple Music link for this song (src/content/records.ts)', 'Your note on why you love it'] }));
+    syncSpin();
   };
-  const close = () => {
-    controller?.pause();
-    setPlaying(false);
-    hooks.onRecord(null, null);
-    sheet.classList.remove('is-open');
-    document.documentElement.classList.remove('is-sheet');
-    window.setTimeout(() => (sheet.hidden = true), 450);
-    opener.focus();
+
+  const syncSpin = () => {
+    const on = spinningHere();
+    spinBtn.textContent = on ? 'Stop' : `Spin it · ${SPIN_SECONDS}s`;
+    albums.forEach((el, i) => el.classList.toggle('is-spinning', on && i === index));
   };
 
-  opener.addEventListener('click', open);
-  // Dev helper: /?crate opens the sheet on load.
-  if (import.meta.env.DEV && new URLSearchParams(location.search).has('crate')) setTimeout(open, 1500);
-  sheet.addEventListener('click', (e) => {
-    const t = e.target as HTMLElement;
-    if (t.closest('[data-close]')) close();
-    const pick = t.closest<HTMLElement>('[data-pick]');
-    if (pick) void select(records.find((r) => r.id === pick.dataset.pick)!);
+  const step = (dir: number) => {
+    index = (index + dir + records.length) % records.length;
+    void render();
+  };
+
+  const setOpen = (open: boolean) => {
+    card.classList.toggle('is-expanded', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.textContent = open ? 'Close the crate' : 'Open the crate';
+    body.inert = !open;
+    if (open) void render();
+  };
+
+  toggle.addEventListener('click', () => setOpen(toggle.getAttribute('aria-expanded') !== 'true'));
+  slot.querySelectorAll<HTMLButtonElement>('[data-step]').forEach((b) => b.addEventListener('click', () => step(Number(b.dataset.step))));
+  body.addEventListener('keydown', (e) => {
+    const ke = e as KeyboardEvent;
+    if (ke.key === 'ArrowLeft') step(-1);
+    if (ke.key === 'ArrowRight') step(1);
   });
-  sheet.addEventListener('keydown', (e) => {
-    if (e.key === 'Escape') close();
+
+  spinBtn.addEventListener('click', async () => {
+    if (spinningHere()) return player.pause();
+    const info = resolved;
+    if (!info?.preview) return;
+    const img = info.cover ? await loadImage(info.cover) : null;
+    hooks.setLabel(info.pick.tint, img);
+    await player.spin({ id: info.pick.id, title: info.title, artist: info.artist, src: info.preview }, SPIN_SECONDS);
   });
 
-  return {
-    /** The house player started: stop Spotify so two songs never overlap. */
-    pause() {
-      controller?.pause();
-    },
-  };
+  // When the clip ends (or anything else takes over), the turntable gets its house label back.
+  player.onChange((s) => {
+    if (!s.guest) hooks.clearLabel();
+    syncSpin();
+  });
+
+  // Dev helper: /?crate opens the crate on load.
+  if (import.meta.env.DEV && new URLSearchParams(location.search).has('crate')) setOpen(true);
 }

@@ -27,7 +27,7 @@ Dev helpers (dev server only):
 - `/?shot=sonare` frames one camera shot without scrolling (see `src/room/shots.ts`).
 - `/?at=lab` scrolls to a chapter.
 - `/?fps` shows the frame rate and what the adaptive quality governor is doing.
-- `/?play` starts the music on load; `/?shot=record` frames the turntable; `/?crate` opens the Liner notes sheet.
+- `/?play` starts the music on load; `/?shot=record` frames the turntable; `/?crate` opens the Liner notes crate.
 
 ## Floors
 
@@ -49,7 +49,7 @@ Dev helpers (dev server only):
 | 12 | Chapter: Sonare of the Lake | ⬜ |
 | 13 | Chapter: RoomLink-ChillZone | ⬜ |
 | 14 | Chapter: Hot Footer | ⬜ |
-| 14b | Liner notes (B1): 3 recommended songs, crate sheet, Spotify embed, cover on the turntable label | ✅ (needs your picks) |
+| 14b | Liner notes (B1): card expands into an album stack, 30 s Apple previews spin on the turntable | ✅ (needs your picks) |
 | 15 | Lab (CS showcase): live audio graph + FFT explainer | ⬜ |
 | 16 | Contact: step sequencer with shareable loops | ⬜ |
 | 17 | Extras: command palette, spectrogram easter egg | ⬜ |
@@ -62,7 +62,7 @@ Until these exist, the site shows visible placeholders (dashed boxes with a yell
 In dev, the browser console lists every placeholder on the page.
 
 - [ ] **Music tracks** for the record player: put MP3/OGG files in `public/audio/` and list them in `src/content/tracks.ts` (the synthesized demo loop plays until then)
-- [ ] **Liner notes picks** (3 songs): Spotify share link, your note, and credits for each, in `src/content/records.ts`
+- [ ] **Liner notes picks** (3 songs): Apple Music link and your note for each (optional Spotify link and credits), in `src/content/records.ts`
 - [ ] **Spectrogram easter-egg track** (a track with an image hidden in its spectrum)
 - [ ] **VR Music Room**: room model `.glb` or a 10 to 20 s screen recording, plus headset screenshots
 - [ ] **Sonare of the Lake**: chorus screen recording, one boat `.glb`
