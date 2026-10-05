@@ -133,7 +133,7 @@ html.is-on .hero__tagline {
 
 .hero__cue {
   position: absolute;
-  bottom: 6vh;
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 84px); /* sits above the player dock */
   left: 50%;
   width: 26px;
   height: 42px;
