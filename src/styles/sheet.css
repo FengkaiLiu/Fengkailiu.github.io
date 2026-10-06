@@ -242,3 +242,145 @@
   font-size: var(--text-micro);
   color: var(--lamp-300);
 }
+
+/* ---------- Media groups ---------- */
+.sheet__media {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-2) 0;
+}
+.sheet__media-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: var(--space-3);
+}
+.sheet__media--photos .sheet__media-grid[data-count='3'] {
+  grid-template-columns: repeat(3, 1fr);
+}
+.sheet__media video,
+.sheet__photo img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #0d0a1c;
+  box-shadow: 0 14px 30px -14px rgba(0, 0, 0, 0.7);
+}
+.sheet__photo img {
+  aspect-ratio: 4 / 3;
+  transition: transform var(--dur) var(--ease-out);
+}
+.sheet__photo {
+  padding: 0;
+  border: 0;
+  border-radius: 12px;
+  background: none;
+  cursor: zoom-in;
+  overflow: hidden;
+}
+.sheet__photo:hover img {
+  transform: scale(1.03);
+}
+.sheet__photo:focus-visible {
+  outline: 2px solid var(--lamp-300);
+  outline-offset: 2px;
+}
+.sheet__media figcaption {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  letter-spacing: 0.04em;
+  opacity: 0.65;
+}
+@media (max-width: 560px) {
+  .sheet__media--photos .sheet__media-grid[data-count='3'] {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+/* ---------- Lightbox ---------- */
+.lightbox {
+  width: 100vw;
+  max-width: none;
+  height: 100svh;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  color: var(--white);
+  background: rgba(8, 5, 20, 0.92);
+}
+.lightbox[open] {
+  display: grid;
+  place-items: center;
+  animation: sheet-fade 0.3s var(--ease-out);
+}
+.lightbox::backdrop {
+  background: transparent;
+}
+.lightbox__frame {
+  display: grid;
+  gap: var(--space-3);
+  justify-items: center;
+  margin: 0;
+  padding: var(--space-6);
+}
+.lightbox__frame img {
+  max-width: min(92vw, 1600px);
+  max-height: 80svh;
+  border-radius: 12px;
+  object-fit: contain;
+  box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.8);
+}
+.lightbox__frame figcaption {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  opacity: 0.7;
+}
+.lightbox__btn {
+  position: fixed;
+  display: grid;
+  place-items: center;
+  width: 46px;
+  height: 46px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  border-radius: 50%;
+  color: var(--white);
+  background: rgba(20, 15, 40, 0.7);
+  font-size: 1.4rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.lightbox__btn:hover {
+  background: rgba(255, 255, 255, 0.14);
+}
+.lightbox__btn[hidden] {
+  display: none;
+}
+.lightbox__btn--close {
+  top: 18px;
+  right: 18px;
+  font-size: 1rem;
+}
+.lightbox__btn--prev {
+  left: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+.lightbox__btn--next {
+  right: 18px;
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* A project's recording, small and muted, in its chapter card. */
+.chapter__preview {
+  display: block;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+  border-radius: 12px;
+  background: #0d0a1c;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}

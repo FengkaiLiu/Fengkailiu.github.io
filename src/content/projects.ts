@@ -7,6 +7,12 @@ export interface ProjectSection {
   bullets?: string[];
 }
 
+/** A captioned group of media in the liner notes: videos play muted on loop, photos enlarge. */
+export interface MediaGroup {
+  caption: string;
+  items: { type: 'video' | 'image'; src: string; alt: string }[];
+}
+
 export interface Project {
   id: string;
   title: string;
@@ -15,6 +21,7 @@ export interface Project {
   cover: string;
   sections: ProjectSection[];
   links: { demo?: string; github?: string };
+  media?: MediaGroup[];
   /** Assets the scroll chapter still needs from Fengkai. */
   needs?: string[];
   placeholder?: boolean;
@@ -34,7 +41,23 @@ export const projects: Project[] = [
       { heading: 'What I learned', text: 'How to architect communication between multiple services and keep performance smooth while handling real-time data streams from different APIs.' },
     ],
     links: { github: 'https://github.com/FengkaiLiu/vrmusicroom' },
-    needs: ['3D model of the room (.glb) or a 10 to 20 second screen recording', '2 or 3 in-headset screenshots'],
+    media: [
+      {
+        caption: 'Dev stage video recording',
+        items: [
+          { type: 'video', src: '/vrmusicroom/demo.mp4', alt: 'VR Music Room, dev stage recording, part 1' },
+          { type: 'video', src: '/vrmusicroom/demo2.mp4', alt: 'VR Music Room, dev stage recording, part 2' },
+        ],
+      },
+      {
+        caption: 'Co-op project presentation',
+        items: [
+          { type: 'image', src: '/vrmusicroom/shot-1.jpg', alt: 'Fengkai in the headset, the room mirrored on the monitor' },
+          { type: 'image', src: '/vrmusicroom/shot-2.jpg', alt: 'The in-VR song picker shown on the monitor' },
+          { type: 'image', src: '/vrmusicroom/shot-3.jpg', alt: 'Presenting the VR room in the lab' },
+        ],
+      },
+    ],
   },
   {
     id: 'sonare',

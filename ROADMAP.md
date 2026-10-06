@@ -45,7 +45,7 @@ Dev helpers (dev server only):
 | 8 | Room interactions: play the keyboard (click or drag), pet the cat, switch the lamp, tap the record player; pointer hints | ✅ |
 | 9 | About: mixing desk (Code, Sound, Visual strips with skill inserts, live meters, solo; master strip with stats) | ✅ |
 | 10 | Project chapter engine: pinned scroll chapters + liner-notes sheet (cover, write-up, links, prev/next) | ✅ |
-| 11 | Chapter: VR Music Room | ⬜ |
+| 11 | Chapter: VR Music Room (dev recordings in the sheet, card preview and on its poster; presentation photos with a lightbox) | ✅ |
 | 12 | Chapter: Sonare of the Lake | ⬜ |
 | 13 | Chapter: RoomLink-ChillZone | ⬜ |
 | 14 | Chapter: Hot Footer | ⬜ |
@@ -65,7 +65,7 @@ In dev, the browser console lists every placeholder on the page.
 - [x] **Liner notes picks** (3 songs): Spotify link, artist name and your note for each (optional credits), in `src/content/records.ts`
 - [ ] **Kasane Teto model** (optional): `public/models/teto.glb` replaces the built-in low-poly one in the Machine Love scene (auto-sized to 0.5 m, first animation loops)
 - [ ] **Spectrogram easter-egg track** (a track with an image hidden in its spectrum)
-- [ ] **VR Music Room**: room model `.glb` or a 10 to 20 s screen recording, plus headset screenshots
+- [x] **VR Music Room**: 2 dev recordings + 3 presentation photos in `public/vrmusicroom/` (full-size originals kept in `media-src/`, not published)
 - [ ] **Sonare of the Lake**: chorus screen recording, one boat `.glb`
 - [ ] **RoomLink-ChillZone**: 360° equirectangular panorama
 - [ ] **Hot Footer**: Unity WebGL build or gameplay GIF

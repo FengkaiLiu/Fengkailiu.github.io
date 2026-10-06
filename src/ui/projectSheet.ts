@@ -1,7 +1,7 @@
 // The project sheet: a liquid glass panel that rises from the bottom with a project's full
 // liner notes (cover, write-up, media still to come, links), and steps to the previous or
 // next track without closing. A modal <dialog>, so focus, Escape and the backdrop behave.
-import type { Project } from '../content/projects';
+import type { MediaGroup, Project } from '../content/projects';
 import { placeholder } from './placeholder';
 import type { SmoothScroll } from './scroll';
 
@@ -13,6 +13,23 @@ export interface SheetTrack {
   /** "A3" */
   track: string;
 }
+
+const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+/** A captioned media group: videos loop muted (with controls), photos open in the lightbox. */
+const mediaGroup = (g: MediaGroup, gi: number) => `
+  <figure class="sheet__media sheet__media--${g.items[0]?.type === 'video' ? 'video' : 'photos'}" data-group="${gi}">
+    <div class="sheet__media-grid" data-count="${g.items.length}">
+      ${g.items
+        .map((m, i) =>
+          m.type === 'video'
+            ? `<video src="${esc(m.src)}" muted loop playsinline controls preload="metadata" aria-label="${esc(m.alt)}"${reducedMotion() ? '' : ' autoplay'}></video>`
+            : `<button class="sheet__photo" type="button" data-photo="${gi}:${i}" aria-label="Enlarge: ${esc(m.alt)}"><img src="${esc(m.src)}" alt="${esc(m.alt)}" loading="lazy" /></button>`,
+        )
+        .join('')}
+    </div>
+    <figcaption>${esc(g.caption)}</figcaption>
+  </figure>`;
 
 export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
   const dialog = document.createElement('dialog');
@@ -43,6 +60,9 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
 
   const render = () => {
     const { project: p, track } = tracks[index];
+    const groups = (p.media ?? []).map((g, gi) => [g, gi] as const);
+    const videoGroups = groups.filter(([g]) => g.items.some((m) => m.type === 'video'));
+    const photoGroups = groups.filter(([g]) => !g.items.some((m) => m.type === 'video'));
     dialog.querySelector('[data-track]')!.textContent = track;
     const links = [
       p.links.demo && `<a class="btn" href="${esc(p.links.demo)}" target="_blank" rel="noopener">Live demo ${arrow}</a>`,
@@ -52,7 +72,14 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
       <h2 class="sheet__title" id="sheet-title">${esc(p.title)}</h2>
       <p class="sheet__subtitle">${esc(p.subtitle)}</p>
       <div class="chapter__tags">${p.tags.map((t) => `<span class="chip">${esc(t)}</span>`).join('')}</div>
-      ${p.cover ? `<figure class="sheet__cover"><img src="${esc(p.cover)}" alt="${esc(p.title)} cover" loading="lazy" /></figure>` : ''}
+      ${
+        // Recordings say more than a cover: lead with them when there are any.
+        videoGroups.length
+          ? videoGroups.map(([g, gi]) => mediaGroup(g, gi)).join('')
+          : p.cover
+            ? `<figure class="sheet__cover"><img src="${esc(p.cover)}" alt="${esc(p.title)} cover" loading="lazy" /></figure>`
+            : ''
+      }
       ${p.sections
         .map(
           (s) => `
@@ -63,6 +90,7 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
         </section>`,
         )
         .join('')}
+      ${photoGroups.map(([g, gi]) => mediaGroup(g, gi)).join('')}
       <div data-media></div>
       ${links.length ? `<div class="sheet__links">${links.join('')}</div>` : ''}
     `;
@@ -98,7 +126,53 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
       dialog.close();
     }, 260);
   };
+  // ---------- Lightbox: photos at full size, with arrows through the group ----------
+  const box = document.createElement('dialog');
+  box.className = 'lightbox';
+  box.setAttribute('aria-label', 'Photo');
+  box.innerHTML = `
+    <figure class="lightbox__frame"><img data-lb-img alt="" /><figcaption data-lb-cap></figcaption></figure>
+    <button class="lightbox__btn lightbox__btn--close" type="button" data-lb-close aria-label="Close">✕</button>
+    <button class="lightbox__btn lightbox__btn--prev" type="button" data-lb-step="-1" aria-label="Previous photo">‹</button>
+    <button class="lightbox__btn lightbox__btn--next" type="button" data-lb-step="1" aria-label="Next photo">›</button>
+  `;
+  document.body.append(box);
+  let lb = { group: 0, item: 0 };
+  const showPhoto = () => {
+    const g = tracks[index].project.media?.[lb.group];
+    const m = g?.items[lb.item];
+    if (!g || !m) return;
+    const img = box.querySelector<HTMLImageElement>('[data-lb-img]')!;
+    img.src = m.src;
+    img.alt = m.alt;
+    box.querySelector('[data-lb-cap]')!.textContent = `${g.caption} · ${lb.item + 1} / ${g.items.length}`;
+    box.querySelectorAll<HTMLElement>('[data-lb-step]').forEach((b) => (b.hidden = g.items.length < 2));
+  };
+  body.addEventListener('click', (e) => {
+    const ref = (e.target as HTMLElement).closest<HTMLElement>('[data-photo]')?.dataset.photo;
+    if (!ref) return;
+    const [group, item] = ref.split(':').map(Number);
+    lb = { group, item };
+    showPhoto();
+    box.showModal();
+  });
+  box.addEventListener('click', (e) => {
+    const t = e.target as HTMLElement;
+    const step = t.closest<HTMLElement>('[data-lb-step]')?.dataset.lbStep;
+    if (step) {
+      const n = tracks[index].project.media?.[lb.group]?.items.length ?? 1;
+      lb.item = (lb.item + Number(step) + n) % n;
+      showPhoto();
+    } else if (t.closest('[data-lb-close]') || t === box) box.close();
+  });
+  box.addEventListener('keydown', (e) => {
+    if (e.key === 'ArrowRight') box.querySelector<HTMLElement>('[data-lb-step="1"]')!.click();
+    if (e.key === 'ArrowLeft') box.querySelector<HTMLElement>('[data-lb-step="-1"]')!.click();
+    e.stopPropagation(); // don't also step the sheet behind
+  });
+
   dialog.addEventListener('close', () => {
+    body.querySelectorAll('video').forEach((v) => v.pause());
     document.documentElement.classList.remove('has-sheet');
     scroll.start();
     // Land on the chapter of the project you ended on, and hand focus back to its button.

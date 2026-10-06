@@ -18,6 +18,7 @@ import {
   PlaneGeometry,
   Points,
   PointsMaterial,
+  VideoTexture,
   Sprite,
   SpriteMaterial,
   SRGBColorSpace,
@@ -99,7 +100,7 @@ const LAPTOP = new Vector3(0.8, 1.8, -3.4);
 const ARM_PARKED = Math.PI / 2;
 const ARM_PLAYING = 0.75;
 
-export function buildRoom(covers: Record<string, string>): RoomProps {
+export function buildRoom(covers: Record<string, string>, videos: Record<string, HTMLVideoElement> = {}): RoomProps {
   const root = new Group();
   const anchors: Record<string, Vector3> = {};
   const glowMats: { mat: MeshStandardMaterial | MeshBasicMaterial; base: Color; max: number }[] = [];
@@ -123,6 +124,8 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
     focusables[id] = { level: 0, halo, frame, picture };
   };
   let focusId: string | null = null;
+  const posterVideo: Record<string, VideoTexture> = {};
+  const coverMaps: Record<string, Texture | null> = {};
 
   // ---------- Shell ----------
   const floor = box(8, 0.2, 8, std('#ffffff', { map: floorTexture(), roughness: 0.7 }), 0, -0.1, 0, 0.02);
@@ -596,7 +599,25 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
       spectrum = bands;
     },
     setFocus(id) {
+      if (id === focusId) return;
+      // A focused project with a recording plays it on its poster; leaving restores the cover.
+      if (focusId && posterVideo[focusId]) {
+        const mat = posterMats[focusId];
+        const cover = coverMaps[focusId];
+        if (mat && cover !== undefined) {
+          mat.map = cover;
+          mat.needsUpdate = true;
+        }
+      }
       focusId = id;
+      const video = id ? videos[id] : undefined;
+      const mat = id ? posterMats[id] : undefined;
+      if (id && video && mat) {
+        coverMaps[id] ??= mat.map;
+        posterVideo[id] ??= videoTexture(video, 1.05 / 0.72);
+        mat.map = posterVideo[id];
+        mat.needsUpdate = true;
+      }
     },
     setLabel(texture) {
       labelMat.map = texture ?? label;
@@ -699,6 +720,26 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
       tint?.motes(voidMat.color);
     },
   };
+}
+
+/** A video as a texture, cropped like object-fit: cover once its size is known. */
+function videoTexture(video: HTMLVideoElement, planeAspect: number) {
+  const tex = new VideoTexture(video);
+  tex.colorSpace = SRGBColorSpace;
+  const fit = () => {
+    if (!video.videoWidth) return;
+    const aspect = video.videoWidth / video.videoHeight;
+    if (aspect > planeAspect) {
+      tex.repeat.set(planeAspect / aspect, 1);
+      tex.offset.set((1 - tex.repeat.x) / 2, 0);
+    } else {
+      tex.repeat.set(1, aspect / planeAspect);
+      tex.offset.set(0, (1 - tex.repeat.y) / 2);
+    }
+  };
+  fit();
+  video.addEventListener('loadedmetadata', fit);
+  return tex;
 }
 
 /** Crop a texture like CSS object-fit: cover for a plane of the given aspect. */

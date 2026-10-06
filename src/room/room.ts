@@ -85,7 +85,12 @@ const GrainShader = {
   `,
 };
 
-export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: Record<string, string>): Room | null {
+export function initRoom(
+  sections: { el: HTMLElement; shot: string }[],
+  covers: Record<string, string>,
+  /** Recordings to show on a project's poster while its chapter is in focus. */
+  videos: Record<string, HTMLVideoElement> = {},
+): Room | null {
   let renderer: WebGLRenderer;
   try {
     renderer = new WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
@@ -158,7 +163,7 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   scene.add(hemi, moon, lampSpot, lampSpot.target, lampFill, fairyFill, posterLight, screenGlow, moodLight);
   const base = { sky: hemi.color.clone(), ground: hemi.groundColor.clone(), fill: fairyFill.color.clone(), moon: moon.color.clone(), poster: posterLight.color.clone() };
 
-  const room = buildRoom(covers);
+  const room = buildRoom(covers, videos);
   scene.add(room.root);
 
   // ---------- Post-processing ----------

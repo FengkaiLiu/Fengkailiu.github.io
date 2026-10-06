@@ -107,9 +107,37 @@ projects.forEach((p) => {
   `;
 });
 
+// Projects with a recording get a small muted preview in their card, playing only while
+// the chapter is on screen. The same element also plays on the project's poster in the room.
+const previews: Record<string, HTMLVideoElement> = {};
+const still = matchMedia('(prefers-reduced-motion: reduce)');
+projects.forEach((p) => {
+  const clip = p.media?.flatMap((g) => g.items).find((m) => m.type === 'video');
+  if (!clip) return;
+  const video = document.createElement('video');
+  video.className = 'chapter__preview';
+  video.muted = true;
+  video.loop = true;
+  video.playsInline = true;
+  video.preload = 'none';
+  video.setAttribute('aria-hidden', 'true');
+  video.dataset.src = clip.src;
+  document.querySelector(`#${p.id} .chapter__slot`)!.before(video);
+  previews[p.id] = video;
+  new IntersectionObserver(
+    ([entry]) => {
+      if (entry.isIntersecting) {
+        if (!video.src) video.src = video.dataset.src!; // load on first approach
+        if (!still.matches) void video.play().catch(() => {});
+      } else video.pause();
+    },
+    { threshold: 0.25 },
+  ).observe(video);
+});
+
 const sections = [...document.querySelectorAll<HTMLElement>('[data-shot]')].map((el) => ({ el, shot: el.dataset.shot! }));
 const covers: Record<string, string> = Object.fromEntries(projects.filter((p) => p.cover).map((p) => [p.id, p.cover]));
-const room = initRoom(sections, covers);
+const room = initRoom(sections, covers, previews);
 
 initSheen();
 

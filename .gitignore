@@ -3,3 +3,6 @@ dist/
 *.local
 .DS_Store
 Thumbs.db
+
+# Full-size originals of site media (the web versions live in public/)
+media-src/
