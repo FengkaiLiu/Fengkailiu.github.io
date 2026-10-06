@@ -17,6 +17,7 @@ import { tracks } from './content/tracks';
 import { mountPlayerDock } from './ui/playerDock';
 import { mountCrate } from './ui/crate';
 import { mountMixer } from './ui/mixer';
+import { mountProjectSheet } from './ui/projectSheet';
 import { mountScopePanel } from './ui/scopePanel';
 import { createSmoothScroll } from './ui/scroll';
 import { mountTrackNav } from './ui/trackNav';
@@ -42,13 +43,13 @@ interface Chapter {
   floor?: string;
   needs?: readonly string[];
   /** Built content instead of a placeholder. */
-  custom?: 'crate' | 'mixer';
+  custom?: 'crate' | 'mixer' | 'project';
 }
 
 // Chapters read like a record's track list. Each one is replaced by its floor (see ROADMAP.md).
 const chapters: Chapter[] = [
   { id: 'about', shot: 'about', track: 'A1', nav: 'About', title: 'Code on one screen, sound on the other.', text: profile.bio[0], custom: 'mixer' },
-  ...projects.map((p, i) => ({ id: p.id, shot: p.id, track: `A${i + 2}`, nav: p.title, title: p.title, text: p.subtitle, tags: p.tags, floor: 'Floors 10 to 14', needs: p.needs })),
+  ...projects.map((p, i) => ({ id: p.id, shot: p.id, track: `A${i + 2}`, nav: p.title, title: p.title, text: p.subtitle, tags: p.tags, custom: 'project' as const })),
   { id: 'records', shot: 'record', track: 'B1', nav: 'Liner notes', title: 'Liner notes.', text: '3 records I keep coming back to. Flip through the crate and put one on the turntable.', custom: 'crate' },
   { id: 'lab', shot: 'lab', track: 'B2', nav: 'The Lab', title: 'How this room hears.', text: 'A live map of the audio graph running this page, and an FFT you can play with.', floor: 'Floor 15' },
   { id: 'contact', shot: 'contact', track: 'B3', nav: 'Contact', title: 'Leave me a beat.', text: 'Sequence a 4-bar loop and send it with your message.', floor: 'Floor 16' },
@@ -69,7 +70,8 @@ app.innerHTML = `
     ${chapters
       .map(
         (c) => `
-      <section class="chapter" id="${c.id}" data-shot="${c.shot}">
+      <section class="chapter${c.custom === 'project' ? ' chapter--pinned' : ''}" id="${c.id}" data-shot="${c.shot}">
+        <div class="chapter__pin">
         <article class="chapter__card liquid liquid--pad">
           <span class="chapter__track">${c.track}</span>
           <h2 class="chapter__title">${c.title}</h2>
@@ -77,6 +79,7 @@ app.innerHTML = `
           ${c.tags ? `<div class="chapter__tags">${c.tags.map((t) => `<span class="chip">${t}</span>`).join('')}</div>` : ''}
           <div class="chapter__slot"></div>
         </article>
+        </div>
       </section>`,
       )
       .join('')}
@@ -88,6 +91,18 @@ document.querySelectorAll<HTMLElement>('.chapter').forEach((el, i) => {
   const c = chapters[i];
   if (c.custom || !c.floor) return;
   el.querySelector('.chapter__slot')!.append(placeholder({ label: `${c.floor}: ${c.title}`, needs: c.needs, tag: c.floor.toUpperCase() }));
+});
+
+// Project chapters: a button that opens the full liner notes, plus the project's links.
+const extArrow = '<svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16L16 8M9 8h7v7" /></svg>';
+projects.forEach((p) => {
+  const slot = document.querySelector<HTMLElement>(`#${p.id} .chapter__slot`)!;
+  slot.classList.add('chapter__actions');
+  slot.innerHTML = `
+    <button class="btn" type="button" data-sheet="${p.id}">${p.placeholder ? 'What it needs' : 'Liner notes'}</button>
+    ${p.links.demo ? `<a class="chapter__link" href="${p.links.demo}" target="_blank" rel="noopener">Live demo ${extArrow}</a>` : ''}
+    ${p.links.github ? `<a class="chapter__link" href="${p.links.github}" target="_blank" rel="noopener">GitHub ${extArrow}</a>` : ''}
+  `;
 });
 
 const sections = [...document.querySelectorAll<HTMLElement>('[data-shot]')].map((el) => ({ el, shot: el.dataset.shot! }));
@@ -141,6 +156,14 @@ const nav = mountTrackNav(
   chapters.map((c) => ({ id: c.id, track: c.track, title: c.nav })),
   scroll,
 );
+const sheet = mountProjectSheet(
+  projects.map((p, i) => ({ project: p, track: `A${i + 2}` })),
+  scroll,
+);
+document.addEventListener('click', (e) => {
+  const id = (e.target as HTMLElement).closest<HTMLElement>('[data-sheet]')?.dataset.sheet;
+  if (id) sheet.open(id);
+});
 initLiquidGlass();
 
 // Things to play with in the room: the keys, the cat, the lamp and the record player.
