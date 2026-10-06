@@ -63,6 +63,7 @@ In dev, the browser console lists every placeholder on the page.
 
 - [ ] **Music tracks** for the record player: put MP3/OGG files in `public/audio/` and list them in `src/content/tracks.ts` (the synthesized demo loop plays until then)
 - [x] **Liner notes picks** (3 songs): Spotify link, artist name and your note for each (optional credits), in `src/content/records.ts`
+- [ ] **Kasane Teto model** (optional): `public/models/teto.glb` replaces the built-in low-poly one in the Machine Love scene (auto-sized to 0.5 m, first animation loops)
 - [ ] **Spectrogram easter-egg track** (a track with an image hidden in its spectrum)
 - [ ] **VR Music Room**: room model `.glb` or a 10 to 20 s screen recording, plus headset screenshots
 - [ ] **Sonare of the Lake**: chorus screen recording, one boat `.glb`

@@ -317,7 +317,7 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     moods.mix('fill', base.fill, fairyFill.color);
     moods.mix('moon', base.moon, moon.color);
     moods.mix('fill', base.poster, posterLight.color);
-    moodLight.intensity = moods.light(now, moodLight.color) * (2.4 + audio[0] * 2) * Math.max(lit, 0.4);
+    moodLight.intensity = moods.light(now, moodLight.color) * (2.4 + audio[0] * 2 * moods.pulse()) * Math.max(lit, 0.4);
     room.setGlow(lit);
 
     // Camera eases toward the scroll target; the pointer adds a small parallax.

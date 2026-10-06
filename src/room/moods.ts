@@ -6,6 +6,8 @@
 //   teto:   Jamie Paige, "Machine Love": a tiny Kasane Teto on the cabinet, red against green
 import {
   AdditiveBlending,
+  AnimationMixer,
+  Box3,
   BoxGeometry,
   BufferAttribute,
   CanvasTexture,
@@ -51,8 +53,9 @@ interface Palette {
   dim: number;
   /** The scene light near the turntable cycles through these on the beat. */
   light: Color[];
-  /** How strong that light gets. */
+  /** How strong that light gets, and how much of it swells on the kick. */
   lightGain: number;
+  pulse: number;
   motes: Color;
   bulbs: Color[];
 }
@@ -67,6 +70,7 @@ const palettes: Record<MoodId, Palette> = {
     dim: 0.7,
     light: [c('#ff3048'), c('#3a6bff'), c('#ffd23a'), c('#3aff7a')],
     lightGain: 0.22,
+    pulse: 0.5,
     motes: c('#ffe27a'),
     bulbs: [c('#ff3048'), c('#ffd23a'), c('#3aff7a'), c('#3a6bff')],
   },
@@ -77,7 +81,8 @@ const palettes: Record<MoodId, Palette> = {
     moon: c('#e6ffd8'),
     dim: 0.15,
     light: [c('#d4f7bc'), c('#ffffff')],
-    lightGain: 0.4,
+    lightGain: 0.3,
+    pulse: 0.1, // a calm field: barely breathes with the beat
     motes: c('#ffffff'),
     bulbs: [c('#ffffff'), c('#dfffc9'), c('#fff6a8')],
   },
@@ -89,6 +94,7 @@ const palettes: Record<MoodId, Palette> = {
     dim: 0.3,
     light: [c('#ff2b3b'), c('#5fd04a')],
     lightGain: 0.5,
+    pulse: 1,
     motes: c('#ff9a9a'),
     bulbs: [c('#ff3048'), c('#7fe06a')],
   },
@@ -132,6 +138,8 @@ export interface Moods {
   dim(): number;
   /** The scene light's color this frame; returns its strength. */
   light(now: number, out: Color): number;
+  /** How much the scene light should swell on the kick, 0..1. */
+  pulse(): number;
   tint: SceneTint;
 }
 
@@ -205,6 +213,15 @@ export function buildMoods(): Moods {
       }
       if (strength > 0) out.multiplyScalar(1 / strength);
       return gain;
+    },
+    pulse() {
+      let p = 0;
+      let total = 0;
+      for (const id of MOODS) {
+        p += weight[id] * palettes[id].pulse;
+        total += weight[id];
+      }
+      return total > 0 ? p / total : 1;
     },
     tint: {
       bulb(i, now, col) {
@@ -431,7 +448,7 @@ function meadowScene(): Scene {
     const onLeft = i % 2 === 0;
     flowerSpots.push({ x: onLeft ? -3.03 + rand() * 0.06 : -2.18 + rand() * 0.06, y: 0.8, z: -3.85 + rand() * 0.5, h: 0.06 + rand() * 0.1, tilt: (rand() - 0.5) * 0.8, delay: 0.3 + rand() * 0.3 });
   }
-  const heads = new InstancedMesh(headGeo, new MeshStandardMaterial({ vertexColors: true, roughness: 0.6, emissive: '#ffffff', emissiveIntensity: 0.06 }), flowerSpots.length);
+  const heads = new InstancedMesh(headGeo, new MeshStandardMaterial({ vertexColors: true, roughness: 0.6, emissive: '#ffffff', emissiveIntensity: 0.03 }), flowerSpots.length);
   const stemGeo = new CylinderGeometry(0.0035, 0.005, 1, 4, 1, true);
   stemGeo.translate(0, 0.5, 0);
   const stems = new InstancedMesh(stemGeo, new MeshStandardMaterial({ color: '#3f8f3a', roughness: 0.9 }), flowerSpots.length);
@@ -579,22 +596,62 @@ function tetoScene(): Scene {
   // Standing on the cabinet's front right corner, turned toward the camera
   root.position.set(-2.16, 0.8, -3.37);
   root.lookAt(EYE.x, 0.8, EYE.z);
-  root.add(teto);
+  const holder = new Group(); // whichever Teto is in use: this one, or a custom model
+  holder.add(teto);
+  root.add(holder);
+
+  // A custom model in public/models/teto.glb replaces the built-in one, loaded the first
+  // time the song plays. It is fitted to the same spot and height; its first animation loops.
+  let tried = false;
+  let mixer: AnimationMixer | null = null;
+  const tryCustom = async () => {
+    tried = true;
+    try {
+      const res = await fetch(`${import.meta.env.BASE_URL}models/teto.glb`);
+      if (!res.ok || (res.headers.get('content-type') ?? '').includes('html')) return; // no file: keep the built-in Teto
+      const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
+      const gltf = await new GLTFLoader().parseAsync(await res.arrayBuffer(), '');
+      const model = gltf.scene;
+      const box = new Box3().setFromObject(model);
+      const size = box.getSize(new Vector3());
+      const fit = TETO_HEIGHT / Math.max(size.y, 1e-6);
+      model.scale.setScalar(fit);
+      model.position.set(-((box.min.x + box.max.x) / 2) * fit, -box.min.y * fit, -((box.min.z + box.max.z) / 2) * fit);
+      model.traverse((o) => {
+        if ((o as Mesh).isMesh) o.castShadow = true;
+      });
+      if (gltf.animations.length) {
+        mixer = new AnimationMixer(model);
+        mixer.clipAction(gltf.animations[0]).play();
+      }
+      holder.clear();
+      holder.add(model);
+    } catch (err) {
+      console.warn('Custom Teto model could not load; using the built-in one.', err);
+    }
+  };
+  let last = 0;
 
   return {
     root,
     update(w, now, audio) {
+      if (!tried) void tryCustom();
+      mixer?.update(last ? Math.min((now - last) / 1000, 0.1) : 0);
+      last = now;
       const pop = easeOutBack(clamp01(w * 1.5));
-      teto.scale.setScalar(Math.max(pop, 0.0001));
-      // Bob on the beat, sway a little, and tilt her head.
+      holder.scale.setScalar(Math.max(pop, 0.0001));
+      // Bob on the beat, sway a little, and turn to look around.
       const beats = (now / 1000) * (100 / 60);
       const hop = Math.abs(Math.sin(beats * Math.PI)) * (0.008 + audio[0] * 0.012);
-      teto.position.y = hop;
-      teto.rotation.z = Math.sin(beats * Math.PI * 0.5) * 0.06;
-      teto.rotation.y = Math.sin(now / 2600) * 0.25;
+      holder.position.y = hop;
+      holder.rotation.z = Math.sin(beats * Math.PI * 0.5) * 0.06;
+      holder.rotation.y = Math.sin(now / 2600) * 0.25;
     },
   };
 }
+
+/** Meters, feet to the top of the ahoge: what a custom model gets scaled to. */
+const TETO_HEIGHT = 0.5;
 
 // ---------------------------------------------------------------------------------------
 // The sky outside: the room's moonlit void, blended with each scene's own backdrop.
