@@ -72,7 +72,7 @@ export const projects: Project[] = [
     title: 'Sonare of the Lake',
     subtitle: 'A lyric visualizer built for the Hatsune Miku "Magical Mirai 2026" Programming Contest.',
     tags: ['Three.js', 'TextAlive API', 'Web/JS', 'Blender'],
-    cover: '/PWpage/Sonare.png',
+    cover: '/PWpage/Sonare.jpg',
     sections: [
       { heading: 'The concept', text: 'The player sails a Vocaloid-themed boat across a stylized lake. Lyrics emerge from the water as schools of luminous particles during verses, then coalesce in the sky during choruses, turning song structure into navigable geography.' },
       { heading: "How it's built", text: 'A Vite + Three.js (r172) web app driven by the TextAlive App API for lyric, beat, and chord timing. Cannon-es powers buoyancy and boat physics, Troika Three Text renders SDF lyric glyphs, GSAP drives the cinematic camera, and Draco compresses the terrain mesh. All six character boats (Miku, Rin, Len, Luka, KAITO, MEIKO) were hand-modeled in Blender from an original cube-chibi template.' },
@@ -119,7 +119,7 @@ export const projects: Project[] = [
     title: 'RoomLink-ChillZone',
     subtitle: 'A self-designed VRChat world built from scratch with Unity and the VRChat SDK.',
     tags: ['Unity', 'Game Design', 'VRChat'],
-    cover: '/PWpage/vrchatroom.png',
+    cover: '/PWpage/vrchatroom.jpg',
     sections: [
       { heading: 'The problem', text: 'This was my first virtual world, so I had to learn the entire pipeline from 3D environment design to SDK integration, essentially from zero.' },
       { heading: 'The solution', text: 'I learned the VRChat SDK inside Unity along with ProBuilder, Bakery, and Magic Light Probes. I integrated interactive prefabs to build a rich environment, then optimized the map from 300MB down to 50MB so it runs smoothly on standalone VR headsets.' },
@@ -143,7 +143,7 @@ export const projects: Project[] = [
     title: 'Hot Footer',
     subtitle: 'A 2D cave platformer from a class project: climb to the exit before you touch the lava. Playable right here.',
     tags: ['Unity', 'C#', 'Game Programming', 'Sound'],
-    cover: '/PWpage/hotfooter.png',
+    cover: '/PWpage/hotfooter.jpg',
     game: 'lava-rising',
     deepDive: 'lava-rising',
     sections: [
