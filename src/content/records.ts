@@ -5,6 +5,7 @@
 // The song plays in Spotify's own embed as a short preview, and the title and cover come from Spotify too. Album, year and genre are
 // looked up in Apple's public catalog by title + artist and left out if it has no match.
 // Anything you fill in by hand wins over the fetched value.
+import type { MoodId } from '../room/moods';
 
 export interface RecordPick {
   id: string;
@@ -16,6 +17,8 @@ export interface RecordPick {
   title?: string;
   album?: string;
   year?: string;
+  /** The scene the room turns into while it plays (see src/room/moods.ts). */
+  mood?: MoodId;
   /** Sleeve color shown until the cover loads. */
   tint: string;
 }
@@ -26,6 +29,7 @@ export const records: RecordPick[] = [
     spotify: 'https://open.spotify.com/track/6jg8bLxvV2k8gtYPkgOufy?si=91922e13feb94bac',
     artist: 'SadSvit',
     note: 'This song brings me energy',
+    mood: 'neon',
     tint: '#ff9d4d',
   },
   {
@@ -33,12 +37,14 @@ export const records: RecordPick[] = [
     spotify: 'https://open.spotify.com/track/7LMajLn4v2ZWmLcfE1a7DY?si=d66ea5cd6bef4c52',
     artist: 'Porter Robinson',
     note: 'This song brings me hope',
+    mood: 'meadow',
     tint: '#90ee90',
   },
   {
     id: 'pick-3',
     spotify: 'https://open.spotify.com/track/1H2pPtoPS8kNlqCN7HfT6g?si=c8ca5caaf7e744b8',
     artist: 'Jamie Paige',
+    mood: 'teto',
     note: 'This song brings me happiness',
     tint: '#ff2b00',
   },

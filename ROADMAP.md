@@ -27,7 +27,7 @@ Dev helpers (dev server only):
 - `/?shot=sonare` frames one camera shot without scrolling (see `src/room/shots.ts`).
 - `/?at=lab` scrolls to a chapter.
 - `/?fps` shows the frame rate and what the adaptive quality governor is doing.
-- `/?play` starts the music on load; `/?shot=record` frames the turntable; `/?crate` opens the Liner notes crate.
+- `/?play` starts the music on load; `/?shot=record` frames the turntable; `/?crate` opens the Liner notes crate; `/?mood=neon` (or `meadow`, `teto`) shows a song scene.
 
 ## Floors
 
@@ -49,7 +49,7 @@ Dev helpers (dev server only):
 | 12 | Chapter: Sonare of the Lake | ⬜ |
 | 13 | Chapter: RoomLink-ChillZone | ⬜ |
 | 14 | Chapter: Hot Footer | ⬜ |
-| 14b | Liner notes (B1): card expands into an album stack; a Spotify embed plays each pick as a preview and borrows the turntable | ✅ |
+| 14b | Liner notes (B1): card expands into an album stack; a Spotify embed plays each pick as a preview and borrows the turntable; each song turns the corner into its cover (neon flowers, meadow, Kasane Teto) | ✅ |
 | 15 | Lab (CS showcase): live audio graph + FFT explainer | ⬜ |
 | 16 | Contact: step sequencer with shareable loops | ⬜ |
 | 17 | Extras: command palette, spectrogram easter egg | ⬜ |

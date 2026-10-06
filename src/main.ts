@@ -117,6 +117,9 @@ mountCrate(document.querySelector<HTMLElement>('#records .chapter__slot')!, play
     label = null;
     room?.setLabel(null);
   },
+  setMood(mood) {
+    room?.setMood(mood ?? null);
+  },
 });
 initLiquidGlass();
 

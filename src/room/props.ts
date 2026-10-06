@@ -29,6 +29,7 @@ import {
   type Texture,
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import type { SceneTint } from './moods';
 import { codeScreen, floorTexture, keysTexture, laptopDeckGlow, laptopDeckTexture, loadImage, placeholderPoster, vinylLabel, windowMaterial } from './textures';
 
 const std = (color: string, extra: Partial<ConstructorParameters<typeof MeshStandardMaterial>[0]> = {}) =>
@@ -69,7 +70,7 @@ export interface RoomProps {
   /** Show a song cover on the record label; null restores the house label. */
   setLabel(texture: Texture | null): void;
   /** `eye` is the camera position: the laptop only types while it is close enough to read. */
-  tick(now: number, dt: number, audio: number[], eye: Vector3): void;
+  tick(now: number, dt: number, audio: number[], eye: Vector3, tint?: SceneTint): void;
   /** Named spots the camera can visit. */
   anchors: Record<string, Vector3>;
   ready: Promise<void>;
@@ -514,7 +515,7 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
       dustMat.opacity = level * 0.55;
       voidMat.opacity = 0.3 + level * 0.25;
     },
-    tick(now, dt, audio, eye) {
+    tick(now, dt, audio, eye, tint) {
       // Each typed character re-uploads a 1600x1000 texture; skip it when nobody can read it.
       if (!screenDrawn || eye.distanceToSquared(LAPTOP) < 3.2 * 3.2) {
         screen.tick(now);
@@ -534,8 +535,9 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
       for (const w of woofers) w.scale.set(kick, 1, kick);
       bulbs.forEach((b, i) => {
         const twinkle = 0.85 + 0.15 * Math.sin(now / 600 + i * 1.7);
-        const base = i % 3 === 0 ? '#ff9ec0' : '#ffcf85';
-        b.color.set(base).multiplyScalar((0.04 + glow * 2.6) * twinkle);
+        b.color.set(i % 3 === 0 ? '#ff9ec0' : '#ffcf85');
+        tint?.bulb(i, now, b.color);
+        b.color.multiplyScalar((0.04 + glow * 2.6) * twinkle);
       });
       const pos = dustGeo.attributes.position as BufferAttribute;
       for (let i = 0; i < dustCount; i++) {
@@ -549,6 +551,8 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
       const sway = Math.sin(now / 9000);
       voidPoints.position.set(sway * 0.4, Math.sin(now / 6000) * 0.25, 0);
       voidPoints.rotation.y = sway * 0.015;
+      voidMat.color.set('#b9b4ff');
+      tint?.motes(voidMat.color);
     },
   };
 }

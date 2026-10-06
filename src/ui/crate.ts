@@ -2,7 +2,7 @@
 // into an album stack; arrows flip between sleeves. The song plays in a Spotify embed below
 // the notes, and whenever it plays it borrows the room's turntable: the arm drops, the label
 // shows the cover, and the room pulses along. Everyone hears a preview, never the full song.
-import { records, resolvePick, type ResolvedPick } from '../content/records';
+import { records, resolvePick, type RecordPick, type ResolvedPick } from '../content/records';
 import type { GuestSlot, Player } from '../audio/player';
 import { createSpotifyPlayer, type PlaybackUpdate, type SpotifyController } from '../audio/spotify';
 import { placeholder } from './placeholder';
@@ -11,6 +11,8 @@ export interface CrateHooks {
   /** Show this cover on the turntable label, or null to restore the house label. */
   setLabel(tint: string, cover: HTMLImageElement | null): void;
   clearLabel(): void;
+  /** Turn the record player's corner into this song's scene (null: back to the plain room). */
+  setMood(mood: RecordPick['mood'] | null): void;
 }
 
 /** Visitors logged in to Spotify would get the full song; stop it where a preview would end. */
@@ -126,6 +128,7 @@ export function mountCrate(slot: HTMLElement, player: Player, hooks: CrateHooks)
         id: info.pick.id,
         slot: player.host({ id: info.pick.id, title: info.title, artist: info.artist }, () => void spotify?.then((c) => c.pause())),
       };
+      hooks.setMood(info.pick.mood ?? null);
       void (info.cover ? loadImage(info.cover) : Promise.resolve(null)).then((img) => {
         if (onTurntable?.id === info.pick.id) hooks.setLabel(info.pick.tint, img);
       });
@@ -197,6 +200,7 @@ export function mountCrate(slot: HTMLElement, player: Player, hooks: CrateHooks)
     if (onTurntable && s.guest?.id !== onTurntable.id) {
       onTurntable = null;
       hooks.clearLabel();
+      hooks.setMood(null);
     }
     syncSpin();
   });

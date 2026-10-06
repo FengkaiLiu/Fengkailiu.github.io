@@ -2,7 +2,6 @@
 // scroll-driven camera that glides from object to object.
 import {
   ACESFilmicToneMapping,
-  CanvasTexture,
   DirectionalLight,
   HalfFloatType,
   HemisphereLight,
@@ -10,7 +9,6 @@ import {
   PerspectiveCamera,
   PointLight,
   Scene,
-  SRGBColorSpace,
   SpotLight,
   type Texture,
   Vector2,
@@ -24,6 +22,7 @@ import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js'
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { buildRoom } from './props';
+import { buildMoods, MOODS, type MoodId } from './moods';
 import { DEFAULT_FRAME, shots, type Shot } from './shots';
 
 export interface Room {
@@ -36,6 +35,8 @@ export interface Room {
   setRain(on: boolean): void;
   setPlaying(on: boolean): void;
   setLabel(texture: Texture | null): void;
+  /** Turn the record player's corner into a song's scene, or null for the plain room. */
+  setMood(id: MoodId | null): void;
 }
 
 const MAX_DPR = 1.75;
@@ -102,7 +103,12 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   document.body.prepend(canvas);
 
   const scene = new Scene();
-  scene.background = voidBackdrop();
+  const moods = buildMoods();
+  scene.background = moods.backdrop; // the moonlit void, blended toward the playing song's sky
+  scene.add(moods.root);
+  // Dev helper: /?mood=neon (or meadow, teto) shows a song scene without playing anything.
+  const debugMood = import.meta.env.DEV ? (new URLSearchParams(location.search).get('mood') as MoodId | null) : null;
+  if (debugMood && MOODS.includes(debugMood)) moods.set(debugMood, true);
 
   const camera = new PerspectiveCamera(34, 1, 0.1, 100);
 
@@ -125,7 +131,11 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   posterLight.position.set(-2.9, 3.9, 1.1);
   const screenGlow = new PointLight('#8fd8ff', 0, 2.6, 2);
   screenGlow.position.set(0.8, 1.85, -3.05);
-  scene.add(hemi, moon, lampSpot, lampSpot.target, lampFill, fairyFill, posterLight, screenGlow);
+  // A song scene's own light by the turntable, dark until a scene plays.
+  const moodLight = new PointLight('#ffffff', 0, 6, 1.3);
+  moodLight.position.set(-2.1, 1.75, -2.85);
+  scene.add(hemi, moon, lampSpot, lampSpot.target, lampFill, fairyFill, posterLight, screenGlow, moodLight);
+  const base = { sky: hemi.color.clone(), ground: hemi.groundColor.clone(), fill: fairyFill.color.clone(), moon: moon.color.clone(), poster: posterLight.color.clone() };
 
   const room = buildRoom(covers);
   scene.add(room.root);
@@ -293,12 +303,21 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
 
     // Lights fade up after the switch.
     const lit = lightsStart === -1 ? 0 : easeInOut(Math.min((now - lightsStart) / LIGHTS_ON_MS, 1));
-    hemi.intensity = 0.42 + lit * 0.25;
-    lampSpot.intensity = lit * 3.6;
-    lampFill.intensity = lit * 2.2;
+    // While a song scene plays, the lights drift toward its cover's colors.
+    const moodWeight = moods.tick(now, dt, audio);
+    const dim = 1 - moods.dim();
+    hemi.intensity = 0.42 + lit * 0.25 + Math.min(moodWeight, 1) * 0.15;
+    lampSpot.intensity = lit * 3.6 * dim;
+    lampFill.intensity = lit * 2.2 * dim;
     fairyFill.intensity = lit * 3.4;
-    posterLight.intensity = lit * 2.6;
+    posterLight.intensity = lit * 2.6 * (0.4 + 0.6 * dim);
     screenGlow.intensity = lit * 1.1;
+    moods.mix('sky', base.sky, hemi.color);
+    moods.mix('ground', base.ground, hemi.groundColor);
+    moods.mix('fill', base.fill, fairyFill.color);
+    moods.mix('moon', base.moon, moon.color);
+    moods.mix('fill', base.poster, posterLight.color);
+    moodLight.intensity = moods.light(now, moodLight.color) * (2.4 + audio[0] * 2) * Math.max(lit, 0.4);
     room.setGlow(lit);
 
     // Camera eases toward the scroll target; the pointer adds a small parallax.
@@ -325,7 +344,7 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     if (w > 820) camera.setViewOffset(w, h, -wideFrame * w, 0, w, h);
     else camera.setViewOffset(w, h, 0, h * 0.14, w, h);
 
-    room.tick(now, dt, audio, camera.position);
+    room.tick(now, dt, audio, camera.position, moods.tint);
     grain.uniforms.uTime.value = now / 1000;
     composer.render(dt);
     governQuality(now, dt);
@@ -361,6 +380,9 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     setLabel(texture) {
       room.setLabel(texture);
     },
+    setMood(id) {
+      moods.set(id);
+    },
     setAudio(bass, mid, treble, level) {
       audio[0] = bass;
       audio[1] = mid;
@@ -389,28 +411,4 @@ function createFpsMeter() {
       el.textContent = `${fps.toFixed(0)} fps · tier ${tier} · dpr ${dpr.toFixed(2)} · bloom ${bloom ? 'on' : 'off'}`;
     },
   };
-}
-
-/** The night outside the diorama: deep violet with a cool moonlit haze on the left, so
- *  the empty side of wide screens reads as atmosphere rather than flat black. */
-function voidBackdrop() {
-  const c = document.createElement('canvas');
-  c.width = 512;
-  c.height = 256;
-  const g = c.getContext('2d')!;
-  g.fillStyle = '#100c21';
-  g.fillRect(0, 0, c.width, c.height);
-  const glow = (x: number, y: number, r: number, color: string) => {
-    const grad = g.createRadialGradient(x, y, 0, x, y, r);
-    grad.addColorStop(0, color);
-    grad.addColorStop(1, 'rgba(16, 12, 33, 0)');
-    g.fillStyle = grad;
-    g.fillRect(0, 0, c.width, c.height);
-  };
-  glow(70, 90, 230, 'rgba(78, 82, 160, 0.55)'); // moon haze, upper left
-  glow(40, 230, 160, 'rgba(120, 60, 130, 0.35)'); // plum glow, lower left
-  glow(330, 120, 260, 'rgba(50, 36, 92, 0.45)'); // behind the room
-  const tex = new CanvasTexture(c);
-  tex.colorSpace = SRGBColorSpace;
-  return tex;
 }
