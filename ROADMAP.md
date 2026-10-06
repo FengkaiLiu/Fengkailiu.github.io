@@ -28,7 +28,7 @@ Dev helpers (dev server only):
 - `/?at=lab` scrolls to a chapter.
 - `/?fps` shows the frame rate and what the adaptive quality governor is doing.
 - `/?nogate&game` opens the Lava Rising console; `game=level2` (or `level3`, `secret`) starts on that level.
-- `/?nogate&notes=hotfooter` opens a project's liner notes.
+- `/?nogate&notes=hotfooter` opens a project's liner notes; `&part=3` scrolls to that part of the walkthrough.
 - `/?play` starts the music on load; `/?shot=record` frames the turntable; `/?crate` opens the Liner notes crate; `/?mood=neon` (or `meadow`, `teto`) shows a song scene; `/?scope=spectrum` (or `wave`, `spectrogram`, `stereo`, `chroma`) opens the Scope.
 
 ## Floors
@@ -51,7 +51,7 @@ Dev helpers (dev server only):
 | 12 | Chapter: Sonare of the Lake (gameplay video in the sheet, card and poster; screenshots; 3D viewer of all six boats; the real Miku boat on the shelf) | ✅ |
 | 13 | Chapter: RoomLink-ChillZone | ⬜ |
 | 14 | Chapter: Hot Footer, playable: the real levels ported to the browser on a console overlay (open from the card or the shelf handheld) | ✅ |
-| 14c | Hot Footer, under the hood: annotated Player.cs walkthrough with interactive raycast diagrams, plus the commit timeline | ⬜ |
+| 14c | Hot Footer, under the hood: four pieces of my C# (ground check, jump tuning, camera follow, soundtrack gate) with live diagrams, plus the commit timeline | ✅ |
 | 14a | Chapter A6: my_KWS (Project 5): edge keyword spotting write-up, demo video on the card and back-wall frame, the live Hugging Face demo embedded on request | ✅ |
 | 14b | Liner notes (B1): card expands into an album stack; a Spotify embed plays each pick as a preview and borrows the turntable; each song turns the corner into its cover (neon flowers, meadow, Kasane Teto) | ✅ |
 | 15 | Lab (CS showcase): live diagram of the page's audio graph + FFT playground (hand-written radix-2 FFT, windowing, play in the room) | ✅ |

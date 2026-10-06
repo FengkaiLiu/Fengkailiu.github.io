@@ -267,3 +267,18 @@ for (const [key, path] of Object.entries(AUDIO)) audio[key] = await save(`audio/
 
 await save('manifest.json', JSON.stringify({ source: 'https://github.com/GameDevGroup4/Unity-Project', exported: new Date().toISOString().slice(0, 10), levels, player, audio, title }, null, 2));
 console.log('done:', OUT);
+
+// Commit history snapshot for the timeline (a file, not live API calls: no rate limits).
+const commitsRes = await fetch('https://api.github.com/repos/GameDevGroup4/Unity-Project/commits?per_page=100');
+if (commitsRes.ok) {
+  const commits = (await commitsRes.json())
+    .map((c) => ({
+      date: c.commit.author.date,
+      author: c.author?.login ?? c.commit.author.name,
+      merge: c.parents.length > 1,
+      message: c.commit.message.split('\n')[0].trim(),
+    }))
+    .reverse();
+  await writeFile(join(OUT, '..', 'commits.json'), JSON.stringify(commits, null, 1));
+  console.log(`commits: ${commits.length}`);
+}

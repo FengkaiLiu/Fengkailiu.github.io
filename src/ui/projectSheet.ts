@@ -114,6 +114,7 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
       }
       ${photoGroups.map(([g, gi]) => mediaGroup(g, gi)).join('')}
       ${p.models ? `<figure class="sheet__media sheet__models"><div data-models></div><figcaption>${esc(p.models.caption)}</figcaption></figure>` : ''}
+      ${p.deepDive ? '<section class="sheet__section sheet__deep" data-deep></section>' : ''}
       <div data-media></div>
       ${links.length ? `<div class="sheet__links">${links.join('')}</div>` : ''}
     `;
@@ -138,6 +139,15 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
       void import('./modelViewer').then(({ mountModelViewer }) => {
         if (viewerFor !== p.id || !host.isConnected) return; // moved on while it loaded
         viewer = mountModelViewer(host, items);
+      });
+    }
+    // Hot Footer's code walkthrough: also on demand, and torn down like the viewer.
+    const deep = body.querySelector<HTMLElement>('[data-deep]');
+    if (deep && p.deepDive) {
+      viewerFor = p.id;
+      void import('./lavaDeepDive').then(({ mountLavaDeepDive }) => {
+        if (viewerFor !== p.id || !deep.isConnected) return;
+        viewer = mountLavaDeepDive(deep);
       });
     }
   };

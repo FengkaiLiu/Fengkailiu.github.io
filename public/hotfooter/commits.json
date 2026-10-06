@@ -1,0 +1,236 @@
+[
+ {
+  "date": "2024-10-25T19:13:10Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Initial commit"
+ },
+ {
+  "date": "2024-10-25T19:15:08Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Instructions update"
+ },
+ {
+  "date": "2024-10-25T19:28:42Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Update Instruction"
+ },
+ {
+  "date": "2024-10-25T19:35:04Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Update Instruction"
+ },
+ {
+  "date": "2024-10-28T18:07:55Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Test of change"
+ },
+ {
+  "date": "2024-10-28T18:14:12Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Update README.md"
+ },
+ {
+  "date": "2024-10-28T18:23:56Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Update README.md"
+ },
+ {
+  "date": "2024-10-28T18:27:53Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Update README.md"
+ },
+ {
+  "date": "2024-10-31T03:51:05Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "import assets got from unity asset store and add some level design"
+ },
+ {
+  "date": "2024-10-31T03:51:16Z",
+  "author": "FengkaiLiu",
+  "merge": true,
+  "message": "Merge branch 'main' of https://github.com/GameDevGroup4/Unity-Project"
+ },
+ {
+  "date": "2024-10-31T04:26:32Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "create logic for player horizontal movement"
+ },
+ {
+  "date": "2024-11-01T03:32:11Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "create animation for idle, walk and run"
+ },
+ {
+  "date": "2024-11-01T04:01:41Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Create ground check for player & adding comments"
+ },
+ {
+  "date": "2024-11-01T04:18:18Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Adding jumping action and fix the physics of 2d friction"
+ },
+ {
+  "date": "2024-11-01T04:33:37Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Code value update & UI element import"
+ },
+ {
+  "date": "2024-11-01T16:24:06Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Adding jumping and falling controller and animation"
+ },
+ {
+  "date": "2024-11-01T16:48:43Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "create camera follow with smooth factor to make camera follow smoothly"
+ },
+ {
+  "date": "2024-11-01T17:19:27Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Create Bounds for camera to make sure player cannot see outside of the game"
+ },
+ {
+  "date": "2024-11-01T17:40:27Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Update README.md"
+ },
+ {
+  "date": "2024-11-01T17:40:46Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Update README.md"
+ },
+ {
+  "date": "2024-11-14T14:44:24Z",
+  "author": "avafacciolo",
+  "merge": false,
+  "message": "start screen"
+ },
+ {
+  "date": "2024-11-15T23:43:39Z",
+  "author": "nbalog7",
+  "merge": false,
+  "message": "implemented double jumping"
+ },
+ {
+  "date": "2024-11-15T23:57:40Z",
+  "author": "nbalog7",
+  "merge": true,
+  "message": "Merge pull request #1 from GameDevGroup4/double-jumping"
+ },
+ {
+  "date": "2024-11-20T21:16:22Z",
+  "author": "avafacciolo",
+  "merge": false,
+  "message": "die when touch lava"
+ },
+ {
+  "date": "2024-11-20T22:19:32Z",
+  "author": "avafacciolo",
+  "merge": false,
+  "message": "win and lose screen"
+ },
+ {
+  "date": "2024-11-20T23:26:24Z",
+  "author": "nbalog7",
+  "merge": false,
+  "message": "Add files via upload"
+ },
+ {
+  "date": "2024-11-21T02:15:56Z",
+  "author": "nbalog7",
+  "merge": false,
+  "message": "Merged with scene and lava logic changes"
+ },
+ {
+  "date": "2024-11-21T02:16:59Z",
+  "author": "nbalog7",
+  "merge": true,
+  "message": "Merge pull request #3 from GameDevGroup4/GUI,-sound,-&-bug-fixes"
+ },
+ {
+  "date": "2024-11-21T14:04:32Z",
+  "author": "avafacciolo",
+  "merge": false,
+  "message": "win screen"
+ },
+ {
+  "date": "2024-11-21T14:26:47Z",
+  "author": "avafacciolo",
+  "merge": true,
+  "message": "changing font + fixing merging errors"
+ },
+ {
+  "date": "2024-11-21T15:45:01Z",
+  "author": "avafacciolo",
+  "merge": false,
+  "message": "burned by lava, win game, lose game sounds"
+ },
+ {
+  "date": "2024-11-22T14:28:26Z",
+  "author": "avafacciolo",
+  "merge": false,
+  "message": "changed font"
+ },
+ {
+  "date": "2024-11-22T17:23:08Z",
+  "author": "nbalog7",
+  "merge": false,
+  "message": "Implemented wall jumps, intense music, and progress highlight"
+ },
+ {
+  "date": "2024-11-22T17:25:44Z",
+  "author": "nbalog7",
+  "merge": true,
+  "message": "Merge branch 'main' of https://github.com/GameDevGroup4/Unity-Project"
+ },
+ {
+  "date": "2024-11-22T23:27:59Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Add 2 sound system & level2 map"
+ },
+ {
+  "date": "2024-11-22T23:30:00Z",
+  "author": "FengkaiLiu",
+  "merge": true,
+  "message": "Merge pull request #4 from GameDevGroup4/2-sound-system&map2"
+ },
+ {
+  "date": "2024-11-28T00:17:45Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "level3 & level secret, level teleport code update"
+ },
+ {
+  "date": "2024-11-30T02:05:12Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "FINAL UPDATE     logic for winning game, connection between levels."
+ },
+ {
+  "date": "2024-12-05T23:58:57Z",
+  "author": "FengkaiLiu",
+  "merge": false,
+  "message": "Code Optimization"
+ }
+]

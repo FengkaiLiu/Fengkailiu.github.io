@@ -277,6 +277,9 @@ showGate(
   // Dev helper: /?nogate&notes=hotfooter opens that project's liner notes.
   const notes = import.meta.env.DEV ? new URLSearchParams(location.search).get('notes') : null;
   if (notes) sheet.open(notes);
+  // ...and &part=3 scrolls it to that part of the Hot Footer walkthrough.
+  const part = import.meta.env.DEV ? Number(new URLSearchParams(location.search).get('part')) : 0;
+  if (part) setTimeout(() => document.querySelectorAll('.deep__part')[part - 1]?.scrollIntoView({ block: 'start' }), 1500);
   // Opened from a shared beat link: glide down to it once the lamp is on.
   const contact = document.getElementById('contact');
   if (beatbox.shared && contact && !atEl) window.setTimeout(() => scroll.to(contact), 1400);

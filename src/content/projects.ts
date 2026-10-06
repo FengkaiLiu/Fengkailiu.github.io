@@ -26,6 +26,8 @@ export interface Project {
   embed?: { title: string; src: string; allow?: string; note: string };
   /** A game playable on the console overlay (Hot Footer). */
   game?: 'lava-rising';
+  /** An interactive code walkthrough in the liner notes (Hot Footer). */
+  deepDive?: 'lava-rising';
   /** 3D models for the liner notes' model viewer (Sonare's boats). */
   models?: { caption: string; items: { name: string; src: string; color: string }[] };
   /** Assets the scroll chapter still needs from Fengkai. */
@@ -143,17 +145,19 @@ export const projects: Project[] = [
     tags: ['Unity', 'C#', 'Game Programming', 'Sound'],
     cover: '/PWpage/hotfooter.png',
     game: 'lava-rising',
+    deepDive: 'lava-rising',
     sections: [
       { heading: 'The game', text: 'Climb out of a cave without touching the lava. Three levels of tight platforming with double jumps and wall jumps, a run timer, and an altimeter that fills as you climb. Near the top of Level 3 the music lifts and the altimeter starts to blink. A terminal hidden in Level 2 opens a secret level.' },
       { heading: 'What I built', bullets: [
-        'The player controller: walking, running on Shift, a ground check, one double jump, and wall jumps detected with raycasts from the head and the feet.',
+        'The core player controller: horizontal movement, running on Shift, the raycast ground check, jumping, and the 2D friction fix.',
         'Idle, walk and run animations blended by speed in the Animator, plus jump and fall states.',
         'A smoothed camera that follows the player and stays inside each level\'s bounds.',
-        'The sound system: a soundtrack choice on the title screen that changes the music in every level after it, plus the jump, landing and lava sounds.',
-        'The secret level and the doors that link the levels together.',
+        'The jump tuning: I halved the jump force (20 to 10) so the platforms need the double jump.',
+        'The sound system: a soundtrack choice on the title screen that changes the music in every level after it.',
+        'Level 2, Level 3 and the secret level (it only opens with my soundtrack), the doors between levels, and the win condition.',
         'The team setup: I created the repo and wrote the Git and Unity workflow guide my teammates followed.',
       ] },
-      { heading: 'The team', text: 'Three of us built it in about six weeks (October to December 2024), working through GitHub and Discord. I made 25 of the project\'s 39 commits.' },
+      { heading: 'The team', text: 'Three of us built it in about six weeks (October to December 2024), working through GitHub and Discord. I made 25 of the project\'s 39 commits. My teammates added the double jump and wall jumps (nbalog7) and the lava, start, win and lose screens (Ava).' },
       { heading: 'This browser version', text: 'The game on this page is a port I made from the original Unity project. The levels are read straight from the Unity scene files, and the movement uses the same numbers as the C# code: 4 units per second walking, twice that running, one air jump, and wall jumps whenever the head and feet both touch a wall.' },
       { heading: 'Credits', text: 'Soundtrack (title theme, level music, secret level, victory and defeat) by Fengkai Liu, produced with Suno. The original title-screen music is by teammate Ava. Art: the Super Grotto Escape pack by Ansimuz (CC0).' },
       { heading: 'What I learned', text: 'How to collaborate through version control, and how to pick up and apply new tools quickly under a tight deadline.' },
