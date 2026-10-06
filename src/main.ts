@@ -18,6 +18,7 @@ import { mountPlayerDock } from './ui/playerDock';
 import { mountCrate } from './ui/crate';
 import { mountMixer } from './ui/mixer';
 import { mountProjectSheet } from './ui/projectSheet';
+import { mountLab } from './ui/lab';
 import { mountScopePanel } from './ui/scopePanel';
 import { createSmoothScroll } from './ui/scroll';
 import { mountTrackNav } from './ui/trackNav';
@@ -43,7 +44,7 @@ interface Chapter {
   floor?: string;
   needs?: readonly string[];
   /** Built content instead of a placeholder. */
-  custom?: 'crate' | 'mixer' | 'project';
+  custom?: 'crate' | 'mixer' | 'project' | 'lab';
 }
 
 // Chapters read like a record's track list. Each one is replaced by its floor (see ROADMAP.md).
@@ -51,7 +52,7 @@ const chapters: Chapter[] = [
   { id: 'about', shot: 'about', track: 'A1', nav: 'About', title: 'Code on one screen, sound on the other.', text: profile.bio[0], custom: 'mixer' },
   ...projects.map((p, i) => ({ id: p.id, shot: p.id, track: `A${i + 2}`, nav: p.title, title: p.title, text: p.subtitle, tags: p.tags, custom: 'project' as const })),
   { id: 'records', shot: 'record', track: 'B1', nav: 'Liner notes', title: 'Liner notes.', text: '3 records I keep coming back to. Flip through the crate and put one on the turntable.', custom: 'crate' },
-  { id: 'lab', shot: 'lab', track: 'B2', nav: 'The Lab', title: 'How this room hears.', text: 'A live map of the audio graph running this page, and an FFT you can play with.', floor: 'Floor 15' },
+  { id: 'lab', shot: 'lab', track: 'B2', nav: 'The Lab', title: 'How this room hears.', text: 'A live map of the audio graph running this page, and an FFT you can play with.', custom: 'lab' },
   { id: 'contact', shot: 'contact', track: 'B3', nav: 'Contact', title: 'Leave me a beat.', text: 'Sequence a 4-bar loop and send it with your message.', floor: 'Floor 16' },
 ];
 
@@ -166,6 +167,13 @@ document.addEventListener('click', (e) => {
 });
 initLiquidGlass();
 
+// The Lab's live diagram needs to know what is sounding right now.
+let keysAt = -1e9;
+mountLab(document.querySelector<HTMLElement>('#lab .chapter__slot')!, () => {
+  const s = player.state();
+  return { music: s.playing && !s.guest, guest: s.playing && Boolean(s.guest), ambience: Boolean(ambience), keysAt };
+});
+
 // Things to play with in the room: the keys, the cat, the lamp and the record player.
 if (room) {
   room.onHover(mountRoomHints());
@@ -175,6 +183,7 @@ if (room) {
     // (a click is a gesture, so this works even after entering silently).
     if (hit.id === 'keys' && hit.note !== undefined) {
       room.pressKey(hit.note);
+      keysAt = performance.now();
       await unlockAudio();
       const { ctx } = getAudio();
       // Into the music bus, so the scope and the room hear your playing too.

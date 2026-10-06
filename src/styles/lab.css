@@ -1,0 +1,180 @@
+/* The Lab: a live diagram of the audio graph, and the FFT playground. */
+
+.chapter__card:has(.lab) {
+  width: min(100%, 660px);
+}
+.lab {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+.lab__tabs,
+.fft__waves {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.lab__tab,
+.fft__wave,
+.fft__toggle {
+  padding: 0.45em 0.95em;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.05);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--dur-fast) var(--ease-out);
+}
+.lab__tab:hover,
+.fft__wave:hover,
+.fft__toggle:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.lab__tab[aria-selected='true'],
+.fft__wave[aria-checked='true'],
+.fft__toggle[aria-pressed='true'] {
+  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(255, 157, 77, 0.2);
+}
+.lab__view[hidden] {
+  display: none;
+}
+.lab__caption {
+  font-size: var(--text-small);
+  line-height: 1.55;
+  opacity: 0.72;
+}
+
+/* ---------- Signal graph ---------- */
+.graph {
+  display: block;
+  width: 100%;
+  height: auto;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(10, 8, 24, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.graph__edge {
+  fill: none;
+  stroke: rgba(255, 255, 255, 0.16);
+  stroke-width: 2;
+  transition: stroke 0.4s var(--ease-out);
+}
+.graph__edge--data {
+  stroke-dasharray: 4 5;
+}
+/* Live edges: lamp orange, with dashes flowing along them toward the speakers. */
+.graph__edge.is-live {
+  stroke: var(--lamp-300);
+  stroke-dasharray: 7 6;
+  animation: graph-flow 0.9s linear infinite;
+}
+.graph__edge--data.is-live {
+  stroke: var(--moon-300);
+  stroke-dasharray: 3 6;
+}
+@keyframes graph-flow {
+  to {
+    stroke-dashoffset: -13;
+  }
+}
+.graph__node rect {
+  fill: rgba(30, 22, 60, 0.95);
+  stroke: rgba(255, 255, 255, 0.18);
+  stroke-width: 1.2;
+  transition:
+    fill 0.4s var(--ease-out),
+    stroke 0.4s var(--ease-out);
+}
+.graph__node--outside rect {
+  stroke-dasharray: 4 4;
+}
+.graph__node.is-live rect {
+  fill: rgba(255, 157, 77, 0.2);
+  stroke: var(--lamp-300);
+}
+.graph__node--outside.is-live rect {
+  fill: rgba(169, 196, 255, 0.14);
+  stroke: var(--moon-300);
+}
+.graph__title {
+  fill: var(--white);
+  font-size: 12px;
+  font-weight: 800;
+}
+.graph__sub {
+  fill: rgba(255, 246, 236, 0.6);
+  font-family: var(--font-mono);
+  font-size: 8px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .graph__edge.is-live {
+    animation: none;
+  }
+}
+
+/* ---------- FFT playground ---------- */
+.fft {
+  display: grid;
+  gap: var(--space-3);
+}
+.fft__controls {
+  display: grid;
+  gap: var(--space-3);
+}
+.fft__freq {
+  display: grid;
+  gap: 6px;
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+.fft__freq output {
+  font-family: var(--font-mono);
+  color: var(--lamp-300);
+  margin-left: 6px;
+}
+.fft__freq input {
+  width: 100%;
+  accent-color: var(--lamp-500);
+}
+.fft__toggles {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.fft__plots {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+.fft__plots figure {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+}
+.fft__plots canvas {
+  display: block;
+  width: 100%;
+  height: 130px;
+  border-radius: 10px;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.fft__plots figcaption {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  opacity: 0.6;
+}
+.fft__readout {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--lamp-300);
+}
+@media (max-width: 560px) {
+  .fft__plots {
+    grid-template-columns: 1fr;
+  }
+}
