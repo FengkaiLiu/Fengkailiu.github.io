@@ -58,7 +58,7 @@ Dev helpers (dev server only):
 | 16 | Contact: 16-step sequencer over the 4-bar progression, shareable beat links, message form (FormSubmit, no mail app needed) | ✅ |
 | 17 | Extras: command palette, spectrogram easter egg | ⬜ |
 | 18 | Polish: Latin-only fonts, re-encoded videos and JPG covers (18a); room pauses under the game console; reduced motion stills the camera arc, parallax, dust and twinkle; axe-clean (WCAG A/AA), skip link, landmarks; favicon; phone layout fixes | ✅ |
-| 19 | Launch: merge to main, Pages source = GitHub Actions | ⬜ |
+| 19 | Launch: main fast-forwarded to the redesign, Pages deploys from GitHub Actions, verified live at fengkailiu.github.io | ✅ |
 
 ## Assets Fengkai needs to make
 
@@ -67,7 +67,7 @@ In dev, the browser console lists every placeholder on the page.
 
 - [ ] **Music tracks** for the record player: put MP3/OGG files in `public/audio/` and list them in `src/content/tracks.ts` (the synthesized demo loop plays until then)
 - [x] **Liner notes picks** (3 songs): Spotify link, artist name and your note for each (optional credits), in `src/content/records.ts`
-- [ ] **Kasane Teto model** (optional): `public/models/teto.glb` replaces the built-in low-poly one in the Machine Love scene (auto-sized to 0.5 m, first animation loops)
+- [ ] **Kasane Teto model** (optional): `public/models/teto.glb` replaces the built-in low-poly one in the Machine Love scene (auto-sized to 0.5 m, first animation loops). After adding it, set `CUSTOM_TETO` in `src/room/moods.ts` to `'models/teto.glb'`
 - [ ] **Spectrogram easter-egg track** (a track with an image hidden in its spectrum)
 - [x] **VR Music Room**: 2 dev recordings + 3 presentation photos in `public/vrmusicroom/` (full-size originals kept in `media-src/`, not published)
 - [x] **Sonare of the Lake**: gameplay video, 2 screenshots and the 6 boat models in `public/sonareofthelake/` (PNG originals in `media-src/`)

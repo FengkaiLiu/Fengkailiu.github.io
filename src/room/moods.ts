@@ -600,14 +600,17 @@ function tetoScene(): Scene {
   holder.add(teto);
   root.add(holder);
 
-  // A custom model in public/models/teto.glb replaces the built-in one, loaded the first
-  // time the song plays. It is fitted to the same spot and height; its first animation loops.
+  // A custom model replaces the built-in one, loaded the first time the song plays. It is
+  // fitted to the same spot and height; its first animation loops. Opt-in: set CUSTOM_TETO to
+  // 'models/teto.glb' once the file is in public/, so visitors never request a missing file.
+  const CUSTOM_TETO: string | null = null;
   let tried = false;
   let mixer: AnimationMixer | null = null;
   const tryCustom = async () => {
     tried = true;
+    if (!CUSTOM_TETO) return;
     try {
-      const res = await fetch(`${import.meta.env.BASE_URL}models/teto.glb`);
+      const res = await fetch(`${import.meta.env.BASE_URL}${CUSTOM_TETO}`);
       if (!res.ok || (res.headers.get('content-type') ?? '').includes('html')) return; // no file: keep the built-in Teto
       const { GLTFLoader } = await import('three/addons/loaders/GLTFLoader.js');
       const gltf = await new GLTFLoader().parseAsync(await res.arrayBuffer(), '');
