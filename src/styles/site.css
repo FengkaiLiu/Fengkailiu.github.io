@@ -233,3 +233,17 @@ html.is-on .hero__tagline {
 .roomhint.is-shown {
   opacity: 1;
 }
+
+/* Tall chapters (About, the Lab, Contact) end clear of the bottom bar, not under it. */
+.chapter {
+  padding-bottom: calc(var(--space-8) + 76px);
+}
+@media (max-width: 820px) {
+  /* On phones the button and bottom bar already fill the hero's foot: no scroll cue. */
+  .hero__cue {
+    display: none;
+  }
+  .chapter {
+    padding-top: calc(var(--space-6) + 60px); /* clear the track list pill */
+  }
+}

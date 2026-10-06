@@ -131,3 +131,22 @@ button {
     scrollbar-color: var(--lamp-300) var(--night-950);
   }
 }
+
+/* Keyboard users can jump past the hero and the room's controls. Hidden until focused. */
+.skip-link {
+  position: fixed;
+  top: max(12px, env(safe-area-inset-top));
+  left: 50%;
+  z-index: 200;
+  padding: 0.6em 1.2em;
+  border-radius: 999px;
+  background: var(--lamp-300);
+  color: var(--night-900);
+  font-weight: 800;
+  text-decoration: none;
+  transform: translate(-50%, -160%);
+  transition: transform 0.2s var(--ease-out);
+}
+.skip-link:focus-visible {
+  transform: translate(-50%, 0);
+}

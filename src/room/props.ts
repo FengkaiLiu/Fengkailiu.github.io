@@ -107,6 +107,7 @@ export function buildRoom(
   /** A real boat model (.glb) to replace the shelf's stand-in paper boat. */
   shelfBoat?: string,
 ): RoomProps {
+  const still = matchMedia('(prefers-reduced-motion: reduce)'); // ambient motion pauses when asked
   const root = new Group();
   const anchors: Record<string, Vector3> = {};
   const glowMats: { mat: MeshStandardMaterial | MeshBasicMaterial; base: Color; max: number }[] = [];
@@ -720,7 +721,7 @@ export function buildRoom(
         (h.s.material as SpriteMaterial).opacity = Math.sin(age * Math.PI) * 0.9;
       }
       bulbs.forEach((b, i) => {
-        const twinkle = 0.85 + 0.15 * Math.sin(now / 600 + i * 1.7);
+        const twinkle = still.matches ? 1 : 0.85 + 0.15 * Math.sin(now / 600 + i * 1.7);
         b.color.set(i % 3 === 0 ? '#ff9ec0' : '#ffcf85');
         tint?.bulb(i, now, b.color);
         // With music, brightness follows the bulb's band and the loudest ones blush to white.
@@ -730,7 +731,8 @@ export function buildRoom(
         b.color.multiplyScalar((0.04 + glow * 2.6) * level);
       });
       const pos = dustGeo.attributes.position as BufferAttribute;
-      for (let i = 0; i < dustCount; i++) {
+      // With reduced motion the dust hangs still (it still glows).
+      for (let i = 0; i < (still.matches ? 0 : dustCount); i++) {
         let y = pos.getY(i) + dt * 0.03;
         if (y > 4) y = 0.5;
         pos.setY(i, y);
@@ -738,8 +740,8 @@ export function buildRoom(
       }
       pos.needsUpdate = true;
       // The whole cloud sways slowly; cheaper than moving every mote.
-      const sway = Math.sin(now / 9000);
-      voidPoints.position.set(sway * 0.4, Math.sin(now / 6000) * 0.25, 0);
+      const sway = still.matches ? 0 : Math.sin(now / 9000);
+      voidPoints.position.set(sway * 0.4, still.matches ? 0 : Math.sin(now / 6000) * 0.25, 0);
       voidPoints.rotation.y = sway * 0.015;
       voidMat.color.set('#b9b4ff');
       tint?.motes(voidMat.color);

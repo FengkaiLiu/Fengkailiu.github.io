@@ -76,7 +76,7 @@ export function mountBeatbox(slot: HTMLElement, player: Player) {
             ${Array.from(
               { length: STEPS },
               (_, i) =>
-                `<button class="beat__step" type="button" role="gridcell" data-r="${ri}" data-i="${i}" aria-pressed="${grid[ri][i]}" aria-label="${r.name}, step ${i + 1}"></button>`,
+                `<button class="beat__step" type="button" role="gridcell" data-r="${ri}" data-i="${i}" aria-selected="${grid[ri][i]}" aria-label="${r.name}, step ${i + 1}"></button>`,
             ).join('')}
           </div>`,
         ).join('')}
@@ -111,7 +111,7 @@ export function mountBeatbox(slot: HTMLElement, player: Player) {
   const $ = <T extends Element>(sel: string) => slot.querySelector<T>(sel)!;
   const cells = [...slot.querySelectorAll<HTMLButtonElement>('.beat__step')];
   const cell = (r: number, i: number) => cells[r * STEPS + i];
-  const paint = () => cells.forEach((c) => c.setAttribute('aria-pressed', String(grid[+c.dataset.r!][+c.dataset.i!])));
+  const paint = () => cells.forEach((c) => c.setAttribute('aria-selected', String(grid[+c.dataset.r!][+c.dataset.i!])));
 
   // Toggle a step; while dragging with the button held, paint the same state across cells.
   let painting: boolean | null = null;

@@ -15,6 +15,8 @@ export function mountPlayerDock(
 ) {
   const bar = document.createElement('div');
   bar.className = 'dockbar';
+  bar.setAttribute('role', 'region'); // a landmark, so screen readers can jump to the player
+  bar.setAttribute('aria-label', 'Room controls: music, volume, rain and scope');
   const dock = document.createElement('div');
   dock.className = 'player liquid liquid--pill';
   dock.dataset.liquidBezel = '18';

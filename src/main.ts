@@ -59,6 +59,7 @@ const chapters: Chapter[] = [
 ];
 
 app.innerHTML = `
+  <a class="skip-link" href="#about">Skip to the content</a>
   <header class="hero" id="top" data-shot="hero">
     <span class="hero__chip liquid liquid--pill" data-liquid-bezel="14">${profile.role}</span>
     <h1 class="hero__name">${profile.name}</h1>

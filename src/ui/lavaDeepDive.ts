@@ -191,6 +191,7 @@ export function mountLavaDeepDive(host: HTMLElement): { dispose(): void } {
   const tileEdge = '#5fb3ff';
   const lava = '#ff8a2a';
 
+  const still = matchMedia('(prefers-reduced-motion: reduce)').matches;
   const playerImg = new Image();
   playerImg.src = IMG_PLAYER;
 
@@ -427,7 +428,7 @@ export function mountLavaDeepDive(host: HTMLElement): { dispose(): void } {
         g.fillText('air jump', sx(ax) + 6 * dpr, sy(ay) + 12 * dpr);
       }
       // the hero riding the arc
-      t = (t + dt * 0.6) % 1.3;
+      t = still ? 0.42 : (t + dt * 0.6) % 1.3; // with reduced motion the hero rests at the air jump
       const i = Math.min(Math.floor((t / 1) * path.length), path.length - 1);
       const [hx, hy] = path[Math.max(i, 0)] ?? [0.5, 0];
       if (playerImg.complete && playerImg.naturalWidth) {

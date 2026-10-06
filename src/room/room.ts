@@ -92,6 +92,7 @@ export function initRoom(
   videos: Record<string, HTMLVideoElement> = {},
   shelfBoat?: string,
 ): Room | null {
+  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   let renderer: WebGLRenderer;
   try {
     renderer = new WebGLRenderer({ antialias: false, powerPreference: 'high-performance' });
@@ -242,7 +243,7 @@ export function initRoom(
     // Hold on each shot for a while, then glide: the camera rests while you read.
     const t = smoothstep(Math.min(Math.max((raw - 0.3) / 0.4, 0), 1));
     desired.pos.lerpVectors(a.pos, b.pos, t);
-    desired.pos.y += Math.sin(t * Math.PI) * 0.45; // a gentle dolly arc between shots
+    if (!reducedMotion.matches) desired.pos.y += Math.sin(t * Math.PI) * 0.45; // a gentle dolly arc between shots
     desired.target.lerpVectors(a.target, b.target, t);
     desired.frame = a.frame + (b.frame - a.frame) * t;
     // The project being read lights up; it hands over as the camera passes halfway.
@@ -270,7 +271,6 @@ export function initRoom(
   let breathe = 0;
   let lampOn = true;
   let lampLevel = 1;
-  const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const debugLit = import.meta.env.DEV && new URLSearchParams(location.search).has('lit');
   let lightsStart = debugLit ? -LIGHTS_ON_MS : -1;
   let last = performance.now();
@@ -331,6 +331,13 @@ export function initRoom(
 
   const loop = (now: number) => {
     if (!running) return;
+    // The game console covers the room with a dark backdrop: hold the last frame and give
+    // the GPU to the game. (The governor skips these frames too, so it isn't fooled.)
+    if (document.documentElement.classList.contains('has-console')) {
+      last = now;
+      requestAnimationFrame(loop);
+      return;
+    }
     const dt = Math.min((now - last) / 1000, 0.1);
     last = now;
 
@@ -370,7 +377,7 @@ export function initRoom(
     camera.updateMatrixWorld();
     right.setFromMatrixColumn(camera.matrixWorld, 0);
     up.setFromMatrixColumn(camera.matrixWorld, 1);
-    camera.position.addScaledVector(right, pointer.x * 0.12).addScaledVector(up, -pointer.y * 0.08);
+    if (!reducedMotion.matches) camera.position.addScaledVector(right, pointer.x * 0.12).addScaledVector(up, -pointer.y * 0.08);
     camera.lookAt(lookAt);
 
     // Frame the subject off-center on wide screens so the text card fits beside it.

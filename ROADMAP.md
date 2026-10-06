@@ -57,7 +57,7 @@ Dev helpers (dev server only):
 | 15 | Lab (CS showcase): live diagram of the page's audio graph + FFT playground (hand-written radix-2 FFT, windowing, play in the room) | ✅ |
 | 16 | Contact: 16-step sequencer over the 4-bar progression, shareable beat links, message form (FormSubmit, no mail app needed) | ✅ |
 | 17 | Extras: command palette, spectrogram easter egg | ⬜ |
-| 18 | Polish: performance, mobile, reduced motion, accessibility, font subsetting | ⬜ |
+| 18 | Polish: Latin-only fonts, re-encoded videos and JPG covers (18a); room pauses under the game console; reduced motion stills the camera arc, parallax, dust and twinkle; axe-clean (WCAG A/AA), skip link, landmarks; favicon; phone layout fixes | ✅ |
 | 19 | Launch: merge to main, Pages source = GitHub Actions | ⬜ |
 
 ## Assets Fengkai needs to make
