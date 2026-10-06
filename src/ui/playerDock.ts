@@ -3,6 +3,7 @@
 // in the Spotify embed is out of the analyser's reach, so it gets a beat-shaped pulse instead.
 import { getMusicBus, type Bands } from '../audio/bus';
 import { setMasterVolume } from '../audio/context';
+import { stepAside } from './stepAside';
 import type { Player, PlayerState } from '../audio/player';
 
 const BARS = 18;
@@ -101,7 +102,7 @@ export function mountPlayerDock(
     $('[data-artist]').textContent = s.guest ? `${s.track.artist} · via Spotify` : s.track.artist;
     dock.classList.toggle('is-guest', Boolean(s.guest));
     // Spotify sets its own volume inside its frame, so the slider steps aside while it plays.
-    vol.hidden = Boolean(s.guest);
+    stepAside(vol, Boolean(s.guest));
     $('[data-time]').textContent = s.time === null ? (s.playing ? 'live' : '') : `${fmt(s.time)}${s.duration ? ` / ${fmt(s.duration)}` : ''}`;
     toggleBtn.innerHTML = icon(s.playing ? 'pause' : 'play');
     toggleBtn.setAttribute('aria-label', s.playing ? 'Pause' : 'Play');

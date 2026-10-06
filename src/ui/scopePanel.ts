@@ -4,6 +4,7 @@ import { getMusicBus } from '../audio/bus';
 import type { Player } from '../audio/player';
 import { createAnalysis, type Analysis } from '../viz/analysis';
 import { chromagram, spectrogram, spectrum, vectorscope, waveform, type Scope } from '../viz/scopes';
+import { stepAside } from './stepAside';
 
 const VIEWS: { id: string; name: string; scope: Scope; about: string }[] = [
   { id: 'wave', name: 'Wave', scope: waveform, about: 'The raw signal: air pressure over a few milliseconds.' },
@@ -118,11 +119,7 @@ export function mountScopePanel(player: Player, bar: HTMLElement) {
       view.scope.draw(g, canvas.width, canvas.height, analysis, dpr);
       $('[data-bpm]').textContent = `BPM ${analysis.bpm ?? (hearing ? 'listening…' : '·')}`;
       $('[data-key]').textContent = `Key ${analysis.key?.name ?? (hearing ? 'listening…' : '·')}`;
-      note.textContent = s.guest
-        ? 'Spotify plays in its own frame, so the room cannot hear it. Play room tone to see the music here.'
-        : s.playing
-          ? ''
-          : 'Press play to see the music.';
+      note.textContent = s.playing ? '' : 'Press play to see the music.';
     }
     raf = open || s.playing ? requestAnimationFrame(frame) : 0;
     if (!raf) last = 0;
@@ -131,8 +128,13 @@ export function mountScopePanel(player: Player, bar: HTMLElement) {
     if (!raf) raf = requestAnimationFrame(frame);
   };
   player.onChange((s) => {
-    // A different song: start the estimates over.
-    if (s.guest) analysis?.reset();
+    // A Spotify song plays outside the room's audio, so there is nothing to see: the scope
+    // steps aside (and closes) until the room's own music is back.
+    stepAside(pill, Boolean(s.guest));
+    if (s.guest) {
+      if (open) setOpen(false);
+      analysis?.reset();
+    }
     if (s.playing || open) wake();
   });
   select(view.id);
