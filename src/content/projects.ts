@@ -159,6 +159,16 @@ export const projects: Project[] = [
       { heading: 'What I learned', text: 'How to collaborate through version control, and how to pick up and apply new tools quickly under a tight deadline.' },
     ],
     links: { github: 'https://github.com/GameDevGroup4/Unity-Project' },
+    media: [
+      {
+        caption: 'From the original Unity build',
+        items: [
+          { type: 'image', src: '/hotfooter/shot-1.jpg', alt: 'Hotfooter title screen with Start and the Harry, Ava and Mute soundtrack buttons' },
+          { type: 'image', src: '/hotfooter/shot-2.jpg', alt: 'A whole level in the Unity editor: stone platforms and a rope bridge above lava pools, with the camera frame drawn in white' },
+          { type: 'image', src: '/hotfooter/shot-3.jpg', alt: 'The yellow hero standing on a stone ledge just above the lava' },
+        ],
+      },
+    ],
   },
   {
     id: 'project5',

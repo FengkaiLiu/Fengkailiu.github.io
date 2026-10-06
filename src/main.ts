@@ -274,6 +274,9 @@ showGate(
   if (atEl) requestAnimationFrame(() => scroll.to(atEl, { instant: true }));
   // Dev helper: /?nogate&game opens the console (game=level2 starts on that level).
   if (import.meta.env.DEV && new URLSearchParams(location.search).has('game')) gameConsole.open();
+  // Dev helper: /?nogate&notes=hotfooter opens that project's liner notes.
+  const notes = import.meta.env.DEV ? new URLSearchParams(location.search).get('notes') : null;
+  if (notes) sheet.open(notes);
   // Opened from a shared beat link: glide down to it once the lamp is on.
   const contact = document.getElementById('contact');
   if (beatbox.shared && contact && !atEl) window.setTimeout(() => scroll.to(contact), 1400);
