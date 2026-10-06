@@ -1,8 +1,8 @@
 // "Liner notes": three recommended songs inside the chapter card. The card expands in place
 // into an album stack; arrows flip between sleeves. The song plays in a Spotify embed below
 // the notes, and whenever it plays it borrows the room's turntable: the arm drops, the label
-// shows the cover, and the room pulses along. A pick's `clip` jumps to the chosen part.
-import { records, resolvePick, type RecordPick, type ResolvedPick } from '../content/records';
+// shows the cover, and the room pulses along. Everyone hears a preview, never the full song.
+import { records, resolvePick, type ResolvedPick } from '../content/records';
 import type { GuestSlot, Player } from '../audio/player';
 import { createSpotifyPlayer, type PlaybackUpdate, type SpotifyController } from '../audio/spotify';
 import { placeholder } from './placeholder';
@@ -13,11 +13,8 @@ export interface CrateHooks {
   clearLabel(): void;
 }
 
-/** 'm:ss' to milliseconds. */
-const ms = (t: string) => t.split(':').reduce((acc, part) => acc * 60 + Number(part), 0) * 1000;
-const clipOf = (pick: RecordPick) => (pick.clip ? { start: ms(pick.clip[0]), end: ms(pick.clip[1]) } : null);
-/** Logged-out visitors get Spotify's preview (30 s at most); anything longer is the full song. */
-const FULL_SONG_MS = 35_000;
+/** Visitors logged in to Spotify would get the full song; stop it where a preview would end. */
+const PREVIEW_MS = 30_000;
 const esc = (s: string) => s.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!);
 
 const images = new Map<string, Promise<HTMLImageElement | null>>();
@@ -129,19 +126,18 @@ export function mountCrate(slot: HTMLElement, player: Player, hooks: CrateHooks)
         id: info.pick.id,
         slot: player.host({ id: info.pick.id, title: info.title, artist: info.artist }, () => void spotify?.then((c) => c.pause())),
       };
-      // Jump into the chosen part, unless they are already listening inside it.
-      const clip = clipOf(info.pick);
-      if (clip && u.duration > FULL_SONG_MS && (u.position < clip.start - 1500 || u.position >= clip.end)) {
-        void spotify?.then((c) => c.seek(clip.start / 1000));
-      }
       void (info.cover ? loadImage(info.cover) : Promise.resolve(null)).then((img) => {
         if (onTurntable?.id === info.pick.id) hooks.setLabel(info.pick.tint, img);
       });
     }
     if (!onTurntable) return;
     onTurntable.slot.progress(u.position / 1000, u.duration / 1000);
-    const clip = clipOf(records.find((r) => r.id === onTurntable!.id)!);
-    if (clip && u.duration > FULL_SONG_MS && u.position >= clip.end) void spotify?.then((c) => c.pause());
+    if (u.duration > PREVIEW_MS + 5000 && u.position >= PREVIEW_MS) {
+      void spotify?.then((c) => {
+        c.pause();
+        c.seek(0);
+      });
+    }
     // At the end Spotify just parks at position = duration, sometimes without pausing.
     if ((u.isPaused && !u.isBuffering) || (u.duration > 0 && u.position >= u.duration - 250)) onTurntable.slot.end();
   };

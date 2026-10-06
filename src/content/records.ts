@@ -2,10 +2,7 @@
 //   spotify: the song's Spotify link (in Spotify: ... > Share > Copy Song Link)
 //   artist:  the artist's name, as it appears on Spotify
 //   note:    why you love it, in your own voice
-//   clip:    optional ['1:12', '1:42']: the part of the song to play. Only works for visitors
-//            logged in to Spotify; everyone else hears the preview Spotify picks.
-// The song plays in Spotify's own embed (a 30 s preview, or the full song for visitors who
-// are logged in), and the title and cover come from Spotify too. Album, year and genre are
+// The song plays in Spotify's own embed as a short preview, and the title and cover come from Spotify too. Album, year and genre are
 // looked up in Apple's public catalog by title + artist and left out if it has no match.
 // Anything you fill in by hand wins over the fetched value.
 
@@ -14,8 +11,6 @@ export interface RecordPick {
   spotify?: string;
   artist?: string;
   note: string;
-  /** Start and end as 'm:ss', e.g. ['1:12', '1:42']. Applies when the full song is available. */
-  clip?: [string, string];
   /** Extra credit lines, e.g. 'Produced by ...'. */
   credits?: string[];
   title?: string;
