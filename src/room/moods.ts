@@ -66,7 +66,7 @@ const palettes: Record<MoodId, Palette> = {
     moon: c('#4a5cff'),
     dim: 0.7,
     light: [c('#ff3048'), c('#3a6bff'), c('#ffd23a'), c('#3aff7a')],
-    lightGain: 0.45,
+    lightGain: 0.22,
     motes: c('#ffe27a'),
     bulbs: [c('#ff3048'), c('#ffd23a'), c('#3aff7a'), c('#3a6bff')],
   },
@@ -77,7 +77,7 @@ const palettes: Record<MoodId, Palette> = {
     moon: c('#e6ffd8'),
     dim: 0.15,
     light: [c('#d4f7bc'), c('#ffffff')],
-    lightGain: 0.8,
+    lightGain: 0.4,
     motes: c('#ffffff'),
     bulbs: [c('#ffffff'), c('#dfffc9'), c('#fff6a8')],
   },
@@ -360,7 +360,7 @@ function neonScene(): Scene {
   return {
     root,
     update(w, now, audio) {
-      const beat = 0.55 + audio[0] * 0.35;
+      const beat = 0.28 + audio[0] * 0.17; // glow, with a gentle pulse on the kick
       for (const m of mats) (m as MeshBasicMaterial).opacity = smooth(clamp01(w * 1.4)) * beat;
       for (const f of flowers) {
         const s = easeOutBack(clamp01((w - f.delay) * 1.6));
@@ -431,7 +431,7 @@ function meadowScene(): Scene {
     const onLeft = i % 2 === 0;
     flowerSpots.push({ x: onLeft ? -3.03 + rand() * 0.06 : -2.18 + rand() * 0.06, y: 0.8, z: -3.85 + rand() * 0.5, h: 0.06 + rand() * 0.1, tilt: (rand() - 0.5) * 0.8, delay: 0.3 + rand() * 0.3 });
   }
-  const heads = new InstancedMesh(headGeo, new MeshStandardMaterial({ vertexColors: true, roughness: 0.6, emissive: '#ffffff', emissiveIntensity: 0.12 }), flowerSpots.length);
+  const heads = new InstancedMesh(headGeo, new MeshStandardMaterial({ vertexColors: true, roughness: 0.6, emissive: '#ffffff', emissiveIntensity: 0.06 }), flowerSpots.length);
   const stemGeo = new CylinderGeometry(0.0035, 0.005, 1, 4, 1, true);
   stemGeo.translate(0, 0.5, 0);
   const stems = new InstancedMesh(stemGeo, new MeshStandardMaterial({ color: '#3f8f3a', roughness: 0.9 }), flowerSpots.length);
