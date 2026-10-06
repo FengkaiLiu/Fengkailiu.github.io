@@ -22,6 +22,8 @@ export interface Project {
   sections: ProjectSection[];
   links: { demo?: string; github?: string };
   media?: MediaGroup[];
+  /** 3D models for the liner notes' model viewer (Sonare's boats). */
+  models?: { caption: string; items: { name: string; src: string; color: string }[] };
   /** Assets the scroll chapter still needs from Fengkai. */
   needs?: string[];
   placeholder?: boolean;
@@ -81,7 +83,30 @@ export const projects: Project[] = [
       demo: 'https://magical-mirai-2026-sonare-of-the-la.vercel.app/',
       github: 'https://github.com/FengkaiLiu/magical-mirai-2026-sonare-of-the-lake',
     },
-    needs: ['Screen recording of a chorus moment (lyrics forming in the sky)', 'One boat model exported as .glb'],
+    media: [
+      {
+        caption: 'Gameplay demo',
+        items: [{ type: 'video', src: '/sonareofthelake/mikuboat.mp4', alt: 'Sonare of the Lake gameplay recording' }],
+      },
+      {
+        caption: 'In-game screenshots',
+        items: [
+          { type: 'image', src: '/sonareofthelake/sonare-1.jpg', alt: 'Verse lyrics rising from the lake beside the boat' },
+          { type: 'image', src: '/sonareofthelake/sonare-2.jpg', alt: 'Chorus lyrics written across the sky above the mountains' },
+        ],
+      },
+    ],
+    models: {
+      caption: 'The six boats, hand-modeled in Blender',
+      items: [
+        { name: 'Miku', src: '/sonareofthelake/littleshipmiku.glb', color: '#39c5bb' },
+        { name: 'Rin', src: '/sonareofthelake/littleshipRin.glb', color: '#ffcf33' },
+        { name: 'Len', src: '/sonareofthelake/littleshipLen.glb', color: '#f5b400' },
+        { name: 'Luka', src: '/sonareofthelake/littleshipluka.glb', color: '#ff8fb1' },
+        { name: 'KAITO', src: '/sonareofthelake/littleshipKAITO.glb', color: '#4a6cff' },
+        { name: 'MEIKO', src: '/sonareofthelake/littleshipMEIKO.glb', color: '#d8263c' },
+      ],
+    },
   },
   {
     id: 'roomlink',

@@ -58,7 +58,17 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
   const [prevBtn, nextBtn] = [...dialog.querySelectorAll<HTMLButtonElement>('[data-step]')];
   let index = 0;
 
+  // The 3D model viewer (Sonare's boats) loads on demand and lives only while shown.
+  let viewer: { dispose(): void } | null = null;
+  let viewerFor = '';
+  const disposeViewer = () => {
+    viewer?.dispose();
+    viewer = null;
+    viewerFor = '';
+  };
+
   const render = () => {
+    disposeViewer();
     const { project: p, track } = tracks[index];
     const groups = (p.media ?? []).map((g, gi) => [g, gi] as const);
     const videoGroups = groups.filter(([g]) => g.items.some((m) => m.type === 'video'));
@@ -91,6 +101,7 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
         )
         .join('')}
       ${photoGroups.map(([g, gi]) => mediaGroup(g, gi)).join('')}
+      ${p.models ? `<figure class="sheet__media sheet__models"><div data-models></div><figcaption>${esc(p.models.caption)}</figcaption></figure>` : ''}
       <div data-media></div>
       ${links.length ? `<div class="sheet__links">${links.join('')}</div>` : ''}
     `;
@@ -108,6 +119,15 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
     prevBtn.setAttribute('aria-label', prev ? `Previous: ${prev.project.title}` : '');
     nextBtn.setAttribute('aria-label', next ? `Next: ${next.project.title}` : '');
     scroller.scrollTop = 0;
+    const host = body.querySelector<HTMLElement>('[data-models]');
+    if (host && p.models) {
+      viewerFor = p.id;
+      const items = p.models.items;
+      void import('./modelViewer').then(({ mountModelViewer }) => {
+        if (viewerFor !== p.id || !host.isConnected) return; // moved on while it loaded
+        viewer = mountModelViewer(host, items);
+      });
+    }
   };
 
   const open = (id: string) => {
@@ -172,6 +192,7 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
   });
 
   dialog.addEventListener('close', () => {
+    disposeViewer();
     body.querySelectorAll('video').forEach((v) => v.pause());
     document.documentElement.classList.remove('has-sheet');
     scroll.start();

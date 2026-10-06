@@ -46,7 +46,7 @@ Dev helpers (dev server only):
 | 9 | About: mixing desk (Code, Sound, Visual strips with skill inserts, live meters, solo; master strip with stats) | ✅ |
 | 10 | Project chapter engine: pinned scroll chapters + liner-notes sheet (cover, write-up, links, prev/next) | ✅ |
 | 11 | Chapter: VR Music Room (dev recordings in the sheet, card preview and on its poster; presentation photos with a lightbox) | ✅ |
-| 12 | Chapter: Sonare of the Lake | ⬜ |
+| 12 | Chapter: Sonare of the Lake (gameplay video in the sheet, card and poster; screenshots; 3D viewer of all six boats; the real Miku boat on the shelf) | ✅ |
 | 13 | Chapter: RoomLink-ChillZone | ⬜ |
 | 14 | Chapter: Hot Footer | ⬜ |
 | 14b | Liner notes (B1): card expands into an album stack; a Spotify embed plays each pick as a preview and borrows the turntable; each song turns the corner into its cover (neon flowers, meadow, Kasane Teto) | ✅ |
@@ -66,7 +66,7 @@ In dev, the browser console lists every placeholder on the page.
 - [ ] **Kasane Teto model** (optional): `public/models/teto.glb` replaces the built-in low-poly one in the Machine Love scene (auto-sized to 0.5 m, first animation loops)
 - [ ] **Spectrogram easter-egg track** (a track with an image hidden in its spectrum)
 - [x] **VR Music Room**: 2 dev recordings + 3 presentation photos in `public/vrmusicroom/` (full-size originals kept in `media-src/`, not published)
-- [ ] **Sonare of the Lake**: chorus screen recording, one boat `.glb`
+- [x] **Sonare of the Lake**: gameplay video, 2 screenshots and the 6 boat models in `public/sonareofthelake/` (PNG originals in `media-src/`)
 - [ ] **RoomLink-ChillZone**: 360° equirectangular panorama
 - [ ] **Hot Footer**: Unity WebGL build or gameplay GIF
 - [ ] **Project 5**: all content

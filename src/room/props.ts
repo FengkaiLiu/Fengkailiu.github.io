@@ -2,6 +2,7 @@
 // Back wall at z = -4, left wall at x = -4, floor at y = 0.
 import {
   AdditiveBlending,
+  Box3,
   BoxGeometry,
   CanvasTexture,
   BufferAttribute,
@@ -100,7 +101,12 @@ const LAPTOP = new Vector3(0.8, 1.8, -3.4);
 const ARM_PARKED = Math.PI / 2;
 const ARM_PLAYING = 0.75;
 
-export function buildRoom(covers: Record<string, string>, videos: Record<string, HTMLVideoElement> = {}): RoomProps {
+export function buildRoom(
+  covers: Record<string, string>,
+  videos: Record<string, HTMLVideoElement> = {},
+  /** A real boat model (.glb) to replace the shelf's stand-in paper boat. */
+  shelfBoat?: string,
+): RoomProps {
   const root = new Group();
   const anchors: Record<string, Vector3> = {};
   const glowMats: { mat: MeshStandardMaterial | MeshBasicMaterial; base: Color; max: number }[] = [];
@@ -322,6 +328,23 @@ export function buildRoom(covers: Record<string, string>, videos: Record<string,
   boat.add(sail);
   root.add(shadowed(boat));
   anchors.sonare = boat.position.clone();
+  // Swap in Sonare's actual boat once it loads; the paper boat stands in until then.
+  if (shelfBoat) {
+    void import('three/addons/loaders/GLTFLoader.js').then(async ({ GLTFLoader }) => {
+      const model = (await new GLTFLoader().loadAsync(shelfBoat)).scene;
+      const bounds = new Box3().setFromObject(model);
+      const size = bounds.getSize(new Vector3());
+      const k = 0.36 / Math.max(size.x, size.z); // about the paper boat's length
+      model.scale.setScalar(k);
+      const c = bounds.getCenter(new Vector3());
+      model.position.set(-c.x * k, -bounds.min.y * k - 0.04, -c.z * k); // resting on the shelf
+      const turned = new Group();
+      turned.rotation.y = Math.PI / 2; // the model's bow points along z; the shelf boat's along x
+      turned.add(model);
+      boat.clear();
+      boat.add(turned);
+    }).catch(() => {}); // keep the paper boat if the model can't load
+  }
 
   // Handheld console (Hot Footer) on the lower shelf
   // A pastel landscape handheld, propped on a little stand, with a cartridge beside it.

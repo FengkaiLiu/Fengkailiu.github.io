@@ -137,7 +137,7 @@ projects.forEach((p) => {
 
 const sections = [...document.querySelectorAll<HTMLElement>('[data-shot]')].map((el) => ({ el, shot: el.dataset.shot! }));
 const covers: Record<string, string> = Object.fromEntries(projects.filter((p) => p.cover).map((p) => [p.id, p.cover]));
-const room = initRoom(sections, covers, previews);
+const room = initRoom(sections, covers, previews, projects.find((p) => p.id === 'sonare')?.models?.items[0]?.src);
 
 initSheen();
 

@@ -90,6 +90,7 @@ export function initRoom(
   covers: Record<string, string>,
   /** Recordings to show on a project's poster while its chapter is in focus. */
   videos: Record<string, HTMLVideoElement> = {},
+  shelfBoat?: string,
 ): Room | null {
   let renderer: WebGLRenderer;
   try {
@@ -163,7 +164,7 @@ export function initRoom(
   scene.add(hemi, moon, lampSpot, lampSpot.target, lampFill, fairyFill, posterLight, screenGlow, moodLight);
   const base = { sky: hemi.color.clone(), ground: hemi.groundColor.clone(), fill: fairyFill.color.clone(), moon: moon.color.clone(), poster: posterLight.color.clone() };
 
-  const room = buildRoom(covers, videos);
+  const room = buildRoom(covers, videos, shelfBoat);
   scene.add(room.root);
 
   // ---------- Post-processing ----------
