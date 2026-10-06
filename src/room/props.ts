@@ -483,7 +483,7 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   strand(new Vector3(-3.92, 4.55, -3.92), new Vector3(3.9, 4.55, -3.92), PER_STRAND);
   strand(new Vector3(-3.92, 4.55, -3.92), new Vector3(-3.92, 4.55, 3.9), PER_STRAND);
   const bulbLevel = new Float32Array(PER_STRAND);
-  let bulbGain = 0.3; // running loudest band, so the strand spans dark to bright for any mix
+  let bulbGain = 0.7; // running loudest band, so the strand spans dark to bright for any mix
   let spectrum: Float32Array | null = null;
   const peak = new Color('#fff1dc');
 
@@ -565,7 +565,7 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
       if (spectrum && playing) for (let k = 0; k < PER_STRAND; k++) loudest = Math.max(loudest, spectrum[k]);
       bulbGain += (Math.max(loudest, 0.08) - bulbGain) * (1 - Math.exp(-dt * (loudest > bulbGain ? 6 : 0.8)));
       for (let k = 0; k < PER_STRAND; k++) {
-        const target = spectrum && playing ? Math.pow(spectrum[k] / bulbGain, 2.2) : 0;
+        const target = spectrum && playing ? Math.pow(Math.min(spectrum[k] / bulbGain, 1), 2.2) : 0; // capped: never past full
         const rate = target > bulbLevel[k] ? 18 : 3.5;
         bulbLevel[k] += (target - bulbLevel[k]) * (1 - Math.exp(-dt * rate));
       }
@@ -612,8 +612,8 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
         tint?.bulb(i, now, b.color);
         // With music, brightness follows the bulb's band and the loudest ones blush to white.
         const lvl = bulbLevel[i % PER_STRAND];
-        b.color.lerp(peak, Math.max(lvl - 0.6, 0) * 0.9 * music);
-        const level = twinkle + (0.12 + lvl * 1.45 - twinkle) * music;
+        b.color.lerp(peak, Math.max(lvl - 0.6, 0) * 0.6 * music);
+        const level = twinkle + (0.12 + lvl * 1.1 - twinkle) * music;
         b.color.multiplyScalar((0.04 + glow * 2.6) * level);
       });
       const pos = dustGeo.attributes.position as BufferAttribute;
