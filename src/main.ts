@@ -13,11 +13,15 @@ import { tracks } from './content/tracks';
 import { mountPlayerDock } from './ui/playerDock';
 import { mountCrate } from './ui/crate';
 import { mountScopePanel } from './ui/scopePanel';
+import { createSmoothScroll } from './ui/scroll';
+import { mountTrackNav } from './ui/trackNav';
 import { coverLabel } from './room/textures';
 
 // Always start at the top so the first shot is the whole room.
 history.scrollRestoration = 'manual';
 window.scrollTo(0, 0);
+const scroll = createSmoothScroll();
+scroll.stop(); // the gate holds the page until the lamp is on
 
 const app = document.querySelector<HTMLDivElement>('#app')!;
 
@@ -26,6 +30,8 @@ interface Chapter {
   shot: string;
   track: string;
   title: string;
+  /** Short name for the track list nav. */
+  nav: string;
   text?: string;
   tags?: readonly string[];
   floor?: string;
@@ -36,11 +42,11 @@ interface Chapter {
 
 // Chapters read like a record's track list. Each one is replaced by its floor (see ROADMAP.md).
 const chapters: Chapter[] = [
-  { id: 'about', shot: 'about', track: 'A1', title: 'Code on one screen, sound on the other.', text: profile.bio[0], floor: 'Floor 9', needs: ['About content on the laptop screen (Floor 9)', 'Portrait photo (optional)'] },
-  ...projects.map((p, i) => ({ id: p.id, shot: p.id, track: `A${i + 2}`, title: p.title, text: p.subtitle, tags: p.tags, floor: 'Floors 10 to 14', needs: p.needs })),
-  { id: 'records', shot: 'record', track: 'B1', title: 'Liner notes.', text: '3 records I keep coming back to. Flip through the crate and put one on the turntable.', custom: 'crate' },
-  { id: 'lab', shot: 'lab', track: 'B2', title: 'How this room hears.', text: 'A live map of the audio graph running this page, and an FFT you can play with.', floor: 'Floor 15' },
-  { id: 'contact', shot: 'contact', track: 'B3', title: 'Leave me a beat.', text: 'Sequence a 4-bar loop and send it with your message.', floor: 'Floor 16' },
+  { id: 'about', shot: 'about', track: 'A1', nav: 'About', title: 'Code on one screen, sound on the other.', text: profile.bio[0], floor: 'Floor 9', needs: ['About content on the laptop screen (Floor 9)', 'Portrait photo (optional)'] },
+  ...projects.map((p, i) => ({ id: p.id, shot: p.id, track: `A${i + 2}`, nav: p.title, title: p.title, text: p.subtitle, tags: p.tags, floor: 'Floors 10 to 14', needs: p.needs })),
+  { id: 'records', shot: 'record', track: 'B1', nav: 'Liner notes', title: 'Liner notes.', text: '3 records I keep coming back to. Flip through the crate and put one on the turntable.', custom: 'crate' },
+  { id: 'lab', shot: 'lab', track: 'B2', nav: 'The Lab', title: 'How this room hears.', text: 'A live map of the audio graph running this page, and an FFT you can play with.', floor: 'Floor 15' },
+  { id: 'contact', shot: 'contact', track: 'B3', nav: 'Contact', title: 'Leave me a beat.', text: 'Sequence a 4-bar loop and send it with your message.', floor: 'Floor 16' },
 ];
 
 app.innerHTML = `
@@ -124,12 +130,17 @@ mountCrate(document.querySelector<HTMLElement>('#records .chapter__slot')!, play
   },
 });
 mountScopePanel(player, dock.bar);
+const nav = mountTrackNav(
+  chapters.map((c) => ({ id: c.id, track: c.track, title: c.nav })),
+  scroll,
+);
 initLiquidGlass();
 
 // "Look around" glides to the first chapter; the camera follows the scroll on its own.
 document.querySelector<HTMLAnchorElement>('[data-look]')!.addEventListener('click', (e) => {
   e.preventDefault();
-  document.getElementById('about')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  const about = document.getElementById('about');
+  if (about) scroll.to(about);
 });
 
 showGate(
@@ -146,7 +157,11 @@ showGate(
 ).then(({ sound }) => {
   room?.lightsOn();
   document.documentElement.classList.add('is-on');
-  window.setTimeout(() => dock.show(), 2600);
+  scroll.start();
+  window.setTimeout(() => {
+    dock.show();
+    nav.show();
+  }, 2600);
   if (sound) {
     playLightsOnChord();
     ambience = startAmbience();
@@ -160,7 +175,8 @@ showGate(
 // Dev helper: /?nogate&lit&at=sonare jumps straight to a chapter with the lights on.
 if (import.meta.env.DEV) {
   const at = new URLSearchParams(location.search).get('at');
-  if (at) setTimeout(() => document.getElementById(at)?.scrollIntoView({ block: 'center' }), 50);
+  const atEl = at ? document.getElementById(at) : null;
+  if (atEl) setTimeout(() => scroll.to(atEl, { instant: true }), 50);
   // /?play starts the music right away (headless needs --autoplay-policy=no-user-gesture-required).
   if (new URLSearchParams(location.search).has('play')) setTimeout(() => void player.play(), 800);
 }
