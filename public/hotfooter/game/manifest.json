@@ -1,0 +1,51 @@
+{
+  "source": "https://github.com/GameDevGroup4/Unity-Project",
+  "exported": "2026-10-06",
+  "levels": {
+    "level1": "level1.json",
+    "level2": "level2.json",
+    "level3": "level3.json",
+    "secret": "secret.json"
+  },
+  "player": {
+    "idle": [
+      "img/player/player-idle1.png",
+      "img/player/player-idle2.png",
+      "img/player/player-idle3.png",
+      "img/player/player-idle4.png",
+      "img/player/player-idle5.png",
+      "img/player/player-idle6.png"
+    ],
+    "run": [
+      "img/player/player-run1.png",
+      "img/player/player-run2.png",
+      "img/player/player-run3.png",
+      "img/player/player-run4.png",
+      "img/player/player-run5.png",
+      "img/player/player-run6.png"
+    ],
+    "jump": [
+      "img/player/player-jump1.png"
+    ],
+    "fall": [
+      "img/player/player-fall.png"
+    ],
+    "hurt": [
+      "img/player/player-hurt1.png",
+      "img/player/player-hurt2.png"
+    ]
+  },
+  "audio": {
+    "bgm": "audio/Hotfooter-BGM.mp3",
+    "title": "audio/Hotfooter-Title-Theme.mp3",
+    "victory": "audio/Hotfooter-Victory-Music.mp3",
+    "defeat": "audio/Hotfooter-Defeat-Music.mp3",
+    "secret": "audio/Secret-Level-BGM.mp3",
+    "hopeful": "audio/SC_hopeful.mp3",
+    "groundJump": "audio/SC_ground_jump.wav",
+    "airJump": "audio/SC_air_jump.wav",
+    "landing": "audio/SC_landing.wav",
+    "burnt": "audio/SC_burnt_by_lava.wav"
+  },
+  "title": "img/StartImage.png"
+}

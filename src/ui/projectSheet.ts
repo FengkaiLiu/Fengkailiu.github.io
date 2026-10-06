@@ -75,6 +75,7 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
     const photoGroups = groups.filter(([g]) => !g.items.some((m) => m.type === 'video'));
     dialog.querySelector('[data-track]')!.textContent = track;
     const links = [
+      p.game && '<button class="btn btn--play" type="button" data-game>Play it here</button>',
       p.links.demo && `<a class="btn" href="${esc(p.links.demo)}" target="_blank" rel="noopener">${esc(p.links.demoLabel ?? 'Live demo')} ${arrow}</a>`,
       p.links.github && `<a class="btn btn--ghost" href="${esc(p.links.github)}" target="_blank" rel="noopener">Source on GitHub ${arrow}</a>`,
     ].filter(Boolean);

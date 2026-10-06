@@ -64,7 +64,7 @@ function cyl(rTop: number, rBottom: number, h: number, mat: Material | Material[
   return shadowed(m);
 }
 
-export type HotspotId = 'keys' | 'cat' | 'lamp' | 'record';
+export type HotspotId = 'keys' | 'cat' | 'lamp' | 'record' | 'handheld';
 
 export interface RoomProps {
   root: Group;
@@ -599,6 +599,7 @@ export function buildRoom(
       { id: 'cat', objects: [cat, catHit] },
       { id: 'lamp', objects: [shade, bulb, arm, lampBase, lampHit] },
       { id: 'record', objects: [vinyl, tonearm, recordHit] },
+      { id: 'handheld', objects: [handheld] },
     ],
     noteAt: keyTex.noteAt,
     pressKey: keyTex.press,

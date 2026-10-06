@@ -7,6 +7,7 @@ const HINTS: Record<HotspotId, string> = {
   cat: 'Pet the cat',
   lamp: 'Lamp on / off',
   record: 'Play / pause',
+  handheld: 'Play Hot Footer',
 };
 
 export function mountRoomHints() {

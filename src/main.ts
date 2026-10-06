@@ -18,6 +18,7 @@ import { mountPlayerDock } from './ui/playerDock';
 import { mountCrate } from './ui/crate';
 import { mountMixer } from './ui/mixer';
 import { mountProjectSheet } from './ui/projectSheet';
+import { mountGameConsole } from './ui/gameConsole';
 import { mountLab } from './ui/lab';
 import { mountBeatbox } from './ui/beatbox';
 import { mountScopePanel } from './ui/scopePanel';
@@ -101,7 +102,8 @@ projects.forEach((p) => {
   const slot = document.querySelector<HTMLElement>(`#${p.id} .chapter__slot`)!;
   slot.classList.add('chapter__actions');
   slot.innerHTML = `
-    <button class="btn" type="button" data-sheet="${p.id}">${p.placeholder ? 'What it needs' : 'Liner notes'}</button>
+    ${p.game ? '<button class="btn btn--play" type="button" data-game>Play it <svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor" stroke="none" /></svg></button>' : ''}
+    <button class="${p.game ? 'btn btn--ghost' : 'btn'}" type="button" data-sheet="${p.id}">${p.placeholder ? 'What it needs' : 'Liner notes'}</button>
     ${p.links.demo ? `<a class="chapter__link" href="${p.links.demo}" target="_blank" rel="noopener">${p.links.demoLabel ?? 'Live demo'} ${extArrow}</a>` : ''}
     ${p.links.github ? `<a class="chapter__link" href="${p.links.github}" target="_blank" rel="noopener">GitHub ${extArrow}</a>` : ''}
   `;
@@ -194,6 +196,13 @@ document.addEventListener('click', (e) => {
   const id = (e.target as HTMLElement).closest<HTMLElement>('[data-sheet]')?.dataset.sheet;
   if (id) sheet.open(id);
 });
+// Hot Footer: the shelf's handheld, life-size and playable.
+const gameConsole = mountGameConsole(player, scroll);
+document.addEventListener('click', (e) => {
+  if (!(e.target as HTMLElement).closest('[data-game]')) return;
+  document.querySelector<HTMLDialogElement>('dialog.sheet[open]')?.close(); // the liner notes step aside
+  gameConsole.open();
+});
 initLiquidGlass();
 
 const beatbox = mountBeatbox(document.querySelector<HTMLElement>('#contact .chapter__slot')!, player);
@@ -231,6 +240,8 @@ if (room) {
       lampClick();
     } else if (hit.id === 'record') {
       void player.toggle();
+    } else if (hit.id === 'handheld') {
+      gameConsole.open();
     }
   });
 }
@@ -261,6 +272,8 @@ showGate(
   const at = import.meta.env.DEV ? new URLSearchParams(location.search).get('at') : null;
   const atEl = at ? document.getElementById(at) : null;
   if (atEl) requestAnimationFrame(() => scroll.to(atEl, { instant: true }));
+  // Dev helper: /?nogate&game opens the console (game=level2 starts on that level).
+  if (import.meta.env.DEV && new URLSearchParams(location.search).has('game')) gameConsole.open();
   // Opened from a shared beat link: glide down to it once the lamp is on.
   const contact = document.getElementById('contact');
   if (beatbox.shared && contact && !atEl) window.setTimeout(() => scroll.to(contact), 1400);

@@ -1,0 +1,334 @@
+/* The Lava Rising console: the shelf's pastel handheld, life-size. */
+
+.console {
+  width: 100%;
+  max-width: none;
+  height: 100%;
+  max-height: none;
+  margin: 0;
+  padding: var(--space-5) var(--space-4);
+  border: 0;
+  background: transparent;
+  color: var(--white);
+  overflow: auto;
+}
+.console[open] {
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: var(--space-4);
+  animation: console-in 0.5s var(--ease-out);
+}
+.console::backdrop {
+  background: radial-gradient(circle at 50% 45%, rgba(40, 18, 50, 0.72), rgba(6, 4, 16, 0.92));
+  backdrop-filter: blur(6px);
+}
+@keyframes console-in {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.94);
+  }
+}
+
+.console__body {
+  --pink: #ff8fa3;
+  --pink-deep: #e8738a;
+  --ink: #26232f;
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(110px, 1fr) minmax(0, 3.4fr) minmax(110px, 1fr);
+  grid-template-areas:
+    'left screen right'
+    'left pills right';
+  align-items: center;
+  gap: clamp(10px, 2vw, 28px) clamp(14px, 2.4vw, 34px);
+  width: min(94vw, 1180px, calc((100svh - 140px) * 2.15));
+  padding: clamp(18px, 2.6vw, 34px) clamp(18px, 3vw, 42px) clamp(34px, 3.6vw, 52px);
+  border-radius: clamp(36px, 6vw, 84px);
+  background:
+    radial-gradient(120% 90% at 30% 0%, rgba(255, 255, 255, 0.35), transparent 55%),
+    linear-gradient(180deg, #ffa3b5, var(--pink) 45%, var(--pink-deep));
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -8px 24px rgba(160, 40, 70, 0.35),
+    0 40px 90px -30px rgba(0, 0, 0, 0.8),
+    0 0 80px -20px rgba(255, 143, 163, 0.45);
+}
+
+.console__shoulder {
+  position: absolute;
+  top: -10px;
+  z-index: -1;
+  width: 18%;
+  height: 40px;
+  border-radius: 18px 18px 0 0;
+  background: linear-gradient(180deg, #f08ba0, var(--pink-deep));
+}
+.console__shoulder--l {
+  left: 9%;
+}
+.console__shoulder--r {
+  right: 9%;
+}
+
+.console__close {
+  position: absolute;
+  top: -14px;
+  right: -14px;
+  z-index: 2;
+  width: 40px;
+  height: 40px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--ink);
+  color: #fff;
+  font-size: 1.5rem;
+  line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+}
+.console__close:hover {
+  background: #3a3546;
+}
+
+/* Screen in its dark bezel */
+.console__screen {
+  grid-area: screen;
+  position: relative;
+  aspect-ratio: 16 / 9;
+  padding: clamp(8px, 1.2vw, 16px);
+  border-radius: clamp(14px, 2vw, 24px);
+  background: var(--ink);
+  box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.7);
+}
+.console__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 6px;
+  background: #120a1c;
+  image-rendering: pixelated;
+  outline: none;
+}
+.console__loading {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  font-family: var(--font-mono);
+  font-size: var(--text-small);
+  color: var(--lamp-300);
+}
+
+/* D-pad */
+.console__left {
+  grid-area: left;
+  display: grid;
+  place-items: center;
+}
+.console__dpad {
+  display: grid;
+  grid-template: repeat(3, 1fr) / repeat(3, 1fr);
+  width: clamp(96px, 10vw, 140px);
+  aspect-ratio: 1;
+}
+.console__dir {
+  border: 0;
+  padding: 0;
+  background: var(--ink);
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+button.console__dir {
+  cursor: pointer;
+}
+.console__dir--up {
+  grid-area: 1 / 2;
+  border-radius: 8px 8px 0 0;
+}
+.console__dir--left {
+  grid-area: 2 / 1;
+  border-radius: 8px 0 0 8px;
+}
+.console__dir--mid {
+  grid-area: 2 / 2;
+}
+.console__dir--right {
+  grid-area: 2 / 3;
+  border-radius: 0 8px 8px 0;
+}
+.console__dir--down {
+  grid-area: 3 / 2;
+  border-radius: 0 0 8px 8px;
+}
+.console__dir.is-down {
+  background: #4a4458;
+}
+
+/* A / B and the speaker grille */
+.console__right {
+  grid-area: right;
+  display: grid;
+  justify-items: center;
+  gap: var(--space-6);
+}
+.console__ab {
+  position: relative;
+  width: clamp(110px, 11vw, 150px);
+  aspect-ratio: 1.15;
+}
+.console__btn {
+  position: absolute;
+  width: 46%;
+  aspect-ratio: 1;
+  border: 0;
+  border-radius: 50%;
+  color: rgba(38, 35, 47, 0.75);
+  font-family: var(--font-display);
+  font-weight: 900;
+  font-size: clamp(0.9rem, 1.3vw, 1.2rem);
+  cursor: pointer;
+  touch-action: none;
+  -webkit-user-select: none;
+  user-select: none;
+  box-shadow:
+    inset 0 3px 0 rgba(255, 255, 255, 0.55),
+    0 5px 0 rgba(38, 35, 47, 0.35);
+  transition: transform 60ms;
+}
+.console__btn--a {
+  top: 0;
+  right: 0;
+  background: #ffd166;
+}
+.console__btn--b {
+  bottom: 0;
+  left: 0;
+  background: #7fb8ff;
+}
+.console__btn.is-down {
+  transform: translateY(3px);
+  box-shadow:
+    inset 0 2px 0 rgba(255, 255, 255, 0.45),
+    0 2px 0 rgba(38, 35, 47, 0.35);
+}
+.console__grille {
+  display: grid;
+  grid-template-columns: repeat(3, 8px);
+  gap: 7px;
+}
+.console__grille i {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--ink);
+  opacity: 0.8;
+}
+
+/* Start / sound pills */
+.console__pills {
+  grid-area: pills;
+  display: flex;
+  justify-content: center;
+  gap: var(--space-5);
+}
+.console__pill {
+  display: grid;
+  justify-items: center;
+  gap: 6px;
+  border: 0;
+  background: none;
+  color: rgba(38, 35, 47, 0.75);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+.console__pill::before {
+  content: '';
+  width: 44px;
+  height: 12px;
+  border-radius: 999px;
+  background: var(--ink);
+}
+.console__pill.is-down::before,
+.console__pill[aria-pressed='true']::before {
+  background: #4a4458;
+}
+
+.console__brand {
+  position: absolute;
+  bottom: clamp(10px, 1.2vw, 16px);
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--text-micro);
+  font-weight: 900;
+  letter-spacing: 0.3em;
+  color: rgba(38, 35, 47, 0.35);
+  pointer-events: none;
+}
+
+.console__help {
+  max-width: 70ch;
+  margin: 0;
+  text-align: center;
+  font-size: var(--text-small);
+  opacity: 0.8;
+}
+.console__help kbd {
+  display: inline-block;
+  min-width: 1.6em;
+  margin: 0 2px;
+  padding: 0 5px;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 5px;
+  font-family: var(--font-mono);
+  font-size: 0.85em;
+  text-align: center;
+}
+
+/* Phones held upright: screen on top, controls underneath, like a Game Boy. */
+@media (max-width: 760px) and (orientation: portrait) {
+  .console__body {
+    grid-template-columns: 1fr 1fr;
+    grid-template-areas:
+      'screen screen'
+      'left right'
+      'pills pills';
+    width: min(96vw, 520px);
+    padding-bottom: 44px;
+  }
+  .console__shoulder {
+    display: none;
+  }
+  .console__grille {
+    display: none;
+  }
+  .console__help {
+    display: none;
+  }
+}
+
+html.has-console {
+  overflow: hidden;
+}
+
+/* "Play it" on the Hot Footer card leads; Liner notes steps back to a glass button. */
+.chapter__actions .btn--ghost {
+  --btn-a: rgba(255, 255, 255, 0.14);
+  --btn-b: rgba(255, 255, 255, 0.06);
+  --btn-glow: transparent;
+}
+.btn--play {
+  --btn-a: #ffb3c1;
+  --btn-b: #ff6f8e;
+  --btn-glow: rgba(255, 111, 142, 0.55);
+}
+.console__loading[hidden] {
+  display: none;
+}
