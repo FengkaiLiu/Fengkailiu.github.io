@@ -12,13 +12,14 @@ import { lampClick, purr } from './audio/foley';
 import { getAudio, unlockAudio } from './audio/context';
 import { getMusicBus } from './audio/bus';
 import { mountRoomHints } from './ui/roomHints';
-import { createPlayer } from './audio/player';
+import { createPlayer, outsideGuest } from './audio/player';
 import { tracks } from './content/tracks';
 import { mountPlayerDock } from './ui/playerDock';
 import { mountCrate } from './ui/crate';
 import { mountMixer } from './ui/mixer';
 import { mountProjectSheet } from './ui/projectSheet';
 import { mountLab } from './ui/lab';
+import { mountBeatbox } from './ui/beatbox';
 import { mountScopePanel } from './ui/scopePanel';
 import { createSmoothScroll } from './ui/scroll';
 import { mountTrackNav } from './ui/trackNav';
@@ -44,7 +45,7 @@ interface Chapter {
   floor?: string;
   needs?: readonly string[];
   /** Built content instead of a placeholder. */
-  custom?: 'crate' | 'mixer' | 'project' | 'lab';
+  custom?: 'crate' | 'mixer' | 'project' | 'lab' | 'beat';
 }
 
 // Chapters read like a record's track list. Each one is replaced by its floor (see ROADMAP.md).
@@ -53,7 +54,7 @@ const chapters: Chapter[] = [
   ...projects.map((p, i) => ({ id: p.id, shot: p.id, track: `A${i + 2}`, nav: p.title, title: p.title, text: p.subtitle, tags: p.tags, custom: 'project' as const })),
   { id: 'records', shot: 'record', track: 'B1', nav: 'Liner notes', title: 'Liner notes.', text: '3 records I keep coming back to. Flip through the crate and put one on the turntable.', custom: 'crate' },
   { id: 'lab', shot: 'lab', track: 'B2', nav: 'The Lab', title: 'How this room hears.', text: 'A live map of the audio graph running this page, and an FFT you can play with.', custom: 'lab' },
-  { id: 'contact', shot: 'contact', track: 'B3', nav: 'Contact', title: 'Leave me a beat.', text: 'Sequence a 4-bar loop and send it with your message.', floor: 'Floor 16' },
+  { id: 'contact', shot: 'contact', track: 'B3', nav: 'Contact', title: 'Leave me a beat.', text: 'Sequence a 4-bar loop and send it with your message.', custom: 'beat' },
 ];
 
 app.innerHTML = `
@@ -167,11 +168,13 @@ document.addEventListener('click', (e) => {
 });
 initLiquidGlass();
 
+const beatbox = mountBeatbox(document.querySelector<HTMLElement>('#contact .chapter__slot')!, player);
+
 // The Lab's live diagram needs to know what is sounding right now.
 let keysAt = -1e9;
 mountLab(document.querySelector<HTMLElement>('#lab .chapter__slot')!, () => {
   const s = player.state();
-  return { music: s.playing && !s.guest, guest: s.playing && Boolean(s.guest), ambience: Boolean(ambience), keysAt };
+  return { music: s.playing && !outsideGuest(s.guest), guest: s.playing && outsideGuest(s.guest), ambience: Boolean(ambience), keysAt };
 });
 
 // Things to play with in the room: the keys, the cat, the lamp and the record player.
@@ -230,6 +233,9 @@ showGate(
   const at = import.meta.env.DEV ? new URLSearchParams(location.search).get('at') : null;
   const atEl = at ? document.getElementById(at) : null;
   if (atEl) requestAnimationFrame(() => scroll.to(atEl, { instant: true }));
+  // Opened from a shared beat link: glide down to it once the lamp is on.
+  const contact = document.getElementById('contact');
+  if (beatbox.shared && contact && !atEl) window.setTimeout(() => scroll.to(contact), 1400);
   window.setTimeout(() => {
     dock.show();
     nav.show();

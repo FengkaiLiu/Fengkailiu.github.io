@@ -51,7 +51,7 @@ Dev helpers (dev server only):
 | 14 | Chapter: Hot Footer | ⬜ |
 | 14b | Liner notes (B1): card expands into an album stack; a Spotify embed plays each pick as a preview and borrows the turntable; each song turns the corner into its cover (neon flowers, meadow, Kasane Teto) | ✅ |
 | 15 | Lab (CS showcase): live diagram of the page's audio graph + FFT playground (hand-written radix-2 FFT, windowing, play in the room) | ✅ |
-| 16 | Contact: step sequencer with shareable loops | ⬜ |
+| 16 | Contact: 16-step sequencer over the 4-bar progression, shareable beat links, message form (mailto) | ✅ |
 | 17 | Extras: command palette, spectrogram easter egg | ⬜ |
 | 18 | Polish: performance, mobile, reduced motion, accessibility, font subsetting | ⬜ |
 | 19 | Launch: merge to main, Pages source = GitHub Actions | ⬜ |

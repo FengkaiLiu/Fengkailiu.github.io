@@ -4,7 +4,7 @@
 import { getMusicBus, type Bands } from '../audio/bus';
 import { setMasterVolume } from '../audio/context';
 import { stepAside } from './stepAside';
-import type { Player, PlayerState } from '../audio/player';
+import { outsideGuest, type Player, type PlayerState } from '../audio/player';
 
 const BARS = 18;
 
@@ -99,10 +99,10 @@ export function mountPlayerDock(
   const render = (s: PlayerState) => {
     dock.classList.toggle('is-playing', s.playing);
     $('[data-title]').textContent = s.track.title;
-    $('[data-artist]').textContent = s.guest ? `${s.track.artist} · via Spotify` : s.track.artist;
+    $('[data-artist]').textContent = outsideGuest(s.guest) ? `${s.track.artist} · via Spotify` : s.track.artist;
     dock.classList.toggle('is-guest', Boolean(s.guest));
     // Spotify sets its own volume inside its frame, so the slider steps aside while it plays.
-    stepAside(vol, Boolean(s.guest));
+    stepAside(vol, outsideGuest(s.guest));
     $('[data-time]').textContent = s.time === null ? (s.playing ? 'live' : '') : `${fmt(s.time)}${s.duration ? ` / ${fmt(s.duration)}` : ''}`;
     toggleBtn.innerHTML = icon(s.playing ? 'pause' : 'play');
     toggleBtn.setAttribute('aria-label', s.playing ? 'Pause' : 'Play');
@@ -120,7 +120,7 @@ export function mountPlayerDock(
     last = now;
     const bus = getMusicBus();
     const { playing, guest } = player.state();
-    if (guest) {
+    if (outsideGuest(guest)) {
       const b = pulse(now / 1000);
       fakeSpectrum(now / 1000);
       onBands(b, playing, spectrum);

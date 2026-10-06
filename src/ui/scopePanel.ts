@@ -1,7 +1,7 @@
 // The scope: a glass panel above the bottom bar with five live visualizers of whatever the
 // room is playing, plus running tempo and key estimates. Opened from a "Scope" pill.
 import { getMusicBus } from '../audio/bus';
-import type { Player } from '../audio/player';
+import { outsideGuest, type Player } from '../audio/player';
 import { createAnalysis, type Analysis } from '../viz/analysis';
 import { chromagram, spectrogram, spectrum, vectorscope, waveform, type Scope } from '../viz/scopes';
 import { stepAside } from './stepAside';
@@ -112,7 +112,7 @@ export function mountScopePanel(player: Player, bar: HTMLElement) {
     const dt = last ? Math.min((now - last) / 1000, 0.1) : 0;
     last = now;
     const s = player.state();
-    const hearing = s.playing && !s.guest;
+    const hearing = s.playing && !outsideGuest(s.guest);
     analysis ??= createAnalysis(getMusicBus());
     analysis.update(dt, hearing);
     if (open) {
@@ -130,8 +130,8 @@ export function mountScopePanel(player: Player, bar: HTMLElement) {
   player.onChange((s) => {
     // A Spotify song plays outside the room's audio, so there is nothing to see: the scope
     // steps aside (and closes) until the room's own music is back.
-    stepAside(pill, Boolean(s.guest));
-    if (s.guest) {
+    stepAside(pill, outsideGuest(s.guest));
+    if (outsideGuest(s.guest)) {
       if (open) setOpen(false);
       analysis?.reset();
     }

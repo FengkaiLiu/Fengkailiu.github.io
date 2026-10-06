@@ -7,12 +7,17 @@ import { getMusicBus } from './bus';
 import { startDemoBeat, type DemoBeat } from './demoBeat';
 import type { Track } from '../content/tracks';
 
-/** A song playing outside the room's audio graph, e.g. a Liner notes pick in the Spotify embed. */
+/** Something else borrowing the turntable: a Liner notes pick in the Spotify embed (outside
+ *  the room's audio graph), or the Contact sequencer (`inRoom`: it plays through the bus). */
 export interface Guest {
   id: string;
   title: string;
   artist: string;
+  inRoom?: boolean;
 }
+
+/** A guest the room cannot hear (Spotify): no meters, volume or scope for it. */
+export const outsideGuest = (g: Guest | null) => Boolean(g && !g.inRoom);
 
 /** The guest's side of the turntable: report progress, and hand it back when done. */
 export interface GuestSlot {

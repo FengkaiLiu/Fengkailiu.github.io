@@ -1,0 +1,215 @@
+/* Contact: the step sequencer and the message form. */
+
+.chapter__card:has(.beat) {
+  width: min(100%, 640px);
+}
+.beat {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+.beat__gift {
+  padding: 8px 12px;
+  border-radius: 10px;
+  background: rgba(255, 157, 77, 0.16);
+  font-weight: 700;
+  color: var(--lamp-300);
+}
+.beat__bar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.beat__play {
+  min-width: 6.5em;
+  justify-content: center;
+}
+.beat__tempo {
+  display: grid;
+  gap: 4px;
+  min-width: 140px;
+  flex: 1;
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+.beat__tempo output {
+  margin-left: 6px;
+  font-family: var(--font-mono);
+  color: var(--lamp-300);
+}
+.beat__tempo input {
+  accent-color: var(--lamp-500);
+}
+.beat__tool {
+  padding: 0.45em 0.95em;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: var(--radius-pill);
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.05);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+}
+.beat__tool:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* The loop's four bars and their chords; the current bar lights while it plays. */
+.beat__chords {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  font-size: var(--text-micro);
+}
+.beat__chords-label {
+  margin-right: 4px;
+  opacity: 0.6;
+}
+.beat__chord {
+  padding: 2px 8px;
+  border-radius: var(--radius-pill);
+  background: rgba(255, 255, 255, 0.06);
+  font-family: var(--font-mono);
+  opacity: 0.7;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
+}
+.beat__chord.is-now {
+  background: rgba(255, 157, 77, 0.28);
+  color: var(--lamp-300);
+  opacity: 1;
+}
+
+.beat__grid {
+  display: grid;
+  gap: 6px;
+  padding: 10px;
+  border-radius: 14px;
+  background: rgba(10, 8, 24, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+  touch-action: none; /* dragging paints steps instead of scrolling */
+}
+.beat__row {
+  display: grid;
+  grid-template-columns: 42px repeat(16, 1fr);
+  align-items: center;
+  gap: 3px;
+}
+.beat__name {
+  font-size: var(--text-micro);
+  font-weight: 800;
+  opacity: 0.75;
+}
+.beat__step {
+  aspect-ratio: 1;
+  min-width: 0;
+  padding: 0;
+  border: 0;
+  border-radius: 5px;
+  background: rgba(255, 255, 255, 0.07);
+  cursor: pointer;
+  transition:
+    background 0.12s var(--ease-out),
+    transform 0.12s var(--ease-out);
+}
+/* Every fourth step a touch brighter: the beats you count. */
+.beat__step:nth-child(4n + 2) {
+  background: rgba(255, 255, 255, 0.12);
+}
+.beat__step[aria-pressed='true'] {
+  background: linear-gradient(180deg, var(--lamp-300), var(--lamp-500));
+  box-shadow: 0 0 10px -2px rgba(255, 157, 77, 0.7);
+}
+.beat__row:nth-child(4) .beat__step[aria-pressed='true'] {
+  background: linear-gradient(180deg, #ffc2d4, var(--rose-400));
+  box-shadow: 0 0 10px -2px rgba(255, 143, 177, 0.7);
+}
+.beat__row:nth-child(5) .beat__step[aria-pressed='true'] {
+  background: linear-gradient(180deg, #d4e1ff, var(--moon-300));
+  box-shadow: 0 0 10px -2px rgba(169, 196, 255, 0.7);
+}
+.beat__step.is-now {
+  transform: scale(0.82);
+  outline: 1px solid rgba(255, 255, 255, 0.55);
+}
+.beat__step:focus-visible {
+  outline: 2px solid var(--white);
+  outline-offset: 1px;
+}
+
+/* ---------- Message form ---------- */
+.beat__form {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+.beat__field {
+  display: grid;
+  gap: 4px;
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+.beat__field input,
+.beat__field textarea {
+  padding: 10px 12px;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 10px;
+  color: var(--white);
+  background: rgba(10, 8, 24, 0.5);
+  font: inherit;
+  font-weight: 500;
+  resize: vertical;
+}
+.beat__field input:focus-visible,
+.beat__field textarea:focus-visible {
+  outline: 2px solid var(--lamp-300);
+  outline-offset: 1px;
+}
+.beat__check {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: var(--text-small);
+}
+.beat__check input {
+  accent-color: var(--lamp-500);
+}
+.beat__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+}
+.beat__copied {
+  font-size: var(--text-small);
+  color: var(--lamp-300);
+  word-break: break-all;
+}
+.beat__note {
+  font-size: var(--text-micro);
+  opacity: 0.6;
+}
+.beat__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
+  margin: var(--space-2) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.beat__links a {
+  font-size: var(--text-small);
+  font-weight: 700;
+  color: var(--lamp-300);
+}
+
+@media (max-width: 560px) {
+  .beat__row {
+    grid-template-columns: 36px repeat(16, 1fr);
+    gap: 2px;
+  }
+}
