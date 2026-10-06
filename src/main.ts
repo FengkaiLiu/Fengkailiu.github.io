@@ -12,6 +12,7 @@ import { createPlayer } from './audio/player';
 import { tracks } from './content/tracks';
 import { mountPlayerDock } from './ui/playerDock';
 import { mountCrate } from './ui/crate';
+import { mountScopePanel } from './ui/scopePanel';
 import { coverLabel } from './room/textures';
 
 // Always start at the top so the first shot is the whole room.
@@ -121,6 +122,7 @@ mountCrate(document.querySelector<HTMLElement>('#records .chapter__slot')!, play
     room?.setMood(mood ?? null);
   },
 });
+mountScopePanel(player, dock.bar);
 initLiquidGlass();
 
 // "Look around" glides to the first chapter; the camera follows the scroll on its own.

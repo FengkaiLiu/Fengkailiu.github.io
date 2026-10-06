@@ -184,6 +184,8 @@ export function mountPlayerDock(
   }
 
   return {
+    /** The bottom bar, so other pills (the scope) can join the row. */
+    bar,
     show() {
       bar.classList.add('is-shown');
     },

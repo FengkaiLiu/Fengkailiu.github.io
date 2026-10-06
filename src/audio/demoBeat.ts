@@ -58,7 +58,7 @@ export function startDemoBeat(ctx: AudioContext, dest: AudioNode): DemoBeat {
   const noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
   const nd = noise.getChannelData(0);
   for (let i = 0; i < nd.length; i++) nd[i] = Math.random() * 2 - 1;
-  const noiseHit = (t: number, filter: BiquadFilterType, freq: number, q: number, vel: number, decay: number) => {
+  const noiseHit = (t: number, filter: BiquadFilterType, freq: number, q: number, vel: number, decay: number, pan = 0) => {
     const src = ctx.createBufferSource();
     src.buffer = noise;
     const f = ctx.createBiquadFilter();
@@ -68,7 +68,11 @@ export function startDemoBeat(ctx: AudioContext, dest: AudioNode): DemoBeat {
     const g = ctx.createGain();
     g.gain.setValueAtTime(vel, t);
     g.gain.exponentialRampToValueAtTime(0.0001, t + decay);
-    src.connect(f).connect(g).connect(out);
+    if (pan) {
+      const p = ctx.createStereoPanner();
+      p.pan.value = pan;
+      src.connect(f).connect(g).connect(p).connect(out);
+    } else src.connect(f).connect(g).connect(out);
     src.start(t, Math.random() * 0.5);
     src.stop(t + decay + 0.02);
   };
@@ -126,8 +130,9 @@ export function startDemoBeat(ctx: AudioContext, dest: AudioNode): DemoBeat {
 
     if (i === 0 || (even ? i === 7 || i === 10 : i === 10 || i === 11)) kick(t + human(), i === 0 ? 0.95 : 0.75);
     if (i === 4 || i === 12) snare(t + 0.01 + human(), 0.9);
-    if (i % 2 === 0) noiseHit(t + human(), 'highpass', 7500, 0.5, i % 4 === 0 ? 0.07 : 0.045, 0.04);
-    else if (Math.random() < 0.18) noiseHit(t + human(), 'highpass', 8000, 0.5, 0.025, 0.03); // ghost hats
+    // Hats sway a little left and right, for width.
+    if (i % 2 === 0) noiseHit(t + human(), 'highpass', 7500, 0.5, i % 4 === 0 ? 0.07 : 0.045, 0.04, i % 4 === 0 ? -0.3 : 0.3);
+    else if (Math.random() < 0.18) noiseHit(t + human(), 'highpass', 8000, 0.5, 0.025, 0.03, 0.45); // ghost hats
 
     if (i === 0) bar.chord.forEach((n, k) => rhodesNote(ctx, keys, n, t + k * 0.03, STEP * 15, 0.075));
     if (i === 11 && !even) bar.chord.slice(2).forEach((n, k) => rhodesNote(ctx, keys, n, t + k * 0.02, STEP * 4, 0.04));

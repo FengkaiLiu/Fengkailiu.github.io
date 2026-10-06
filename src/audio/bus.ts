@@ -12,6 +12,11 @@ export interface Bands {
 export interface MusicBus {
   input: GainNode;
   analyser: AnalyserNode;
+  /** Per-channel analysers for stereo views (the vectorscope). */
+  left: AnalyserNode;
+  right: AnalyserNode;
+  /** A long FFT (about 6 Hz bins) for pitch: tells neighbouring notes apart down in the bass. */
+  fine: AnalyserNode;
   /** Smoothed 0..1 bands. Call once per frame. */
   read(dt: number): Bands;
 }
@@ -27,6 +32,19 @@ export function getMusicBus(): MusicBus {
   analyser.smoothingTimeConstant = 0.75;
   input.connect(analyser);
   analyser.connect(master);
+  // Side branch: split the channels for stereo analysis. Analysers pass nothing on, so
+  // this taps the signal without changing what reaches the speakers.
+  const splitter = ctx.createChannelSplitter(2);
+  const left = ctx.createAnalyser();
+  const right = ctx.createAnalyser();
+  left.fftSize = right.fftSize = 2048;
+  input.connect(splitter);
+  const fine = ctx.createAnalyser();
+  fine.fftSize = 8192;
+  fine.smoothingTimeConstant = 0.5;
+  input.connect(fine);
+  splitter.connect(left, 0);
+  splitter.connect(right, 1);
 
   const freq = new Uint8Array(analyser.frequencyBinCount);
   const wave = new Float32Array(analyser.fftSize);
@@ -49,6 +67,9 @@ export function getMusicBus(): MusicBus {
   bus = {
     input,
     analyser,
+    left,
+    right,
+    fine,
     read(dt) {
       analyser.getByteFrequencyData(freq);
       analyser.getFloatTimeDomainData(wave);

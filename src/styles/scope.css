@@ -1,0 +1,121 @@
+/* The scope: a glass panel of visualizers that opens above the bottom bar. */
+
+.scope {
+  position: fixed;
+  left: 50%;
+  bottom: calc(max(16px, env(safe-area-inset-bottom)) + 58px + 12px);
+  z-index: var(--z-player);
+  display: grid;
+  gap: var(--space-3);
+  width: min(760px, calc(100vw - 32px));
+  transform: translateX(-50%);
+  animation: scope-in 0.45s var(--ease-out);
+}
+.scope[hidden] {
+  display: none;
+}
+@keyframes scope-in {
+  from {
+    opacity: 0;
+    transform: translate(-50%, 16px);
+  }
+}
+
+.scope__head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-4);
+}
+.scope__tabs {
+  display: flex;
+  gap: 4px;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+.scope__tab {
+  flex: none;
+  padding: 0.45em 0.95em;
+  border: 1px solid transparent;
+  border-radius: var(--radius-pill);
+  color: var(--white);
+  background: transparent;
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  opacity: 0.65;
+  cursor: pointer;
+  transition:
+    background var(--dur-fast) var(--ease-out),
+    opacity var(--dur-fast) var(--ease-out);
+}
+.scope__tab:hover {
+  opacity: 1;
+}
+.scope__tab[aria-selected='true'] {
+  border-color: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.12);
+  opacity: 1;
+}
+.scope__readout {
+  display: flex;
+  gap: var(--space-4);
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  color: var(--lamp-300);
+}
+
+.scope__stage {
+  position: relative;
+  height: 220px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #120d24;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.scope__canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+.scope__note {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--space-4);
+  font-size: var(--text-small);
+  text-align: center;
+  opacity: 0.8;
+  pointer-events: none;
+}
+.scope__note:empty {
+  display: none;
+}
+.scope__about {
+  font-size: var(--text-small);
+  opacity: 0.7;
+}
+
+/* The pill that opens it, lit while open. */
+.pill--scope {
+  padding-left: 14px;
+  border: 0;
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+}
+.pill--scope.is-active svg {
+  color: var(--lamp-300);
+}
+
+@media (max-width: 560px) {
+  .scope__stage {
+    height: 170px;
+  }
+  .pill--scope {
+    padding: 0 16px;
+  }
+}

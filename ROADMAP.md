@@ -27,7 +27,7 @@ Dev helpers (dev server only):
 - `/?shot=sonare` frames one camera shot without scrolling (see `src/room/shots.ts`).
 - `/?at=lab` scrolls to a chapter.
 - `/?fps` shows the frame rate and what the adaptive quality governor is doing.
-- `/?play` starts the music on load; `/?shot=record` frames the turntable; `/?crate` opens the Liner notes crate; `/?mood=neon` (or `meadow`, `teto`) shows a song scene.
+- `/?play` starts the music on load; `/?shot=record` frames the turntable; `/?crate` opens the Liner notes crate; `/?mood=neon` (or `meadow`, `teto`) shows a song scene; `/?scope=spectrum` (or `wave`, `spectrogram`, `stereo`, `chroma`) opens the Scope.
 
 ## Floors
 
@@ -39,7 +39,7 @@ Dev helpers (dev server only):
 | 3 | Startup gate (lamp switch, load progress) + lights-on chord, rain and vinyl ambience | ✅ |
 | 3b | Audio engine: shared analyser bus, band extraction (bass / mid / treble / level) | ✅ |
 | 4 | Record player as the music player: glass dock, tonearm + spinning vinyl, playlist, synthesized demo loop | ✅ |
-| 5 | Visualizers: waveform, spectrum, spectrogram, vectorscope, chromagram, BPM/key | ⬜ |
+| 5 | Visualizers: waveform, spectrum, spectrogram, vectorscope, chromagram, BPM/key (Scope panel on the bottom bar) | ✅ |
 | 6 | Audio-reactive room: speakers pump, fairy lights = spectrum, laptop shows live FFT, lamp breathes | ⬜ |
 | 7 | Smooth scroll (Lenis + GSAP), nav | ⬜ |
 | 8 | Room interactions: click the keyboard to play notes, pet the cat, flip the lamp | ⬜ |
