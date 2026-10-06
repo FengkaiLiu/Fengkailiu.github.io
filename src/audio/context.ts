@@ -3,15 +3,22 @@
 
 let ctx: AudioContext | null = null;
 let master: GainNode | null = null;
+let masterLevel = 0.8;
 
 export function getAudio(): { ctx: AudioContext; master: GainNode } {
   if (!ctx) {
     ctx = new AudioContext({ latencyHint: 'interactive' });
     master = ctx.createGain();
-    master.gain.value = 0.8;
+    master.gain.value = masterLevel;
     master.connect(ctx.destination);
   }
   return { ctx, master: master! };
+}
+
+/** Overall volume, 0..1 gain. Safe to call before the context exists (it is created on first use). */
+export function setMasterVolume(gain: number) {
+  masterLevel = gain;
+  if (ctx && master) master.gain.setTargetAtTime(gain, ctx.currentTime, 0.03);
 }
 
 export async function unlockAudio() {

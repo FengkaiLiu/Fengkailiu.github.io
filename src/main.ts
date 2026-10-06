@@ -144,6 +144,10 @@ showGate(
   if (sound) {
     playLightsOnChord();
     ambience = startAmbience();
+    // The record drops in once the lights-on chord has rung out.
+    window.setTimeout(() => {
+      if (!player.state().playing) void player.play();
+    }, 1800);
   }
 });
 

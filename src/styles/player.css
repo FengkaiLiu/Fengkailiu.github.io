@@ -1,15 +1,14 @@
-/* Record player remote: a glass capsule docked at the bottom of the page. */
+/* The bottom bar: record player remote, volume and rain, as separate glass pills in a row. */
 
-.player {
+.dockbar {
   position: fixed;
   left: 50%;
   bottom: max(16px, env(safe-area-inset-bottom));
   z-index: var(--z-player);
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--space-2);
   max-width: calc(100vw - 32px);
-  padding: 8px 8px 8px 10px;
   opacity: 0;
   pointer-events: none;
   transform: translate(-50%, 24px);
@@ -17,10 +16,76 @@
     opacity 0.9s var(--ease-out),
     transform 1.1s var(--ease-out);
 }
-.player.is-shown {
+.dockbar.is-shown {
   opacity: 1;
   pointer-events: auto;
   transform: translate(-50%, 0);
+}
+
+.player {
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+  padding: 8px 8px 8px 10px;
+}
+
+/* Volume and rain pills: the same glass, the height of the player. */
+.pill {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 58px;
+  padding: 0 14px 0 8px;
+  color: var(--white);
+}
+.pill svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  fill: currentColor;
+}
+.icon-line {
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.8;
+  stroke-linecap: round;
+}
+.pill__slider {
+  --fill: 80%;
+  width: 92px;
+  height: 4px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--lamp-300) var(--fill), rgba(255, 255, 255, 0.2) var(--fill));
+  appearance: none;
+  cursor: pointer;
+}
+.pill__slider::-webkit-slider-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--white);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.5);
+  appearance: none;
+}
+.pill__slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border: 0;
+  border-radius: 50%;
+  background: var(--white);
+}
+.pill--rain {
+  padding-left: 14px;
+  border: 0;
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+}
+.pill__label {
+  white-space: nowrap;
 }
 
 /* A tiny record that spins with the real one. */
@@ -125,7 +190,7 @@
   background: linear-gradient(180deg, #ffe2b8, var(--lamp-500));
 }
 /* Until the first play, the button breathes to invite a press. */
-.player.is-shown:not(.is-playing) .player__btn--main {
+.dockbar.is-shown .player:not(.is-playing) .player__btn--main {
   animation: player-invite 2.6s ease-in-out infinite;
 }
 @keyframes player-invite {
@@ -137,29 +202,43 @@
   .player__time {
     display: none;
   }
-  .player {
+  .dockbar {
     width: calc(100vw - 32px);
+  }
+  .player {
+    flex: 1;
   }
   .player__meta {
     flex: 1;
   }
+  /* Phones: icons only; the speaker mutes and unmutes. */
+  .pill__slider,
+  .pill__label {
+    display: none;
+  }
+  .pill {
+    padding: 0 8px;
+  }
+  .pill--rain {
+    padding: 0 16px;
+  }
 }
 
 /* Rain: a cloud with drops while it rains, a dimmed cloud once it stops. */
-.player__rain .player__drops {
+.player__drops {
   fill: none;
   stroke: var(--moon-300);
   stroke-width: 1.8;
   stroke-linecap: round;
   transition: opacity var(--dur-fast) var(--ease-out);
 }
-.player__rain[aria-pressed='true'] {
+.pill--rain[aria-pressed='true'] svg {
   color: var(--moon-300);
 }
-.player__rain[aria-pressed='false'] {
-  opacity: 0.55;
+.pill--rain[aria-pressed='false'] {
+  opacity: 0.6;
 }
-.player__rain[aria-pressed='false'] .player__drops {
+.pill--rain[aria-pressed='false'] .player__drops {
   opacity: 0;
 }
 
