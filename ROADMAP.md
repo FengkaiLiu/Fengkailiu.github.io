@@ -62,7 +62,7 @@ Until these exist, the site shows visible placeholders (dashed boxes with a yell
 In dev, the browser console lists every placeholder on the page.
 
 - [ ] **Music tracks** for the record player: put MP3/OGG files in `public/audio/` and list them in `src/content/tracks.ts` (the synthesized demo loop plays until then)
-- [ ] **Liner notes picks** (3 songs): Apple Music link and your note for each (optional Spotify link and credits), in `src/content/records.ts`
+- [ ] **Liner notes picks** (3 songs): Spotify link, artist name and your note for each (optional credits), in `src/content/records.ts`
 - [ ] **Spectrogram easter-egg track** (a track with an image hidden in its spectrum)
 - [ ] **VR Music Room**: room model `.glb` or a 10 to 20 s screen recording, plus headset screenshots
 - [ ] **Sonare of the Lake**: chorus screen recording, one boat `.glb`

@@ -1,19 +1,19 @@
-// "Liner notes": three songs Fengkai recommends. For each one, paste the Apple Music link
-// (open the song in Apple Music > Share > Copy Link). Title, artist, album, year, cover art
-// and the official 30 s preview are fetched from Apple automatically. Then write `note` in
-// your own voice. Any field you fill in by hand wins over the fetched one.
+// "Liner notes": three songs Fengkai recommends. For each one, fill in:
+//   spotify: the song's Spotify link (in Spotify: ... > Share > Copy Song Link)
+//   artist:  the artist's name, as it appears on Spotify
+//   note:    why you love it, in your own voice
+// Title and cover come from Spotify. Album, year and the 30 s preview that spins on the
+// turntable come from Apple's public catalog (Spotify no longer offers previews), matched
+// by title + artist. Anything you fill in by hand wins over the fetched value.
 
 export interface RecordPick {
   id: string;
-  /** Apple Music song link, like https://music.apple.com/us/album/.../123?i=456 */
-  apple?: string;
-  /** Optional link for the "full song" button, e.g. a Spotify share link. */
-  full?: string;
+  spotify?: string;
+  artist?: string;
   note: string;
   /** Extra credit lines, e.g. 'Produced by ...'. */
   credits?: string[];
   title?: string;
-  artist?: string;
   album?: string;
   year?: string;
   /** Sleeve color shown until the cover loads. */
@@ -47,42 +47,72 @@ export interface ResolvedPick {
   year: string;
   credits: string[];
   cover: string | null;
+  /** 30 s clip, or null if no matching preview was found. */
   preview: string | null;
+  /** The Spotify link, for the "full song" button. */
   link: string | null;
   missing: boolean;
 }
 
-const appleId = (link?: string) => link?.match(/[?&]i=(\d+)/)?.[1] ?? link?.match(/\/song\/[^/]+\/(\d+)/)?.[1] ?? null;
+interface AppleHit {
+  trackName: string;
+  artistName: string;
+  collectionName?: string;
+  releaseDate?: string;
+  artworkUrl100?: string;
+  previewUrl?: string;
+  primaryGenreName?: string;
+}
+
+const norm = (s: string) =>
+  s
+    .toLowerCase()
+    .replace(/\(.*?\)|\[.*?\]|feat\..*$/g, '')
+    .replace(/[^a-z0-9À-￿]+/g, ' ')
+    .trim();
+
+async function json<T>(url: string): Promise<T | null> {
+  try {
+    const res = await fetch(url);
+    return res.ok ? ((await res.json()) as T) : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Finds the same song in Apple's catalog: same artist, and a title that matches. */
+async function findOnApple(title: string, artist: string): Promise<AppleHit | null> {
+  const data = await json<{ results: AppleHit[] }>(
+    `https://itunes.apple.com/search?term=${encodeURIComponent(`${title} ${artist}`)}&entity=song&limit=15`,
+  );
+  const t = norm(title);
+  const a = norm(artist);
+  const byArtist = (data?.results ?? []).filter((h) => h.previewUrl && (norm(h.artistName).includes(a) || a.includes(norm(h.artistName))));
+  return byArtist.find((h) => norm(h.trackName) === t) ?? byArtist.find((h) => norm(h.trackName).startsWith(t) || t.startsWith(norm(h.trackName))) ?? null;
+}
 
 const cache = new Map<string, Promise<ResolvedPick>>();
 
-/** Looks the song up on Apple's public iTunes API (no key needed, CORS-enabled). */
 export function resolvePick(pick: RecordPick): Promise<ResolvedPick> {
   if (!cache.has(pick.id)) {
     cache.set(
       pick.id,
       (async () => {
-        const id = appleId(pick.apple);
-        type Hit = { trackName?: string; artistName?: string; collectionName?: string; releaseDate?: string; artworkUrl100?: string; previewUrl?: string; trackViewUrl?: string; primaryGenreName?: string };
-        let hit: Hit | undefined;
-        if (id) {
-          try {
-            hit = (await (await fetch(`https://itunes.apple.com/lookup?id=${id}&entity=song`)).json()).results?.[0];
-          } catch {
-            hit = undefined;
-          }
-        }
+        const spotify = pick.spotify?.includes('open.spotify.com/') ? pick.spotify : undefined;
+        const embed = spotify ? await json<{ title: string; thumbnail_url: string }>(`https://open.spotify.com/oembed?url=${encodeURIComponent(spotify)}`) : null;
+        const title = pick.title ?? embed?.title;
+        const apple = title && pick.artist ? await findOnApple(title, pick.artist) : null;
         return {
           pick,
-          title: pick.title ?? hit?.trackName ?? 'Song title',
-          artist: pick.artist ?? hit?.artistName ?? 'Artist',
-          album: pick.album ?? hit?.collectionName ?? 'Album',
-          year: pick.year ?? hit?.releaseDate?.slice(0, 4) ?? 'Year',
-          credits: [...(hit?.primaryGenreName ? [`Genre · ${hit.primaryGenreName}`] : []), ...(pick.credits ?? [])],
-          cover: hit?.artworkUrl100?.replace('100x100bb', '600x600bb') ?? null,
-          preview: hit?.previewUrl ?? null,
-          link: pick.full ?? hit?.trackViewUrl ?? null,
-          missing: !hit,
+          title: title ?? 'Song title',
+          artist: pick.artist ?? apple?.artistName ?? 'Artist',
+          album: pick.album ?? apple?.collectionName ?? 'Album',
+          year: pick.year ?? apple?.releaseDate?.slice(0, 4) ?? 'Year',
+          credits: [...(apple?.primaryGenreName ? [`Genre · ${apple.primaryGenreName}`] : []), ...(pick.credits ?? [])],
+          cover: apple?.artworkUrl100?.replace('100x100bb', '600x600bb') ?? embed?.thumbnail_url ?? null,
+          preview: apple?.previewUrl ?? null,
+          link: spotify ?? null,
+          missing: !embed || !pick.artist,
         };
       })(),
     );

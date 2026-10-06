@@ -67,7 +67,7 @@ export function mountCrate(slot: HTMLElement, player: Player, hooks: CrateHooks)
           </div>
           <div class="crate__actions">
             <button class="btn crate__spin" type="button" data-spin>Spin it · ${SPIN_SECONDS}s</button>
-            <a class="crate__link" data-link target="_blank" rel="noopener">Full song ↗</a>
+            <a class="crate__link" data-link target="_blank" rel="noopener">Full song on Spotify ↗</a>
           </div>
           <div data-missing></div>
         </div>
@@ -120,13 +120,13 @@ export function mountCrate(slot: HTMLElement, player: Player, hooks: CrateHooks)
     if (info.link) link.href = info.link;
     const missing = $<HTMLElement>('[data-missing]');
     missing.replaceChildren();
-    if (info.missing) missing.append(placeholder({ label: `Liner notes pick ${index + 1}`, needs: ['Apple Music link for this song (src/content/records.ts)', 'Your note on why you love it'] }));
+    if (info.missing) missing.append(placeholder({ label: `Liner notes pick ${index + 1}`, needs: ['Spotify link and artist name for this song (src/content/records.ts)', 'Your note on why you love it'] }));
     syncSpin();
   };
 
   const syncSpin = () => {
     const on = spinningHere();
-    spinBtn.textContent = on ? 'Stop' : `Spin it · ${SPIN_SECONDS}s`;
+    spinBtn.textContent = on ? 'Stop' : spinBtn.disabled ? 'No preview found' : `Spin it · ${SPIN_SECONDS}s`;
     albums.forEach((el, i) => el.classList.toggle('is-spinning', on && i === index));
   };
 
