@@ -14,6 +14,7 @@
   position: absolute;
   top: 0;
   left: calc(var(--i) * 46px);
+  z-index: calc(3 - var(--i)); /* the first pick lies on top of the pile */
   width: 118px;
   height: 118px;
   border-radius: 8px;

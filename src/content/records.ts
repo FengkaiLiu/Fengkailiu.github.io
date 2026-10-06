@@ -22,11 +22,11 @@ export interface RecordPick {
 
 export const records: RecordPick[] = [
   {
-    id: 'pick-3',
-    spotify: 'https://open.spotify.com/track/1H2pPtoPS8kNlqCN7HfT6g?si=c8ca5caaf7e744b8',
-    artist: 'Jamie Paige',
-    note: 'This song brings me happiness',
-    tint: '#ff2b00',
+    id: 'pick-1',
+    spotify: 'https://open.spotify.com/track/6jg8bLxvV2k8gtYPkgOufy?si=91922e13feb94bac',
+    artist: 'SadSvit',
+    note: 'This song brings me energy',
+    tint: '#ff9d4d',
   },
   {
     id: 'pick-2',
@@ -36,11 +36,11 @@ export const records: RecordPick[] = [
     tint: '#90ee90',
   },
   {
-    id: 'pick-1',
-    spotify: 'https://open.spotify.com/track/6jg8bLxvV2k8gtYPkgOufy?si=91922e13feb94bac',
-    artist: 'SadSvit',
-    note: 'This song brings me energy',
-    tint: '#ff9d4d',
+    id: 'pick-3',
+    spotify: 'https://open.spotify.com/track/1H2pPtoPS8kNlqCN7HfT6g?si=c8ca5caaf7e744b8',
+    artist: 'Jamie Paige',
+    note: 'This song brings me happiness',
+    tint: '#ff2b00',
   },
 ];
 
