@@ -102,7 +102,7 @@ projects.forEach((p) => {
   slot.classList.add('chapter__actions');
   slot.innerHTML = `
     <button class="btn" type="button" data-sheet="${p.id}">${p.placeholder ? 'What it needs' : 'Liner notes'}</button>
-    ${p.links.demo ? `<a class="chapter__link" href="${p.links.demo}" target="_blank" rel="noopener">Live demo ${extArrow}</a>` : ''}
+    ${p.links.demo ? `<a class="chapter__link" href="${p.links.demo}" target="_blank" rel="noopener">${p.links.demoLabel ?? 'Live demo'} ${extArrow}</a>` : ''}
     ${p.links.github ? `<a class="chapter__link" href="${p.links.github}" target="_blank" rel="noopener">GitHub ${extArrow}</a>` : ''}
   `;
 });

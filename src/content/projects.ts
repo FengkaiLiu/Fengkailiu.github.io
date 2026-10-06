@@ -20,7 +20,7 @@ export interface Project {
   tags: string[];
   cover: string;
   sections: ProjectSection[];
-  links: { demo?: string; github?: string };
+  links: { demo?: string; github?: string; /** Button text for the demo link (default "Live demo"). */ demoLabel?: string };
   media?: MediaGroup[];
   /** A live demo to embed in the liner notes, loaded only when the visitor asks. */
   embed?: { title: string; src: string; allow?: string; note: string };
@@ -123,10 +123,16 @@ export const projects: Project[] = [
       { heading: 'What I learned', text: 'How to combine Unity with third-party SDKs, prefabs, and plugins to build fully interactive worlds, and why aggressive optimization matters for mobile VR.' },
     ],
     links: {
-      demo: 'https://vrchat.com/home/world/wrld_1c519374-adfc-4072-9df4-21458d94a13e/info',
+      demo: 'https://vrchat.com/home/launch?worldId=wrld_1c519374-adfc-4072-9df4-21458d94a13e',
+      demoLabel: 'Visit in VRChat',
       github: 'https://github.com/FengkaiLiu/VRchatRoomLowpoly',
     },
-    needs: ['360° panorama screenshot of the world (equirectangular .jpg)'],
+    media: [
+      {
+        caption: 'World intro',
+        items: [{ type: 'video', src: '/vrchatroom/vrchatroom.mp4', alt: 'RoomLink-ChillZone world intro video' }],
+      },
+    ],
   },
   {
     id: 'hotfooter',
