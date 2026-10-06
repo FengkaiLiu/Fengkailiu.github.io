@@ -482,13 +482,14 @@ export function buildRoom(
     addFocus(id, w, h, new Vector3(-3.996, y, z), 'left', frameMat, mat);
     anchors[`poster-${id}`] = new Vector3(-3.95, y, z);
   }
-  // Empty frame waiting for Project 5, on the back wall
-  const p5Mat = std('#ffffff', { map: placeholderPoster() });
-  const p5 = new Mesh(new PlaneGeometry(0.7, 0.95), p5Mat);
-  p5.position.set(3.05, 3.0, -3.97);
+  // Project 5's frame on the back wall: landscape like the others, so covers and videos fit.
+  const p5Mat = std('#ffffff', { roughness: 0.6, map: placeholderPoster() });
+  posterMats.project5 = p5Mat;
+  const p5 = new Mesh(new PlaneGeometry(1.05, 0.72), p5Mat);
+  p5.position.set(3.12, 3.0, -3.97);
   const p5Frame = std('#f6efe6');
-  root.add(box(0.78, 1.03, 0.03, p5Frame, 3.05, 3.0, -3.99, 0.01), p5);
-  addFocus('project5', 0.7, 0.95, new Vector3(3.05, 3.0, -3.996), 'back', p5Frame, p5Mat);
+  root.add(box(1.13, 0.8, 0.03, p5Frame, 3.12, 3.0, -3.99, 0.01), p5);
+  addFocus('project5', 1.05, 0.72, new Vector3(3.12, 3.0, -3.996), 'back', p5Frame, p5Mat);
   anchors.project5 = p5.position.clone();
 
   const coverLoads = Object.entries(covers).map(async ([id, url]) => {

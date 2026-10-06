@@ -49,6 +49,7 @@ Dev helpers (dev server only):
 | 12 | Chapter: Sonare of the Lake (gameplay video in the sheet, card and poster; screenshots; 3D viewer of all six boats; the real Miku boat on the shelf) | ✅ |
 | 13 | Chapter: RoomLink-ChillZone | ⬜ |
 | 14 | Chapter: Hot Footer | ⬜ |
+| 14a | Chapter A6: my_KWS (Project 5): edge keyword spotting write-up, demo video on the card and back-wall frame, the live Hugging Face demo embedded on request | ✅ |
 | 14b | Liner notes (B1): card expands into an album stack; a Spotify embed plays each pick as a preview and borrows the turntable; each song turns the corner into its cover (neon flowers, meadow, Kasane Teto) | ✅ |
 | 15 | Lab (CS showcase): live diagram of the page's audio graph + FFT playground (hand-written radix-2 FFT, windowing, play in the room) | ✅ |
 | 16 | Contact: 16-step sequencer over the 4-bar progression, shareable beat links, message form (FormSubmit, no mail app needed) | ✅ |
@@ -69,9 +70,9 @@ In dev, the browser console lists every placeholder on the page.
 - [x] **Sonare of the Lake**: gameplay video, 2 screenshots and the 6 boat models in `public/sonareofthelake/` (PNG originals in `media-src/`)
 - [ ] **RoomLink-ChillZone**: 360° equirectangular panorama
 - [ ] **Hot Footer**: Unity WebGL build or gameplay GIF
-- [ ] **Project 5**: all content
+- [x] **Project 5** (my_KWS): write-up from the repo README, demo video, cover from the repo's demo screenshot, in `public/kws/`
 - [ ] **Portrait / photos** for About (optional)
-- [ ] **Poster art** for Project 5 (the empty frame on the back wall)
+- [x] **Poster art** for Project 5: the live demo's screenshot
 - [ ] **Optional `.glb` models** to swap in for the procedural props (headset, boat, handheld, your own synth)
 
 ## Browser notes

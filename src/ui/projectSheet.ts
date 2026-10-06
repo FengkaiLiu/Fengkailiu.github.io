@@ -100,6 +100,17 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
         </section>`,
         )
         .join('')}
+      ${
+        p.embed
+          ? `<section class="sheet__section sheet__embed">
+              <h3>${esc(p.embed.title)}</h3>
+              <div class="sheet__embed-frame" data-embed>
+                <button class="btn" type="button" data-embed-load>Load the live demo</button>
+                <p class="sheet__embed-note">${esc(p.embed.note)}</p>
+              </div>
+            </section>`
+          : ''
+      }
       ${photoGroups.map(([g, gi]) => mediaGroup(g, gi)).join('')}
       ${p.models ? `<figure class="sheet__media sheet__models"><div data-models></div><figcaption>${esc(p.models.caption)}</figcaption></figure>` : ''}
       <div data-media></div>
@@ -146,6 +157,20 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
       dialog.close();
     }, 260);
   };
+  // Live demo embeds load only on request (a third-party page, possibly with a mic prompt).
+  body.addEventListener('click', (e) => {
+    if (!(e.target as HTMLElement).closest('[data-embed-load]')) return;
+    const embed = tracks[index].project.embed;
+    const frame = body.querySelector<HTMLElement>('[data-embed]');
+    if (!embed || !frame) return;
+    const iframe = document.createElement('iframe');
+    iframe.src = embed.src;
+    iframe.title = `${tracks[index].project.title}: live demo`;
+    if (embed.allow) iframe.allow = embed.allow;
+    iframe.className = 'sheet__embed-iframe';
+    frame.replaceChildren(iframe);
+  });
+
   // ---------- Lightbox: photos at full size, with arrows through the group ----------
   const box = document.createElement('dialog');
   box.className = 'lightbox';
@@ -193,6 +218,7 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
 
   dialog.addEventListener('close', () => {
     disposeViewer();
+    body.querySelector('[data-embed] iframe')?.remove(); // stop the demo (and its mic) on close
     body.querySelectorAll('video').forEach((v) => v.pause());
     document.documentElement.classList.remove('has-sheet');
     scroll.start();

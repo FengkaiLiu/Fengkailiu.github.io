@@ -14,7 +14,7 @@ export const shots: Record<string, Shot> = {
   sonare: { pos: [0.4, 3.3, 1.1], target: [-3.95, 3.2, 1.1] },
   roomlink: { pos: [0.4, 3.05, 2.35], target: [-3.95, 3.0, 2.35] },
   hotfooter: { pos: [-1.35, 2.55, -1.85], target: [-2.4, 2.28, -3.8] },
-  project5: { pos: [3.2, 3.05, -1.1], target: [3.05, 3.0, -3.97] },
+  project5: { pos: [3.15, 3.05, -1.25], target: [3.12, 3.0, -3.97] },
   lab: { pos: [0.5, 2.35, -1.45], target: [-0.2, 1.68, -3.25] },
   contact: { pos: [0.85, 2.95, -0.4], target: [0.8, 2.95, -3.98], frame: 0.16 },
   record: { pos: [-1.55, 1.85, -2.35], target: [-2.62, 0.95, -3.6] },

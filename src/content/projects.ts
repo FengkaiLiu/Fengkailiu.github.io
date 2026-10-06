@@ -22,6 +22,8 @@ export interface Project {
   sections: ProjectSection[];
   links: { demo?: string; github?: string };
   media?: MediaGroup[];
+  /** A live demo to embed in the liner notes, loaded only when the visitor asks. */
+  embed?: { title: string; src: string; allow?: string; note: string };
   /** 3D models for the liner notes' model viewer (Sonare's boats). */
   models?: { caption: string; items: { name: string; src: string; color: string }[] };
   /** Assets the scroll chapter still needs from Fengkai. */
@@ -143,13 +145,40 @@ export const projects: Project[] = [
   },
   {
     id: 'project5',
-    title: 'Project 5',
-    subtitle: 'Coming soon.',
-    tags: ['Coming Soon'],
-    cover: '',
-    sections: [],
-    links: {},
-    needs: ['Title, subtitle, tags, cover image, write-up'],
-    placeholder: true,
+    title: 'my_KWS',
+    subtitle: 'Edge keyword spotting from scratch: a "Hey Siri"-style wake-word detector that runs in your browser.',
+    tags: ['Python', 'DSP', 'DS-CNN', 'ONNX', 'WebAssembly'],
+    cover: '/kws/cover.jpg',
+    sections: [
+      { heading: 'The goal', text: 'Build a keyword-spotting pipeline from scratch, small and fast enough for edge devices: the always-listening kind of detector that wakes a voice assistant.' },
+      {
+        heading: 'The pipeline',
+        text: 'A hand-written log-mel front end (numpy) feeds a depthwise-separable CNN (DS-CNN, about 65k parameters). The model is quantized to int8 ONNX and runs in a streaming detector with a 1 s window and a 100 ms hop, plus debounce and a refractory period so one word fires once.',
+      },
+      {
+        heading: 'Results',
+        bullets: ['Test F1 of 0.981.', 'A 37.5 KB model (int8).', '0.15 ms inference (p50).', 'About 2.0 false accepts per hour at 10 dB SNR.'],
+      },
+      {
+        heading: 'Live demo',
+        text: 'Say "yes" into your mic. Feature extraction and inference both run client-side with onnxruntime-web (WebAssembly), so audio never leaves the tab: no install, no server.',
+      },
+    ],
+    links: {
+      demo: 'https://huggingface.co/spaces/KuroeLove/my-kws-demo',
+      github: 'https://github.com/FengkaiLiu/my_KWS',
+    },
+    media: [
+      {
+        caption: 'Demo recording',
+        items: [{ type: 'video', src: '/kws/kws.mp4', alt: 'my_KWS demo recording' }],
+      },
+    ],
+    embed: {
+      title: 'Try it here',
+      src: 'https://kuroelove-my-kws-demo.static.hf.space/index.html',
+      allow: 'microphone',
+      note: 'Loads the live demo from Hugging Face. It asks for your microphone; the audio stays in your browser.',
+    },
   },
 ];
