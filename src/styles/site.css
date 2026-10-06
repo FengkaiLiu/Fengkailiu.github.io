@@ -99,36 +99,11 @@ html.is-on .hero__tagline {
   gap: var(--space-3);
   margin-top: var(--space-3);
   padding: 10px;
-  padding-right: var(--space-5);
 }
 .hero__dock-note {
   font-size: var(--text-small);
   font-weight: 600;
   opacity: 0.7;
-}
-
-.dock-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 0.6em 1em;
-  border: 1px solid rgba(255, 255, 255, 0.25);
-  border-radius: var(--radius-pill);
-  background: rgba(255, 255, 255, 0.06);
-  font-size: var(--text-small);
-  font-weight: 700;
-  cursor: pointer;
-}
-.dock-toggle__dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--moon-300);
-  box-shadow: 0 0 10px var(--moon-300);
-}
-.dock-toggle[aria-pressed='false'] .dock-toggle__dot {
-  background: rgba(255, 255, 255, 0.3);
-  box-shadow: none;
 }
 
 .hero__cue {

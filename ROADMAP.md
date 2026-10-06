@@ -49,7 +49,7 @@ Dev helpers (dev server only):
 | 12 | Chapter: Sonare of the Lake | ⬜ |
 | 13 | Chapter: RoomLink-ChillZone | ⬜ |
 | 14 | Chapter: Hot Footer | ⬜ |
-| 14b | Liner notes (B1): card expands into an album stack; a Spotify embed plays each pick and borrows the turntable (30 s spin) | ✅ |
+| 14b | Liner notes (B1): card expands into an album stack; a Spotify embed plays each pick (optional clip range) and borrows the turntable | ✅ |
 | 15 | Lab (CS showcase): live audio graph + FFT explainer | ⬜ |
 | 16 | Contact: step sequencer with shareable loops | ⬜ |
 | 17 | Extras: command palette, spectrogram easter egg | ⬜ |

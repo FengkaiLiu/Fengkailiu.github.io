@@ -50,9 +50,6 @@ app.innerHTML = `
     <p class="hero__sub">${profile.tagline}</p>
     <div class="hero__dock liquid liquid--pill" data-liquid-bezel="22">
       <a class="btn" href="#about" data-look>Look around <svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" /></svg></a>
-      <button class="dock-toggle" type="button" data-rain aria-pressed="true" title="Rain on the window, and its sound if audio is on">
-        <span class="dock-toggle__dot"></span><span data-rain-label>Rain on</span>
-      </button>
     </div>
     <div class="hero__cue" aria-hidden="true"><span></span></div>
   </header>
@@ -88,14 +85,6 @@ const room = initRoom(sections, covers);
 initSheen();
 
 let ambience: Ambience | null = null;
-let raining = true;
-const rainBtn = document.querySelector<HTMLButtonElement>('[data-rain]')!;
-rainBtn.addEventListener('click', () => {
-  raining = !raining;
-  room?.setRain(raining);
-  ambience?.setRain(raining);
-  rainBtn.setAttribute("aria-pressed", String(raining));
-});
 
 const player = createPlayer(tracks);
 const dock = mountPlayerDock(
@@ -104,7 +93,14 @@ const dock = mountPlayerDock(
     room?.setAudio(b.bass, b.mid, b.treble, b.level);
     room?.setPlaying(playing);
   },
-  { canSkip: tracks.length > 1 },
+  {
+    canSkip: tracks.length > 1,
+    // Rain lives on the dock so it can be switched off from anywhere on the page.
+    onRain(on) {
+      room?.setRain(on);
+      ambience?.setRain(on);
+    },
+  },
 );
 
 // Liner notes picks borrow the same turntable, with the song's cover on the label.

@@ -145,6 +145,24 @@
   }
 }
 
+/* Rain: a cloud with drops while it rains, a dimmed cloud once it stops. */
+.player__rain .player__drops {
+  fill: none;
+  stroke: var(--moon-300);
+  stroke-width: 1.8;
+  stroke-linecap: round;
+  transition: opacity var(--dur-fast) var(--ease-out);
+}
+.player__rain[aria-pressed='true'] {
+  color: var(--moon-300);
+}
+.player__rain[aria-pressed='false'] {
+  opacity: 0.55;
+}
+.player__rain[aria-pressed='false'] .player__drops {
+  opacity: 0;
+}
+
 .player__btn[hidden] {
   display: none;
 }

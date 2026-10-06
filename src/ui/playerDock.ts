@@ -6,7 +6,11 @@ import type { Player, PlayerState } from '../audio/player';
 
 const BARS = 18;
 
-export function mountPlayerDock(player: Player, onBands: (b: Bands, playing: boolean) => void, opts: { canSkip: boolean }) {
+export function mountPlayerDock(
+  player: Player,
+  onBands: (b: Bands, playing: boolean) => void,
+  opts: { canSkip: boolean; onRain(on: boolean): void },
+) {
   const dock = document.createElement('div');
   dock.className = 'player liquid liquid--pill';
   dock.dataset.liquidBezel = '18';
@@ -21,6 +25,7 @@ export function mountPlayerDock(player: Player, onBands: (b: Bands, playing: boo
     <canvas class="player__bars" width="${BARS * 6}" height="28" aria-hidden="true"></canvas>
     <span class="player__time" data-time></span>
     <span class="player__controls">
+      <button class="player__btn player__rain" type="button" data-rain aria-pressed="true" aria-label="Rain" title="Rain on the window, and its sound if audio is on">${icon('rain')}</button>
       <button class="player__btn" type="button" data-prev aria-label="Previous track">${icon('prev')}</button>
       <button class="player__btn player__btn--main" type="button" data-toggle aria-label="Play">${icon('play')}</button>
       <button class="player__btn" type="button" data-next aria-label="Next track">${icon('next')}</button>
@@ -35,6 +40,12 @@ export function mountPlayerDock(player: Player, onBands: (b: Bands, playing: boo
   toggleBtn.addEventListener('click', () => void player.toggle());
   $('[data-prev]').addEventListener('click', () => void player.prev());
   $('[data-next]').addEventListener('click', () => void player.next());
+  const rainBtn = $<HTMLButtonElement>('[data-rain]');
+  rainBtn.addEventListener('click', () => {
+    const on = rainBtn.getAttribute('aria-pressed') !== 'true';
+    rainBtn.setAttribute('aria-pressed', String(on));
+    opts.onRain(on);
+  });
   // Skip buttons only make sense once there is more than one track to skip to.
   if (!opts.canSkip) dock.querySelectorAll<HTMLElement>('[data-prev], [data-next]').forEach((b) => (b.hidden = true));
 
@@ -136,12 +147,13 @@ function fmt(sec: number) {
   return `${m}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
 }
 
-function icon(name: 'play' | 'pause' | 'prev' | 'next') {
+function icon(name: 'play' | 'pause' | 'prev' | 'next' | 'rain') {
   const paths = {
     play: '<path d="M8 5.5v13l11-6.5z" />',
     pause: '<rect x="6.5" y="5" width="4" height="14" rx="1.2" /><rect x="13.5" y="5" width="4" height="14" rx="1.2" />',
     prev: '<path d="M18 6v12l-8.5-6zM6 6h2v12H6z" />',
     next: '<path d="M6 6v12l8.5-6zM16 6h2v12h-2z" />',
+    rain: '<path d="M7 15.5a4.5 4.5 0 0 1-.6-8.96 5.5 5.5 0 0 1 10.45 1.47A3.75 3.75 0 0 1 17.25 15.5z" /><path class="player__drops" d="M8.5 17.5l-1 2.5M12.5 17.5l-1 2.5M16.5 17.5l-1 2.5" />',
   };
   return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[name]}</svg>`;
 }

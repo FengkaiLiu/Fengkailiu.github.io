@@ -213,16 +213,6 @@
   line-height: 1.7;
   opacity: 0.7;
 }
-.crate__actions {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: var(--space-4);
-}
-.crate__spin:disabled {
-  opacity: 0.45;
-  cursor: not-allowed;
-}
 .crate__hint {
   font-size: var(--text-small);
   opacity: 0.75;
