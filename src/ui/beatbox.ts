@@ -30,6 +30,10 @@ const STARTER: Record<Row, number[]> = {
   keys: [0, 11],
 };
 
+// FormSubmit's alias for the inbox: forwards to Fengkai's email without showing the
+// address in the page's code. (Activated once by email; works from any site.)
+const FORM_ENDPOINT = 'https://formsubmit.co/ajax/89e7d74d90bba11bef0a0f3920a07da4';
+
 const esc = (s: string) => s.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!);
 
 /** "82-" + 20 hex digits: tempo, then the 5 x 16 grid as bits. */
@@ -291,7 +295,7 @@ export function mountBeatbox(slot: HTMLElement, player: Player) {
     status.className = 'beat__status';
     status.textContent = 'Sending…';
     try {
-      const res = await fetch(`https://formsubmit.co/ajax/${profile.links.email}`, {
+      const res = await fetch(FORM_ENDPOINT, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
         body: JSON.stringify({
