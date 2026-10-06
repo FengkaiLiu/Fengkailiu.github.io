@@ -32,6 +32,8 @@ export interface Room {
   lightsOn(): void;
   /** Feed analyser bands, each 0..1. */
   setAudio(bass: number, mid: number, treble: number, level: number): void;
+  /** Log-spaced spectrum, 0..1 per band (the fairy lights and the laptop's FFT). */
+  setSpectrum(bands: Float32Array): void;
   setRain(on: boolean): void;
   setPlaying(on: boolean): void;
   setLabel(texture: Texture | null): void;
@@ -240,6 +242,7 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
 
   // ---------- Loop ----------
   const audio = [0, 0, 0, 0];
+  let breathe = 0;
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const debugLit = import.meta.env.DEV && new URLSearchParams(location.search).has('lit');
   let lightsStart = debugLit ? -LIGHTS_ON_MS : -1;
@@ -309,9 +312,12 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     // While a song scene plays, the lights drift toward its cover's colors.
     const moodWeight = moods.tick(now, dt, audio);
     const dim = 1 - moods.dim();
+    // The lamp breathes with the music: a slow follower of its loudness.
+    breathe += (audio[3] - breathe) * (1 - Math.exp(-dt * 1.6));
+    const lampBreath = 1 + breathe * 0.22;
     hemi.intensity = 0.42 + lit * 0.25 + Math.min(moodWeight, 1) * 0.15;
-    lampSpot.intensity = lit * 3.6 * dim;
-    lampFill.intensity = lit * 2.2 * dim;
+    lampSpot.intensity = lit * 3.6 * dim * lampBreath;
+    lampFill.intensity = lit * 2.2 * dim * lampBreath;
     fairyFill.intensity = lit * 3.4;
     posterLight.intensity = lit * 2.6 * (0.4 + 0.6 * dim);
     screenGlow.intensity = lit * 1.1;
@@ -347,7 +353,7 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     if (w > 820) camera.setViewOffset(w, h, -wideFrame * w, 0, w, h);
     else camera.setViewOffset(w, h, 0, h * 0.14, w, h);
 
-    room.tick(now, dt, audio, camera.position, moods.tint);
+    room.tick(now, dt, audio, camera.position, moods.tint, breathe);
     grain.uniforms.uTime.value = now / 1000;
     composer.render(dt);
     governQuality(now, dt);
@@ -385,6 +391,9 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     },
     setMood(id) {
       moods.set(id);
+    },
+    setSpectrum(bands) {
+      room.setSpectrum(bands);
     },
     setAudio(bass, mid, treble, level) {
       audio[0] = bass;

@@ -73,7 +73,9 @@ export interface RoomProps {
   /** Show a song cover on the record label; null restores the house label. */
   setLabel(texture: Texture | null): void;
   /** `eye` is the camera position: the laptop only types while it is close enough to read. */
-  tick(now: number, dt: number, audio: number[], eye: Vector3, tint?: SceneTint): void;
+  tick(now: number, dt: number, audio: number[], eye: Vector3, tint?: SceneTint, breathe?: number): void;
+  /** Log-spaced spectrum, 0..1 per band: the fairy lights and the laptop's live FFT. */
+  setSpectrum(bands: Float32Array): void;
   /** Named spots the camera can visit. */
   anchors: Record<string, Vector3>;
   ready: Promise<void>;
@@ -210,8 +212,9 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   root.add(kb);
   anchors.keyboard = new Vector3(-0.15, deskY + 0.1, -3.1);
 
-  // Speakers: woofers pulse with the bass (Floor 6)
+  // Speakers: woofers pump with the bass, tweeters flutter with the treble
   const woofers: Mesh[] = [];
+  const tweeters: Mesh[] = [];
   for (const x of [-0.55, 2.15]) {
     root.add(box(0.34, 0.5, 0.32, std('#efe3d2'), x, deskY + 0.25, -3.55, 0.03));
     const ring = cyl(0.11, 0.11, 0.02, std('#2b2836'), x, deskY + 0.2, -3.385);
@@ -221,6 +224,7 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
     const tweeter = cyl(0.04, 0.04, 0.02, std('#2b2836'), x, deskY + 0.39, -3.385);
     tweeter.rotation.x = Math.PI / 2;
     woofers.push(cone);
+    tweeters.push(tweeter);
     root.add(ring, cone, tweeter);
   }
   anchors.speakers = new Vector3(-0.55, deskY + 0.3, -3.5);
@@ -453,6 +457,7 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
 
   // ---------- Fairy lights along the top of both walls ----------
   const bulbs: MeshBasicMaterial[] = [];
+  const PER_STRAND = 34;
   const strand = (from: Vector3, to: Vector3, count: number) => {
     const pts: Vector3[] = [];
     for (let i = 0; i <= 12; i++) {
@@ -473,8 +478,14 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
       root.add(b);
     }
   };
-  strand(new Vector3(-3.92, 4.55, -3.92), new Vector3(3.9, 4.55, -3.92), 34);
-  strand(new Vector3(-3.92, 4.55, -3.92), new Vector3(-3.92, 4.55, 3.9), 34);
+  // Both strands start in the corner, so with music the bass glows there and the treble
+  // runs out toward the far ends, mirrored along the two walls.
+  strand(new Vector3(-3.92, 4.55, -3.92), new Vector3(3.9, 4.55, -3.92), PER_STRAND);
+  strand(new Vector3(-3.92, 4.55, -3.92), new Vector3(-3.92, 4.55, 3.9), PER_STRAND);
+  const bulbLevel = new Float32Array(PER_STRAND);
+  let bulbGain = 0.3; // running loudest band, so the strand spans dark to bright for any mix
+  let spectrum: Float32Array | null = null;
+  const peak = new Color('#fff1dc');
 
   // ---------- Dust floating in the lamp light ----------
   const dustCount = 260;
@@ -514,6 +525,7 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   let rain = 1;
   let rainTarget = 1;
   let playing = false;
+  let music = 0; // eases to 1 while something plays: how much the room follows the audio
   let spin = 0;
   let screenDrawn = false;
   return {
@@ -525,6 +537,9 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
     },
     setPlaying(on) {
       playing = on;
+    },
+    setSpectrum(bands) {
+      spectrum = bands;
     },
     setFocus(id) {
       focusId = id;
@@ -543,10 +558,20 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
       dustMat.opacity = level * 0.55;
       voidMat.opacity = 0.3 + level * 0.25;
     },
-    tick(now, dt, audio, eye, tint) {
+    tick(now, dt, audio, eye, tint, breathe = 0) {
+      music += ((playing ? 1 : 0) - music) * (1 - Math.exp(-dt * 2));
+      // Fairy bulbs follow their band: quick to light, slow to fade, like a VU meter.
+      let loudest = 0;
+      if (spectrum && playing) for (let k = 0; k < PER_STRAND; k++) loudest = Math.max(loudest, spectrum[k]);
+      bulbGain += (Math.max(loudest, 0.08) - bulbGain) * (1 - Math.exp(-dt * (loudest > bulbGain ? 6 : 0.8)));
+      for (let k = 0; k < PER_STRAND; k++) {
+        const target = spectrum && playing ? Math.pow(spectrum[k] / bulbGain, 2.2) : 0;
+        const rate = target > bulbLevel[k] ? 18 : 3.5;
+        bulbLevel[k] += (target - bulbLevel[k]) * (1 - Math.exp(-dt * rate));
+      }
       // Each typed character re-uploads a 1600x1000 texture; skip it when nobody can read it.
       if (!screenDrawn || eye.distanceToSquared(LAPTOP) < 3.2 * 3.2) {
-        screen.tick(now);
+        screen.tick(now, spectrum, music);
         screenDrawn = true;
       }
       win.uniforms.uTime.value = now / 1000;
@@ -577,11 +602,19 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
       body.scale.y = 0.75 + Math.sin(now / 900) * 0.025;
       const kick = 1 + audio[0] * 0.25;
       for (const w of woofers) w.scale.set(kick, 1, kick);
+      const flutter = 1 + audio[2] * 0.3;
+      for (const t of tweeters) t.scale.set(flutter, 1, flutter);
+      // The lamp's bulb breathes with the lamp light (see room.ts).
+      bulbMat.color.multiplyScalar(1 + breathe * 0.35);
       bulbs.forEach((b, i) => {
         const twinkle = 0.85 + 0.15 * Math.sin(now / 600 + i * 1.7);
         b.color.set(i % 3 === 0 ? '#ff9ec0' : '#ffcf85');
         tint?.bulb(i, now, b.color);
-        b.color.multiplyScalar((0.04 + glow * 2.6) * twinkle);
+        // With music, brightness follows the bulb's band and the loudest ones blush to white.
+        const lvl = bulbLevel[i % PER_STRAND];
+        b.color.lerp(peak, Math.max(lvl - 0.6, 0) * 0.9 * music);
+        const level = twinkle + (0.12 + lvl * 1.45 - twinkle) * music;
+        b.color.multiplyScalar((0.04 + glow * 2.6) * level);
       });
       const pos = dustGeo.attributes.position as BufferAttribute;
       for (let i = 0; i < dustCount; i++) {

@@ -10,7 +10,7 @@ const BARS = 18;
 
 export function mountPlayerDock(
   player: Player,
-  onBands: (b: Bands, playing: boolean) => void,
+  onBands: (b: Bands, playing: boolean, spectrum: Float32Array) => void,
   opts: { canSkip: boolean; onRain(on: boolean): void },
 ) {
   const bar = document.createElement('div');
@@ -121,10 +121,14 @@ export function mountPlayerDock(
     const bus = getMusicBus();
     const { playing, guest } = player.state();
     if (guest) {
-      onBands(pulse(now / 1000), playing);
+      const b = pulse(now / 1000);
+      fakeSpectrum(now / 1000);
+      onBands(b, playing, spectrum);
       fakeBars(now / 1000);
     } else {
-      onBands(bus.read(dt), playing);
+      const b = bus.read(dt);
+      bus.spectrumInto(spectrum);
+      onBands(b, playing, spectrum);
       readBars(bus.analyser);
     }
     paintBars();
@@ -148,6 +152,16 @@ export function mountPlayerDock(
     pulsed.treble = 0.25 + 0.15 * Math.exp(-((beat + 0.5) % 1) * 7);
     pulsed.level = 0.45 + 0.3 * kick;
     return pulsed;
+  }
+  /** The room's spectrum (fairy lights, laptop): real from the bus, or this stand-in for a guest. */
+  const spectrum = new Float32Array(34);
+  function fakeSpectrum(t: number) {
+    const kick = Math.exp(-(((t * 100) / 60) % 1) * 5);
+    const n = spectrum.length;
+    for (let i = 0; i < n; i++) {
+      const wobble = 0.5 + 0.5 * Math.sin(t * (1.7 + i * 0.29) + i * 2.3);
+      spectrum[i] = Math.min(1, (1 - i / (n * 1.5)) * (0.2 + 0.35 * wobble + (i < 8 ? 0.45 : 0.1) * kick));
+    }
   }
   function fakeBars(t: number) {
     const kick = Math.exp(-(((t * 100) / 60) % 1) * 5);

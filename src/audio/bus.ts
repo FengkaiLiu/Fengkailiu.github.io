@@ -19,6 +19,8 @@ export interface MusicBus {
   fine: AnalyserNode;
   /** Smoothed 0..1 bands. Call once per frame. */
   read(dt: number): Bands;
+  /** Fill `out` with log-spaced levels (0..1, about 40 Hz to 12 kHz) from the last read(). */
+  spectrumInto(out: Float32Array): void;
 }
 
 let bus: MusicBus | null = null;
@@ -82,6 +84,17 @@ export function getMusicBus(): MusicBus {
       follow('treble', Math.min(avg(ranges.treble) * 3.0, 1), dt);
       follow('level', Math.min(rms * 4, 1), dt);
       return out;
+    },
+    spectrumInto(target) {
+      const n = target.length;
+      for (let k = 0; k < n; k++) {
+        const a = bin(40 * Math.pow(12000 / 40, k / n));
+        const b = Math.max(a, bin(40 * Math.pow(12000 / 40, (k + 1) / n)) - 1);
+        let s = 0;
+        for (let i = a; i <= b; i++) s += freq[i];
+        // Treble sits lower in a mix; tilt it up so the top bands still move.
+        target[k] = Math.min((s / ((b - a + 1) * 255)) * (1.15 + (k / n) * 0.9), 1);
+      }
     },
   };
   return bus;

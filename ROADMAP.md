@@ -40,7 +40,7 @@ Dev helpers (dev server only):
 | 3b | Audio engine: shared analyser bus, band extraction (bass / mid / treble / level) | ✅ |
 | 4 | Record player as the music player: glass dock, tonearm + spinning vinyl, playlist, synthesized demo loop | ✅ |
 | 5 | Visualizers: waveform, spectrum, spectrogram, vectorscope, chromagram, BPM/key (Scope panel on the bottom bar) | ✅ |
-| 6 | Audio-reactive room: speakers pump, fairy lights = spectrum, laptop shows live FFT, lamp breathes | ⬜ |
+| 6 | Audio-reactive room: speakers pump, fairy lights = spectrum, laptop shows live FFT, lamp breathes | ✅ |
 | 7 | Smooth scroll (Lenis + GSAP), nav | ⬜ |
 | 8 | Room interactions: click the keyboard to play notes, pet the cat, flip the lamp | ⬜ |
 | 9 | About: mixer channel strip | ⬜ |

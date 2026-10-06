@@ -74,13 +74,55 @@ export function codeScreen() {
     texture.needsUpdate = true;
   };
 
+  // While music plays, a small "fft · live" window floats in the editor's empty top-right
+  // corner, the output of the code it sits beside.
+  let fftDrawn = 0;
+  const drawFft = (bands: Float32Array, amount: number) => {
+    const x0 = 680;
+    const y0 = 66;
+    const w = 320;
+    const h = 190;
+    ctx.globalAlpha = Math.min(amount * 1.4, 1);
+    ctx.fillStyle = '#1b1e38';
+    ctx.beginPath();
+    ctx.roundRect(x0, y0, w, h, 14);
+    ctx.fill();
+    ctx.strokeStyle = '#2e3258';
+    ctx.lineWidth = 2;
+    ctx.stroke();
+    ctx.fillStyle = '#7f8bb3';
+    ctx.font = '700 20px "JetBrains Mono Variable", monospace';
+    ctx.fillText('fft · live', x0 + 18, y0 + 32);
+    const n = bands.length;
+    const left = x0 + 18;
+    const base = y0 + h - 18;
+    const slot = (w - 36) / n;
+    const top = 130 * amount;
+    for (let k = 0; k < n; k++) {
+      const bh = Math.max(3, top * bands[k]);
+      const t = k / (n - 1);
+      ctx.fillStyle = `rgb(${255 - t * 86}, ${157 + t * 39}, ${77 + t * 178})`; // lamp orange to moon blue
+      ctx.fillRect(left + k * slot, base - bh, slot * 0.7, bh);
+    }
+    ctx.globalAlpha = 1;
+  };
+
   return {
     texture,
-    tick(now: number) {
-      if (now - lastStep < 90) return;
-      lastStep = now;
-      typed = typed >= total + 70 ? 0 : typed + 1; // hold the finished code a few seconds, then retype
+    tick(now: number, bands?: Float32Array | null, amount = 0) {
+      const typing = now - lastStep >= 90;
+      const live = amount > 0.01 && bands;
+      // Typing steps redraw at ~11 fps; the FFT pane at ~30 fps while it shows.
+      if (!typing && !(live && now - fftDrawn > 33)) return;
+      if (typing) {
+        lastStep = now;
+        typed = typed >= total + 70 ? 0 : typed + 1; // hold the finished code a few seconds, then retype
+      }
       draw(now);
+      if (live) {
+        drawFft(bands, amount);
+        fftDrawn = now;
+      }
     },
   };
 }

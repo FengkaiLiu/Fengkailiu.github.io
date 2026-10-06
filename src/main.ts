@@ -90,8 +90,9 @@ let ambience: Ambience | null = null;
 const player = createPlayer(tracks);
 const dock = mountPlayerDock(
   player,
-  (b, playing) => {
+  (b, playing, spectrum) => {
     room?.setAudio(b.bass, b.mid, b.treble, b.level);
+    room?.setSpectrum(spectrum);
     room?.setPlaying(playing);
   },
   {
