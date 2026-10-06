@@ -1,7 +1,8 @@
 // Contact: "Leave me a beat." A 16-step sequencer over the room's 4-bar progression
 // (kick, snare, hat, bass, and Rhodes chords that follow the bar), saved into a link you
-// can share, and a message form that sends it along by email. The beat plays through the
-// room's own audio, so the lights, meters and scope all follow it.
+// can share, and a message form that sends it along (through FormSubmit, a form-to-email
+// relay, so it works without the visitor's email app). The beat plays through the room's
+// own audio, so the lights, meters and scope all follow it.
 import { getMusicBus } from '../audio/bus';
 import { getAudio, unlockAudio } from '../audio/context';
 import { BARS, createKit, type Kit } from '../audio/kit';
@@ -78,19 +79,24 @@ export function mountBeatbox(slot: HTMLElement, player: Player) {
       </div>
 
       <form class="beat__form" data-form>
-        <label class="beat__field"><span>Your name</span><input name="name" autocomplete="name" required /></label>
+        <div class="beat__pair">
+          <label class="beat__field"><span>Your name</span><input name="name" autocomplete="name" required /></label>
+          <label class="beat__field"><span>Your email</span><input name="email" type="email" autocomplete="email" required placeholder="so I can write back" /></label>
+        </div>
+        <!-- Honeypot: hidden from people, filled in by spam bots, and then ignored. -->
+        <input class="beat__honey" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" />
         <label class="beat__field"><span>Message</span><textarea name="message" rows="3" required placeholder="Say hi, ask about a project, or just send the beat."></textarea></label>
         <label class="beat__check"><input type="checkbox" name="withBeat" checked /> Attach my beat (as a link)</label>
         <div class="beat__actions">
-          <button class="btn" type="submit">Send with my beat</button>
+          <button class="btn" type="submit" data-send>Send with my beat</button>
           <button class="beat__tool" type="button" data-copy>Copy beat link</button>
           <span class="beat__copied" aria-live="polite" data-copied></span>
         </div>
-        <p class="beat__note">Opens your email app with everything filled in, addressed to ${esc(profile.links.email)}.</p>
+        <p class="beat__status" aria-live="polite" data-status></p>
       </form>
 
       <ul class="beat__links">
-        <li><a href="mailto:${esc(profile.links.email)}">Email</a></li>
+        <li><button class="beat__linkbtn" type="button" data-email>Email: ${esc(profile.links.email)}</button></li>
         <li><a href="${esc(profile.links.github)}" target="_blank" rel="noopener">GitHub</a></li>
         <li><a href="${esc(profile.links.linkedin)}" target="_blank" rel="noopener">LinkedIn</a></li>
         <li><a href="${esc(profile.links.instagram)}" target="_blank" rel="noopener">Instagram</a></li>
@@ -258,13 +264,57 @@ export function mountBeatbox(slot: HTMLElement, player: Player) {
     }
     window.setTimeout(() => (copied.textContent = ''), 3000);
   });
-  $<HTMLFormElement>('[data-form]').addEventListener('submit', (e) => {
+  // Email: copy the address (a mailto: link does nothing for people without a mail app).
+  const emailBtn = $<HTMLButtonElement>('[data-email]');
+  emailBtn.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(profile.links.email);
+      emailBtn.textContent = 'Email address copied';
+    } catch {
+      emailBtn.textContent = profile.links.email;
+    }
+    window.setTimeout(() => (emailBtn.textContent = `Email: ${profile.links.email}`), 2500);
+  });
+
+  // Send: posted to FormSubmit, which forwards it to the inbox. No account or mail app needed.
+  const formEl = $<HTMLFormElement>('[data-form]');
+  const status = $<HTMLElement>('[data-status]');
+  const sendBtn = $<HTMLButtonElement>('[data-send]');
+  formEl.addEventListener('submit', async (e) => {
     e.preventDefault();
-    const form = new FormData(e.target as HTMLFormElement);
+    const form = new FormData(formEl);
+    if (form.get('_honey')) return; // a bot filled in the hidden field
     const name = String(form.get('name') ?? '').trim();
     const message = String(form.get('message') ?? '').trim();
-    const body = form.get('withBeat') ? `${message}\n\nMy beat (${bpm} BPM): ${link()}` : message;
-    location.href = `mailto:${profile.links.email}?subject=${encodeURIComponent(`A note from ${name || 'a visitor'}`)}&body=${encodeURIComponent(body)}`;
+    const withBeat = Boolean(form.get('withBeat'));
+    sendBtn.disabled = true;
+    status.className = 'beat__status';
+    status.textContent = 'Sending…';
+    try {
+      const res = await fetch(`https://formsubmit.co/ajax/${profile.links.email}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Accept: 'application/json' },
+        body: JSON.stringify({
+          name,
+          email: String(form.get('email') ?? '').trim(),
+          message,
+          beat: withBeat ? `${link()} (${bpm} BPM)` : 'none attached',
+          _subject: `Portfolio: a note from ${name || 'a visitor'}`,
+          _template: 'table',
+          _captcha: 'false',
+        }),
+      });
+      const data = (await res.json().catch(() => ({}))) as { success?: string | boolean };
+      if (!res.ok || String(data.success) !== 'true') throw new Error('not sent');
+      status.classList.add('is-ok');
+      status.textContent = 'Sent. Thank you, I will write back soon.';
+      formEl.reset();
+    } catch {
+      status.classList.add('is-error');
+      status.textContent = `That didn't go through. You can email ${profile.links.email} directly (the Email button below copies it).`;
+    } finally {
+      sendBtn.disabled = false;
+    }
   });
 
   return {
