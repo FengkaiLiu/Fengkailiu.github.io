@@ -13,6 +13,9 @@ import {
   CylinderGeometry,
   DoubleSide,
   Group,
+  InstancedMesh,
+  type InterleavedBufferAttribute,
+  Matrix4,
   Mesh,
   MeshBasicMaterial,
   MeshStandardMaterial,
@@ -34,6 +37,7 @@ import {
   type Texture,
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
+import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
 import type { SceneTint } from './moods';
 import { codeScreen, floorTexture, keysTexture, laptopDeckGlow, laptopDeckTexture, loadImage, placeholderPoster, vinylLabel, windowMaterial } from './textures';
 
@@ -68,6 +72,8 @@ export type HotspotId = 'keys' | 'cat' | 'lamp' | 'record' | 'handheld';
 
 export interface RoomProps {
   root: Group;
+  /** Invisible copies of the merged static meshes, for raycasts (never drawn). */
+  pickRoot: Group;
   /** Things you can click, each with the meshes a raycast should test. */
   hotspots: { id: HotspotId; objects: Object3D[] }[];
   /** The note under a point on the keyboard (uv of a raycast hit), or null. */
@@ -117,7 +123,7 @@ export function buildRoom(
   };
   // Projects that light up while their section is on screen: a warm frame, a glow on the
   // wall behind, and the picture itself a touch brighter.
-  const focusables: Record<string, { level: number; halo: MeshBasicMaterial; frame?: MeshStandardMaterial; picture?: MeshStandardMaterial }> = {};
+  const focusables: Record<string, { level: number; halo: MeshBasicMaterial; plane: Mesh; frame?: MeshStandardMaterial; picture?: MeshStandardMaterial }> = {};
   const haloTex = haloTexture();
   const addFocus = (id: string, w: number, h: number, at: Vector3, facing: 'left' | 'back', frame?: MeshStandardMaterial, picture?: MeshStandardMaterial) => {
     const halo = new MeshBasicMaterial({ map: haloTex, color: '#ffb873', transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false });
@@ -125,10 +131,11 @@ export function buildRoom(
     plane.position.copy(at);
     if (facing === 'left') plane.rotation.y = Math.PI / 2;
     plane.renderOrder = -1;
+    plane.visible = false; // shown only while it glows: a clear plane still costs every pixel it covers
     root.add(plane);
     if (frame) frame.setValues({ emissive: '#ffc890', emissiveIntensity: 0 });
     if (picture) picture.setValues({ emissive: '#ffffff', emissiveIntensity: 0 });
-    focusables[id] = { level: 0, halo, frame, picture };
+    focusables[id] = { level: 0, halo, plane, frame, picture };
   };
   let focusId: string | null = null;
   const posterVideo: Record<string, VideoTexture> = {};
@@ -344,6 +351,7 @@ export function buildRoom(
       turned.add(model);
       boat.clear();
       boat.add(turned);
+      mergeStatic(boat, new Set(), true); // the model arrives in dozens of parts
     }).catch(() => {}); // keep the paper boat if the model can't load
   }
 
@@ -471,8 +479,14 @@ export function buildRoom(
     ['sonare', 1.1, 3.25, 1.05, 0.72],
     ['roomlink', 2.35, 3.0, 1.05, 0.72],
   ];
+  // A poster's picture is also its emissive map (it brightens in focus). Both are always set
+  // together, so swapping a cover or a video in never needs a new shader mid-scroll.
+  const posterMat = () => {
+    const map = placeholderPoster();
+    return std('#ffffff', { roughness: 0.6, map, emissiveMap: map });
+  };
   for (const [id, z, y, w, h] of posterSpots) {
-    const mat = std('#ffffff', { roughness: 0.6, map: placeholderPoster() });
+    const mat = posterMat();
     posterMats[id] = mat;
     const poster = new Mesh(new PlaneGeometry(w, h), mat);
     poster.rotation.y = Math.PI / 2;
@@ -484,7 +498,7 @@ export function buildRoom(
     anchors[`poster-${id}`] = new Vector3(-3.95, y, z);
   }
   // Project 5's frame on the back wall: landscape like the others, so covers and videos fit.
-  const p5Mat = std('#ffffff', { roughness: 0.6, map: placeholderPoster() });
+  const p5Mat = posterMat();
   posterMats.project5 = p5Mat;
   const p5 = new Mesh(new PlaneGeometry(1.05, 0.72), p5Mat);
   p5.position.set(3.12, 3.0, -3.97);
@@ -504,13 +518,33 @@ export function buildRoom(
     const mat = posterMats[id];
     if (!mat) return;
     fitCover(tex, 1.05 / 0.72);
-    mat.map = tex;
+    mat.map = mat.emissiveMap = tex;
     mat.needsUpdate = true;
   });
+  // A poster playing its recording needs its own shader variant (video decoding). A hidden
+  // copy holds that variant from the start, so room.ts can compile it behind the gate.
+  for (const [id, video] of Object.entries(videos)) {
+    if (posterMats[id]) posterVideo[id] = videoTexture(video, 1.05 / 0.72);
+  }
+  const firstVideo = Object.values(posterVideo)[0];
+  if (firstVideo) {
+    const warm = posterMat();
+    warm.setValues({ emissive: '#ffffff', emissiveIntensity: 0, map: firstVideo, emissiveMap: firstVideo });
+    const holder = new Mesh(new PlaneGeometry(0.01, 0.01), warm);
+    holder.visible = false;
+    root.add(holder);
+  }
 
   // ---------- Fairy lights along the top of both walls ----------
-  const bulbs: MeshBasicMaterial[] = [];
   const PER_STRAND = 34;
+  const BULBS = PER_STRAND * 2;
+  // One instanced draw for every bulb; each gets its own color per frame (see tick).
+  const bulbs = new InstancedMesh(new SphereGeometry(0.035, 10, 8), new MeshBasicMaterial({ color: '#ffffff' }), BULBS);
+  const bulbPink = new Color('#ff9ec0');
+  const bulbAmber = new Color('#ffcf85');
+  const bulbColor = new Color();
+  const bulbAt = new Matrix4();
+  let bulbsPlaced = 0;
   const strand = (from: Vector3, to: Vector3, count: number) => {
     const pts: Vector3[] = [];
     for (let i = 0; i <= 12; i++) {
@@ -522,19 +556,17 @@ export function buildRoom(
     const curve = new CatmullRomCurve3(pts);
     root.add(new Mesh(new TubeGeometry(curve, 120, 0.006, 6), std('#1f1a2c')));
     for (let i = 0; i < count; i++) {
-      const mat = new MeshBasicMaterial({ color: new Color(i % 3 === 0 ? '#ff9ec0' : '#ffcf85') });
-      addGlow(mat, 2.6);
-      bulbs.push(mat);
-      const b = new Mesh(new SphereGeometry(0.035, 10, 8), mat);
-      b.position.copy(curve.getPoint((i + 0.5) / count));
-      b.position.y -= 0.03;
-      root.add(b);
+      const p = curve.getPoint((i + 0.5) / count);
+      bulbs.setMatrixAt(bulbsPlaced, bulbAt.makeTranslation(p.x, p.y - 0.03, p.z));
+      bulbs.setColorAt(bulbsPlaced, bulbAmber);
+      bulbsPlaced++;
     }
   };
   // Both strands start in the corner, so with music the bass glows there and the treble
   // runs out toward the far ends, mirrored along the two walls.
   strand(new Vector3(-3.92, 4.55, -3.92), new Vector3(3.9, 4.55, -3.92), PER_STRAND);
   strand(new Vector3(-3.92, 4.55, -3.92), new Vector3(-3.92, 4.55, 3.9), PER_STRAND);
+  root.add(bulbs);
   const bulbLevel = new Float32Array(PER_STRAND);
   let bulbGain = 0.7; // running loudest band, so the strand spans dark to bright for any mix
   let spectrum: Float32Array | null = null;
@@ -572,6 +604,7 @@ export function buildRoom(
   voidGeo.setAttribute('position', new BufferAttribute(voidPos, 3));
   const voidMat = new PointsMaterial({ color: '#b9b4ff', size: 0.07, map: dotTexture(), alphaTest: 0.01, transparent: true, opacity: 0.35, depthWrite: false, blending: AdditiveBlending });
   const voidPoints = new Points(voidGeo, voidMat);
+  const voidBase = voidMat.color.clone();
   root.add(voidPoints);
 
   // Invisible, slightly generous hit shapes, so small things are easy to click from afar.
@@ -584,6 +617,14 @@ export function buildRoom(
   recordHit.position.set(-2.6, 0.9, -3.6);
   root.add(catHit, lampHit, recordHit);
 
+  // Everything that never moves or changes merges into a few meshes. Clickable and moving
+  // things stay separate; the handheld, a clickable group, merges within itself.
+  const moving = new Set<Object3D>([keys, cat, catHit, shade, bulb, arm, lampBase, lampHit, vinyl, tonearm, recordHit, handheld, boat, ...woofers, ...tweeters]);
+  const pickRoot = new Group();
+  pickRoot.add(...mergeStatic(root, moving));
+  pickRoot.updateMatrixWorld(true);
+  mergeStatic(handheld, new Set(), true);
+
   let glow = 0;
   let lamp = 1;
   let rain = 1;
@@ -594,6 +635,7 @@ export function buildRoom(
   let screenDrawn = false;
   return {
     root,
+    pickRoot,
     anchors,
     hotspots: [
       { id: 'keys', objects: [keys] },
@@ -631,17 +673,15 @@ export function buildRoom(
         const mat = posterMats[focusId];
         const cover = coverMaps[focusId];
         if (mat && cover !== undefined) {
-          mat.map = cover;
+          mat.map = mat.emissiveMap = cover;
           mat.needsUpdate = true;
         }
       }
       focusId = id;
-      const video = id ? videos[id] : undefined;
       const mat = id ? posterMats[id] : undefined;
-      if (id && video && mat) {
+      if (id && posterVideo[id] && mat) {
         coverMaps[id] ??= mat.map;
-        posterVideo[id] ??= videoTexture(video, 1.05 / 0.72);
-        mat.map = posterVideo[id];
+        mat.map = mat.emissiveMap = posterVideo[id];
         mat.needsUpdate = true;
       }
     },
@@ -683,14 +723,9 @@ export function buildRoom(
         if (Math.abs(f.level - target) < 0.002) f.level = target;
         const k = f.level * f.level * (3 - 2 * f.level);
         f.halo.opacity = k * 0.6 * (0.4 + 0.6 * glow);
+        f.plane.visible = f.halo.opacity > 0.001;
         if (f.frame) f.frame.emissiveIntensity = k * 0.55;
-        if (f.picture) {
-          if (f.picture.emissiveMap !== f.picture.map) {
-            f.picture.emissiveMap = f.picture.map; // follows the cover once it loads
-            f.picture.needsUpdate = true;
-          }
-          f.picture.emissiveIntensity = k * 0.22;
-        }
+        if (f.picture) f.picture.emissiveIntensity = k * 0.22;
       }
       rain += (rainTarget - rain) * (1 - Math.exp(-dt * 0.8));
       win.uniforms.uRain.value = rain;
@@ -720,16 +755,17 @@ export function buildRoom(
         h.s.position.set(cat.position.x + 0.3 + h.dx, cat.position.y + 0.2 + age * 0.45, cat.position.z + Math.sin(age * 6 + h.dx * 40) * 0.03);
         (h.s.material as SpriteMaterial).opacity = Math.sin(age * Math.PI) * 0.9;
       }
-      bulbs.forEach((b, i) => {
+      for (let i = 0; i < BULBS; i++) {
         const twinkle = still.matches ? 1 : 0.85 + 0.15 * Math.sin(now / 600 + i * 1.7);
-        b.color.set(i % 3 === 0 ? '#ff9ec0' : '#ffcf85');
-        tint?.bulb(i, now, b.color);
+        bulbColor.copy(i % 3 === 0 ? bulbPink : bulbAmber);
+        tint?.bulb(i, now, bulbColor);
         // With music, brightness follows the bulb's band and the loudest ones blush to white.
         const lvl = bulbLevel[i % PER_STRAND];
-        b.color.lerp(peak, Math.max(lvl - 0.6, 0) * 0.6 * music);
+        bulbColor.lerp(peak, Math.max(lvl - 0.6, 0) * 0.6 * music);
         const level = twinkle + (0.12 + lvl * 1.1 - twinkle) * music;
-        b.color.multiplyScalar((0.04 + glow * 2.6) * level);
-      });
+        bulbs.setColorAt(i, bulbColor.multiplyScalar((0.04 + glow * 2.6) * level));
+      }
+      bulbs.instanceColor!.needsUpdate = true;
       const pos = dustGeo.attributes.position as BufferAttribute;
       // With reduced motion the dust hangs still (it still glows).
       for (let i = 0; i < (still.matches ? 0 : dustCount); i++) {
@@ -743,10 +779,94 @@ export function buildRoom(
       const sway = still.matches ? 0 : Math.sin(now / 9000);
       voidPoints.position.set(sway * 0.4, still.matches ? 0 : Math.sin(now / 6000) * 0.25, 0);
       voidPoints.rotation.y = sway * 0.015;
-      voidMat.color.set('#b9b4ff');
+      voidMat.color.copy(voidBase);
       tint?.motes(voidMat.color);
     },
   };
+}
+
+/** A float copy of a vertex attribute, whatever its storage. */
+function floats(a: BufferAttribute | InterleavedBufferAttribute, size: number) {
+  const out = new Float32Array(a.count * size);
+  for (let i = 0; i < a.count; i++) for (let k = 0; k < size; k++) out[i * size + k] = a.getComponent(i, k);
+  return new BufferAttribute(out, size);
+}
+
+/** Plain colored surfaces: no textures, no glow, opaque, and not changed after building. */
+function mergeable(m: Mesh) {
+  const mat = m.material;
+  if (!m.visible || m.children.length || (m as InstancedMesh).isInstancedMesh || Array.isArray(mat)) return false;
+  if (!(mat instanceof MeshStandardMaterial) || mat.type !== 'MeshStandardMaterial') return false;
+  return mat.visible && !mat.transparent && !mat.vertexColors && !mat.map && !mat.emissiveMap && !mat.normalMap && !mat.roughnessMap && !mat.metalnessMap && !mat.alphaMap && mat.emissive.getHex() === 0;
+}
+
+/**
+ * Merges the static meshes under `container` that share a surface (roughness, metalness,
+ * side, shadows) into one mesh each, with their colors baked into the vertices. The room
+ * drew ~290 meshes a frame; on Windows each draw is translated for Direct3D in the same GPU
+ * process that composites the page, so weak machines stuttered on the draw count alone.
+ * Returns stand-ins of the originals for raycasting (unless `keepRaycast`): testing one merged
+ * mesh means testing every triangle in the room on each pointer move.
+ */
+function mergeStatic(container: Object3D, skip: Set<Object3D>, keepRaycast = false): Object3D[] {
+  container.updateMatrixWorld(true);
+  const toLocal = container.matrixWorld.clone().invert();
+  const taken: Mesh[] = [];
+  const visit = (o: Object3D) => {
+    if (skip.has(o)) return;
+    if ((o as Mesh).isMesh && mergeable(o as Mesh)) taken.push(o as Mesh);
+    o.children.forEach(visit);
+  };
+  container.children.forEach(visit);
+
+  const groups = new Map<string, { sample: MeshStandardMaterial; cast: boolean; receive: boolean; parts: BufferGeometry[]; meshes: Mesh[] }>();
+  for (const m of taken) {
+    const mat = m.material as MeshStandardMaterial;
+    const src = m.geometry;
+    // Plain float copies (models may arrive interleaved or quantized); a missing uv is zeros.
+    const part = new BufferGeometry();
+    part.setAttribute('position', floats(src.getAttribute('position'), 3));
+    if (src.index) part.setIndex(src.index.clone());
+    if (src.getAttribute('normal')) part.setAttribute('normal', floats(src.getAttribute('normal'), 3));
+    else part.computeVertexNormals();
+    const uv = src.getAttribute('uv');
+    part.setAttribute('uv', uv ? floats(uv, 2) : new BufferAttribute(new Float32Array(part.getAttribute('position').count * 2), 2));
+    part.applyMatrix4(toLocal.clone().multiply(m.matrixWorld));
+    const n = part.getAttribute('position').count;
+    const colors = new Float32Array(n * 3);
+    for (let i = 0; i < n; i++) colors.set([mat.color.r, mat.color.g, mat.color.b], i * 3);
+    part.setAttribute('color', new BufferAttribute(colors, 3));
+    const key = [mat.roughness, mat.metalness, mat.side, mat.flatShading, m.castShadow, m.receiveShadow, !!src.index].join('|');
+    let group = groups.get(key);
+    if (!group) groups.set(key, (group = { sample: mat, cast: m.castShadow, receive: m.receiveShadow, parts: [], meshes: [] }));
+    group.parts.push(part);
+    group.meshes.push(m);
+  }
+
+  const standIns: Object3D[] = [];
+  for (const { sample, cast, receive, parts, meshes } of groups.values()) {
+    if (meshes.length < 2) continue; // nothing to gain
+    const geometry = mergeGeometries(parts);
+    if (!geometry) continue;
+    const merged = new Mesh(
+      geometry,
+      new MeshStandardMaterial({ color: '#ffffff', vertexColors: true, roughness: sample.roughness, metalness: sample.metalness, side: sample.side, flatShading: sample.flatShading }),
+    );
+    merged.castShadow = cast;
+    merged.receiveShadow = receive;
+    if (!keepRaycast) merged.raycast = () => {};
+    container.add(merged);
+    for (const m of meshes) {
+      if (!keepRaycast) {
+        const standIn = new Mesh(m.geometry, m.material);
+        standIn.matrixAutoUpdate = false;
+        standIn.matrix.copy(m.matrixWorld);
+        standIns.push(standIn);
+      }
+      m.removeFromParent();
+    }
+  }
+  return standIns;
 }
 
 /** A video as a texture, cropped like object-fit: cover once its size is known. */

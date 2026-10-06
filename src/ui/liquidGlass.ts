@@ -17,6 +17,9 @@ interface Entry {
   displace: SVGFEDisplacementMapElement;
   w: number;
   h: number;
+  /** Bumped per rebuild, so a slow encode can't overwrite a newer one. */
+  gen: number;
+  url?: string;
 }
 
 const entries = new WeakMap<HTMLElement, Entry>();
@@ -100,10 +103,22 @@ function upgrade(el: HTMLElement) {
   filter.append(blur, image, displace, saturate);
   defs!.append(filter);
 
-  entries.set(el, { filter, image, displace, w: 0, h: 0 });
+  entries.set(el, { filter, image, displace, w: 0, h: 0, gen: 0 });
   rebuild(el);
   resizeObserver!.observe(el);
   el.classList.add('liquid--live');
+}
+
+// On lower quality tiers glass.css swaps the refraction for a plain blur, so maps aren't
+// built then; elements that changed size meanwhile catch up when the tier climbs back.
+const stale = new Set<HTMLElement>();
+const fxFull = () => (document.documentElement.dataset.fx ?? 'full') === 'full';
+if (liquidSupported) {
+  new MutationObserver(() => {
+    if (!fxFull()) return;
+    stale.forEach(rebuild);
+    stale.clear();
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-fx'] });
 }
 
 function rebuild(el: HTMLElement) {
@@ -112,22 +127,32 @@ function rebuild(el: HTMLElement) {
   const w = Math.round(el.offsetWidth);
   const h = Math.round(el.offsetHeight);
   if (w < 2 || h < 2 || (w === entry.w && h === entry.h)) return;
+  if (!fxFull()) {
+    stale.add(el);
+    return;
+  }
   entry.w = w;
   entry.h = h;
 
   const radius = Math.min(parseFloat(getComputedStyle(el).borderTopLeftRadius) || 0, w / 2, h / 2);
   const bezel = Math.min(Number(el.dataset.liquidBezel ?? 28), w / 2, h / 2);
   const depth = Number(el.dataset.liquidDepth ?? 1); // optical strength multiplier
-  const { url, maxShift } = displacementMap(w, h, radius, bezel);
-
-  entry.filter.setAttribute('width', String(w));
-  entry.filter.setAttribute('height', String(h));
-  entry.image.setAttribute('width', String(w));
-  entry.image.setAttribute('height', String(h));
-  entry.image.setAttribute('href', url);
-  entry.displace.setAttribute('scale', String(maxShift * depth * 2));
-  el.style.setProperty('backdrop-filter', `url(#${entry.filter.id})`);
-  el.style.setProperty('-webkit-backdrop-filter', `url(#${entry.filter.id})`);
+  const canvas = displacementMap(w, h, radius, bezel);
+  // Encoded off the main thread; a newer size that lands first wins.
+  const gen = ++entry.gen;
+  canvas.toBlob((blob) => {
+    if (!blob || gen !== entry.gen) return;
+    if (entry.url) URL.revokeObjectURL(entry.url);
+    entry.url = URL.createObjectURL(blob);
+    entry.filter.setAttribute('width', String(w));
+    entry.filter.setAttribute('height', String(h));
+    entry.image.setAttribute('width', String(w));
+    entry.image.setAttribute('height', String(h));
+    entry.image.setAttribute('href', entry.url);
+    entry.displace.setAttribute('scale', String(bezel * 0.5 * depth * 2));
+    el.style.setProperty('backdrop-filter', `url(#${entry.filter.id})`);
+    el.style.setProperty('-webkit-backdrop-filter', `url(#${entry.filter.id})`);
+  });
 }
 
 /** Pixel shift along the bezel (0 = outer edge, 1 = inner edge), from Snell's law. */
@@ -148,23 +173,29 @@ const lut = (() => {
   return out;
 })();
 
+/** The map is drawn at half size (feImage stretches it back); the shift varies smoothly, so
+ * this looks the same and costs a quarter of the work. */
+const MAP_SCALE = 0.5;
+
 function displacementMap(w: number, h: number, radius: number, bezel: number) {
+  const mw = Math.max(2, Math.ceil(w * MAP_SCALE));
+  const mh = Math.max(2, Math.ceil(h * MAP_SCALE));
   const canvas = document.createElement('canvas');
-  canvas.width = w;
-  canvas.height = h;
+  canvas.width = mw;
+  canvas.height = mh;
   const ctx = canvas.getContext('2d')!;
-  const img = ctx.createImageData(w, h);
+  const img = ctx.createImageData(mw, mh);
   const data = img.data;
 
   const hw = w / 2;
   const hh = h / 2;
   const r = Math.max(radius, 0.001);
 
-  for (let y = 0; y < h; y++) {
-    for (let x = 0; x < w; x++) {
-      // Signed distance to a rounded rectangle, plus its outward normal.
-      const px = x + 0.5 - hw;
-      const py = y + 0.5 - hh;
+  for (let my = 0; my < mh; my++) {
+    for (let mx = 0; mx < mw; mx++) {
+      // Signed distance to a rounded rectangle (in full-size pixels), plus its outward normal.
+      const px = ((mx + 0.5) / mw) * w - hw;
+      const py = ((my + 0.5) / mh) * h - hh;
       const qx = Math.abs(px) - (hw - r);
       const qy = Math.abs(py) - (hh - r);
       let dist: number;
@@ -193,7 +224,7 @@ function displacementMap(w: number, h: number, radius: number, bezel: number) {
         mag = lut[Math.min(LUT_SIZE - 1, Math.floor((inside / bezel) * (LUT_SIZE - 1)))];
       }
       // Sample inward from the edge, so the rim visibly bends what is behind it.
-      const i = (y * w + x) * 4;
+      const i = (my * mw + mx) * 4;
       data[i] = 128 - nx * mag * 127;
       data[i + 1] = 128 - ny * mag * 127;
       data[i + 2] = 128;
@@ -201,5 +232,5 @@ function displacementMap(w: number, h: number, radius: number, bezel: number) {
     }
   }
   ctx.putImageData(img, 0, 0);
-  return { url: canvas.toDataURL(), maxShift: bezel * 0.5 };
+  return canvas;
 }

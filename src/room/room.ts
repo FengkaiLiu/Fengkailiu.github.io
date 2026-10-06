@@ -21,7 +21,6 @@ import { EffectComposer } from 'three/addons/postprocessing/EffectComposer.js';
 import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
-import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
 import { buildRoom, type HotspotId } from './props';
 import { buildMoods, MOODS, type MoodId } from './moods';
 import { DEFAULT_FRAME, shots, type Shot } from './shots';
@@ -64,26 +63,27 @@ const MAX_DPR = 1.75;
 const MIN_DPR = 0.8;
 const LIGHTS_ON_MS = 2400;
 
-// Film grain + vignette: the lofi finish.
-const GrainShader = {
-  uniforms: { tDiffuse: { value: null }, uTime: { value: 0 } },
-  vertexShader: /* glsl */ `
-    varying vec2 vUv;
-    void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }
-  `,
-  fragmentShader: /* glsl */ `
-    uniform sampler2D tDiffuse;
-    uniform float uTime;
-    varying vec2 vUv;
-    float hash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }
-    void main() {
-      vec4 c = texture2D(tDiffuse, vUv);
-      c.rgb += (hash(vUv * 1000.0 + fract(uTime) * 100.0) - 0.5) * 0.045;
-      c.rgb *= mix(0.62, 1.0, smoothstep(1.0, 0.3, length(vUv - 0.5) * 1.3));
-      gl_FragColor = c;
-    }
-  `,
-};
+/** The final pass (tone mapping and sRGB) with the lofi finish, film grain and a vignette,
+ * folded in: one fewer full-screen read and write per frame than a separate grain pass. */
+function grainOutputPass() {
+  const pass = new OutputPass();
+  pass.uniforms.uTime = { value: 0 };
+  pass.material.fragmentShader = pass.material.fragmentShader
+    .replace(
+      'varying vec2 vUv;',
+      /* glsl */ `varying vec2 vUv;
+      uniform float uTime;
+      float grainHash(vec2 p) { return fract(sin(dot(p, vec2(12.9898, 78.233))) * 43758.5453); }`,
+    )
+    .replace(
+      /}\s*$/,
+      /* glsl */ `
+      gl_FragColor.rgb += (grainHash(vUv * 1000.0 + fract(uTime) * 100.0) - 0.5) * 0.045;
+      gl_FragColor.rgb *= mix(0.62, 1.0, smoothstep(1.0, 0.3, length(vUv - 0.5) * 1.3));
+    }`,
+    );
+  return pass;
+}
 
 export function initRoom(
   sections: { el: HTMLElement; shot: string }[],
@@ -103,12 +103,12 @@ export function initRoom(
   // big window renders at a lower density instead of choking the GPU; small windows stay crisp.
   // fx: how fancy the HTML glass over the canvas may be (it re-blurs every frame).
   const tiers = [
-    { megapixels: 3.2, msaa: 4, bloom: true, fx: 'full' },
-    { megapixels: 2.2, msaa: 4, bloom: true, fx: 'full' },
-    { megapixels: 1.6, msaa: 0, bloom: true, fx: 'lite' },
-    { megapixels: 1.15, msaa: 0, bloom: true, fx: 'lite' },
-    { megapixels: 0.85, msaa: 0, bloom: false, fx: 'min' },
-    { megapixels: 0.6, msaa: 0, bloom: false, fx: 'min' },
+    { megapixels: 3.2, msaa: 4, bloom: true, bloomScale: 1, fx: 'full' },
+    { megapixels: 2.2, msaa: 4, bloom: true, bloomScale: 1, fx: 'full' },
+    { megapixels: 1.6, msaa: 0, bloom: true, bloomScale: 0.5, fx: 'lite' },
+    { megapixels: 1.15, msaa: 0, bloom: true, bloomScale: 0.5, fx: 'lite' },
+    { megapixels: 0.85, msaa: 0, bloom: false, bloomScale: 0.5, fx: 'min' },
+    { megapixels: 0.6, msaa: 0, bloom: false, bloomScale: 0.5, fx: 'min' },
   ] as const;
   let tier = 0;
   const dprFor = (t: number) => {
@@ -173,9 +173,11 @@ export function initRoom(
   const composer = new EffectComposer(renderer, target);
   composer.addPass(new RenderPass(scene, camera));
   const bloom = new UnrealBloomPass(new Vector2(1, 1), 0.7, 0.42, 0.9);
+  // Bloom blurs at half the render size; cheaper tiers blur at a quarter (a soft glow hides it).
+  const bloomSetSize = bloom.setSize.bind(bloom);
+  bloom.setSize = (w, h) => bloomSetSize(w * tiers[tier].bloomScale, h * tiers[tier].bloomScale);
   composer.addPass(bloom);
-  composer.addPass(new OutputPass());
-  const grain = new ShaderPass(GrainShader);
+  const grain = grainOutputPass();
   composer.addPass(grain);
   composer.setPixelRatio(dpr);
 
@@ -187,7 +189,6 @@ export function initRoom(
     composer.setPixelRatio(dpr);
     renderer.setSize(w, h);
     composer.setSize(w, h);
-    bloom.resolution.set(w / 2, h / 2);
     camera.aspect = w / h;
     // Portrait screens see less sideways; widen the lens so the room still fits.
     camera.fov = camera.aspect < 1 ? 42 : 34;
@@ -278,6 +279,37 @@ export function initRoom(
   let resolveFirst!: () => void;
   const firstFrame = new Promise<void>((r) => (resolveFirst = r));
   let drawn = false;
+  // Compile every shader the room will ever need (song scenes, posters playing video) before
+  // the gate opens. Each one compiled mid-scroll froze the page for up to a second on some GPUs.
+  let warming = true;
+  const warm = Promise.all([room.ready, firstFrame])
+    .then(async () => {
+      // Programs depend on where they draw: the composer's buffer, not the screen.
+      renderer.setRenderTarget(composer.readBuffer);
+      const done = renderer.compileAsync(scene, camera);
+      renderer.setRenderTarget(null);
+      await done;
+      // A shader's first draw still stalls on some drivers (ANGLE on Direct3D), so draw
+      // everything once offscreen, hidden and out-of-view things included.
+      const restore: (() => void)[] = [];
+      scene.traverse((o) => {
+        if (!o.visible) {
+          o.visible = true;
+          restore.push(() => (o.visible = false));
+        }
+        if (o.frustumCulled) {
+          o.frustumCulled = false;
+          restore.push(() => (o.frustumCulled = true));
+        }
+      });
+      renderer.setRenderTarget(composer.readBuffer);
+      renderer.render(scene, camera);
+      renderer.setRenderTarget(null);
+      for (const undo of restore) undo();
+      pickStartTier();
+    })
+    .catch(() => {})
+    .finally(() => (warming = false));
 
   const right = new Vector3();
   const up = new Vector3();
@@ -303,7 +335,65 @@ export function initRoom(
     resize();
   };
   document.documentElement.dataset.fx = tiers[tier].fx;
+  // Dev helper: /?tier=3 locks a quality tier (the governor and the start-up timing stand down).
+  const benchTier = import.meta.env.DEV ? new URLSearchParams(location.search).get('tier') : null;
+  if (benchTier !== null) applyTier(Number(benchTier));
+
+  // Where to start: the tier this GPU settled on last visit, or else a quick timing behind the
+  // gate. Starting at the top made weak GPUs crawl for seconds before the governor caught up.
+  const gpuName = (() => {
+    const gl = renderer.getContext();
+    const info = gl.getExtension('WEBGL_debug_renderer_info');
+    return String(gl.getParameter(info ? info.UNMASKED_RENDERER_WEBGL : gl.RENDERER));
+  })();
+  const TIER_KEY = 'room-tier';
+  const rememberTier = () => {
+    try {
+      localStorage.setItem(TIER_KEY, JSON.stringify({ gpu: gpuName, tier }));
+    } catch {
+      // storage blocked: just measure again next time
+    }
+  };
+  const rememberedTier = () => {
+    try {
+      const saved = JSON.parse(localStorage.getItem(TIER_KEY) ?? 'null') as { gpu: string; tier: number } | null;
+      return saved?.gpu === gpuName && tiers[saved.tier] ? saved.tier : null;
+    } catch {
+      return null;
+    }
+  };
+  /** GPU time of one frame: draw, then read a pixel back, which waits for the GPU to finish. */
+  const frameMs = () => {
+    const gl = renderer.getContext();
+    const px = new Uint8Array(4);
+    const times: number[] = [];
+    for (let i = 0; i < 4; i++) {
+      const t0 = performance.now();
+      composer.render(0);
+      gl.readPixels(0, 0, 1, 1, gl.RGBA, gl.UNSIGNED_BYTE, px);
+      times.push(performance.now() - t0);
+    }
+    times.shift(); // the first draw at a new size also allocates its buffers
+    return times.sort((a, b) => a - b)[1];
+  };
+  const pickStartTier = () => {
+    if (benchTier !== null) return;
+    const saved = rememberedTier();
+    if (saved !== null) {
+      applyTier(saved);
+      return;
+    }
+    // Timed at tier 2; each step up costs roughly 1.5x, each step down saves about 0.7x.
+    // The room may take about 9 ms of the frame, leaving room for the page drawn over it.
+    applyTier(2);
+    const ms = frameMs();
+    const budget = 9;
+    const start = ms < budget * 0.4 ? 0 : ms < budget * 0.65 ? 1 : ms < budget ? 2 : ms < budget * 1.4 ? 3 : ms < budget * 1.9 ? 4 : 5;
+    applyTier(start);
+    rememberTier();
+  };
   const governQuality = (now: number, dt: number) => {
+    if (benchTier !== null) return;
     if (!gov.startAt) gov.startAt = now + 2000; // ignore the shader-compile hitch at startup
     if (now < gov.startAt || document.hidden) return;
     gov.frames++;
@@ -315,12 +405,14 @@ export function initRoom(
     if (fps < 50 && tier < tiers.length - 1) {
       failed.add(tier);
       applyTier(Math.min(tier + (fps < 32 ? 2 : 1), tiers.length - 1));
+      rememberTier();
       gov.goodStreak = 0;
     } else if (fps > 57) {
       // Climb only after sustained headroom, and never back into a tier that failed.
       gov.goodStreak++;
       if (gov.goodStreak >= 5 && tier > 0 && !failed.has(tier - 1)) {
         applyTier(tier - 1);
+        rememberTier();
         gov.goodStreak = 0;
       }
     } else {
@@ -391,8 +483,9 @@ export function initRoom(
 
     room.tick(now, dt, audio, camera.position, moods.tint, breathe);
     grain.uniforms.uTime.value = now / 1000;
-    composer.render(dt);
-    governQuality(now, dt);
+    // While shaders warm up (behind the gate), hold the first frame: drawing now would wait on them.
+    if (!warming || !drawn) composer.render(dt);
+    if (!warming) governQuality(now, dt);
 
     if (!drawn) {
       drawn = true;
@@ -422,7 +515,7 @@ export function initRoom(
   const pick = (x: number, y: number): RoomHit | null => {
     ndc.set((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
     raycaster.setFromCamera(ndc, camera);
-    for (const hit of raycaster.intersectObject(room.root, true)) {
+    for (const hit of raycaster.intersectObjects([room.root, room.pickRoot], true)) {
       const o = hit.object as { isMesh?: boolean; visible: boolean };
       if (!o.isMesh || !o.visible) continue; // dust, motes and hidden things don't block
       let node: typeof hit.object | null = hit.object;
@@ -490,7 +583,7 @@ export function initRoom(
   });
 
   return {
-    ready: Promise.all([room.ready, firstFrame]).then(() => undefined),
+    ready: warm.then(() => undefined),
     lightsOn() {
       if (lightsStart === -1) lightsStart = performance.now();
     },
