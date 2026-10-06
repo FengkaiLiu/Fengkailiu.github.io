@@ -1,5 +1,6 @@
 // The record player's remote: a liquid glass capsule docked at the bottom of the page.
-// While music plays it also pumps the analyser bands into the 3D room every frame.
+// While music plays it also pumps the analyser bands into the 3D room every frame. A guest
+// in the Spotify embed is out of the analyser's reach, so it gets a beat-shaped pulse instead.
 import { getMusicBus, type Bands } from '../audio/bus';
 import type { Player, PlayerState } from '../audio/player';
 
@@ -40,7 +41,7 @@ export function mountPlayerDock(player: Player, onBands: (b: Bands, playing: boo
   const render = (s: PlayerState) => {
     dock.classList.toggle('is-playing', s.playing);
     $('[data-title]').textContent = s.track.title;
-    $('[data-artist]').textContent = s.guest ? `${s.track.artist} · Liner notes preview` : s.track.artist;
+    $('[data-artist]').textContent = s.guest ? `${s.track.artist} · via Spotify` : s.track.artist;
     dock.classList.toggle('is-guest', Boolean(s.guest));
     $('[data-time]').textContent = s.time === null ? (s.playing ? 'live' : '') : `${fmt(s.time)}${s.duration ? ` / ${fmt(s.duration)}` : ''}`;
     toggleBtn.innerHTML = icon(s.playing ? 'pause' : 'play');
@@ -58,10 +59,15 @@ export function mountPlayerDock(player: Player, onBands: (b: Bands, playing: boo
     const dt = Math.min((now - last) / 1000, 0.1);
     last = now;
     const bus = getMusicBus();
-    const bands = bus.read(dt);
-    const playing = player.state().playing;
-    onBands(bands, playing);
-    drawBars(bus.analyser);
+    const { playing, guest } = player.state();
+    if (guest) {
+      onBands(pulse(now / 1000), playing);
+      fakeBars(now / 1000);
+    } else {
+      onBands(bus.read(dt), playing);
+      readBars(bus.analyser);
+    }
+    paintBars();
     quietFor = playing ? 0 : quietFor + dt;
     raf = quietFor < 1.5 ? requestAnimationFrame(frame) : 0;
   };
@@ -72,8 +78,28 @@ export function mountPlayerDock(player: Player, onBands: (b: Bands, playing: boo
     }
   });
 
+  // Roughly 100 BPM: a kick-like swell each beat, with the mids breathing every bar.
+  const pulsed: Bands = { bass: 0, mid: 0, treble: 0, level: 0 };
+  function pulse(t: number): Bands {
+    const beat = (t * 100) / 60;
+    const kick = Math.exp(-(beat % 1) * 5);
+    pulsed.bass = 0.25 + 0.6 * kick;
+    pulsed.mid = 0.35 + 0.15 * Math.sin((beat / 4) * Math.PI * 2) + 0.1 * kick;
+    pulsed.treble = 0.25 + 0.15 * Math.exp(-((beat + 0.5) % 1) * 7);
+    pulsed.level = 0.45 + 0.3 * kick;
+    return pulsed;
+  }
+  function fakeBars(t: number) {
+    const kick = Math.exp(-(((t * 100) / 60) % 1) * 5);
+    for (let i = 0; i < BARS; i++) {
+      const tilt = 1 - i / (BARS * 1.4); // falls toward the treble, like a real mix
+      const wobble = 0.5 + 0.5 * Math.sin(t * (2.1 + i * 0.37) + i * 1.7);
+      freq[i] = 255 * Math.min(1, tilt * (0.3 + 0.35 * wobble + (i < 5 ? 0.4 * kick : 0.12 * kick)));
+    }
+  }
+
   const full = new Uint8Array(1024);
-  function drawBars(analyser: AnalyserNode) {
+  function readBars(analyser: AnalyserNode) {
     analyser.getByteFrequencyData(full);
     // Log-spaced bins so the bars read like a real spectrum, not all treble.
     for (let i = 0; i < BARS; i++) {
@@ -83,6 +109,8 @@ export function mountPlayerDock(player: Player, onBands: (b: Bands, playing: boo
       for (let k = a; k < b; k++) s += full[k];
       freq[i] = s / (b - a);
     }
+  }
+  function paintBars() {
     g.clearRect(0, 0, canvas.width, canvas.height);
     for (let i = 0; i < BARS; i++) {
       const h = Math.max(2, (freq[i] / 255) * canvas.height);

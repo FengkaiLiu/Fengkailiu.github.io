@@ -2,9 +2,10 @@
 //   spotify: the song's Spotify link (in Spotify: ... > Share > Copy Song Link)
 //   artist:  the artist's name, as it appears on Spotify
 //   note:    why you love it, in your own voice
-// Title and cover come from Spotify. Album, year and the 30 s preview that spins on the
-// turntable come from Apple's public catalog (Spotify no longer offers previews), matched
-// by title + artist. Anything you fill in by hand wins over the fetched value.
+// The song plays in Spotify's own embed (a 30 s preview, or the full song for visitors who
+// are logged in), and the title and cover come from Spotify too. Album, year and genre are
+// looked up in Apple's public catalog by title + artist and left out if it has no match.
+// Anything you fill in by hand wins over the fetched value.
 
 export interface RecordPick {
   id: string;
@@ -23,18 +24,24 @@ export interface RecordPick {
 export const records: RecordPick[] = [
   {
     id: 'pick-1',
-    note: 'Why this one? Write a few lines: when you first heard it, what to listen for, why it belongs in this room.',
+    spotify: 'https://open.spotify.com/track/6jg8bLxvV2k8gtYPkgOufy?si=91922e13feb94bac',
+    artist: 'SadSvit',
+    note: 'This song brings me energy',
     tint: '#ff9d4d',
   },
   {
     id: 'pick-2',
-    note: 'Why this one? Maybe a production detail you love, a chord change, the mix.',
-    tint: '#ff8fb1',
+    spotify: 'https://open.spotify.com/track/7LMajLn4v2ZWmLcfE1a7DY?si=d66ea5cd6bef4c52',
+    artist: 'Porter Robinson',
+    note: 'This song brings me hope',
+    tint: '#90ee90',
   },
   {
     id: 'pick-3',
-    note: 'Why this one? The 2am song, the one that made you want to make music.',
-    tint: '#a9c4ff',
+    spotify: 'https://open.spotify.com/track/1H2pPtoPS8kNlqCN7HfT6g?si=c8ca5caaf7e744b8',
+    artist: 'Jamie Paige',
+    note: 'This song brings me love',
+    tint: '#ff2b00',
   },
 ];
 
@@ -43,14 +50,12 @@ export interface ResolvedPick {
   pick: RecordPick;
   title: string;
   artist: string;
-  album: string;
-  year: string;
+  album: string | null;
+  year: string | null;
   credits: string[];
   cover: string | null;
-  /** 30 s clip, or null if no matching preview was found. */
-  preview: string | null;
-  /** The Spotify link, for the "full song" button. */
-  link: string | null;
+  /** spotify:track:... for the embed, or null without a valid link. */
+  uri: string | null;
   missing: boolean;
 }
 
@@ -59,8 +64,6 @@ interface AppleHit {
   artistName: string;
   collectionName?: string;
   releaseDate?: string;
-  artworkUrl100?: string;
-  previewUrl?: string;
   primaryGenreName?: string;
 }
 
@@ -80,16 +83,22 @@ async function json<T>(url: string): Promise<T | null> {
   }
 }
 
-/** Finds the same song in Apple's catalog: same artist, and a title that matches. */
+/** Finds the same song in Apple's catalog (for album, year and genre): same artist, and a title that matches. */
 async function findOnApple(title: string, artist: string): Promise<AppleHit | null> {
   const data = await json<{ results: AppleHit[] }>(
     `https://itunes.apple.com/search?term=${encodeURIComponent(`${title} ${artist}`)}&entity=song&limit=15`,
   );
   const t = norm(title);
   const a = norm(artist);
-  const byArtist = (data?.results ?? []).filter((h) => h.previewUrl && (norm(h.artistName).includes(a) || a.includes(norm(h.artistName))));
+  const byArtist = (data?.results ?? []).filter((h) => norm(h.artistName).includes(a) || a.includes(norm(h.artistName)));
   return byArtist.find((h) => norm(h.trackName) === t) ?? byArtist.find((h) => norm(h.trackName).startsWith(t) || t.startsWith(norm(h.trackName))) ?? null;
 }
+
+/** oEmbed gives a 300 px thumbnail; the same image id at the 640 px size code is the full cover. */
+const bigCover = (thumb: string) => {
+  const hash = thumb.match(/ab67616d0000[0-9a-f]{4}([0-9a-f]+)$/)?.[1];
+  return hash ? `https://i.scdn.co/image/ab67616d0000b273${hash}` : thumb;
+};
 
 const cache = new Map<string, Promise<ResolvedPick>>();
 
@@ -98,20 +107,19 @@ export function resolvePick(pick: RecordPick): Promise<ResolvedPick> {
     cache.set(
       pick.id,
       (async () => {
-        const spotify = pick.spotify?.includes('open.spotify.com/') ? pick.spotify : undefined;
-        const embed = spotify ? await json<{ title: string; thumbnail_url: string }>(`https://open.spotify.com/oembed?url=${encodeURIComponent(spotify)}`) : null;
+        const id = pick.spotify?.match(/open\.spotify\.com\/(?:intl-[a-z-]+\/)?track\/([A-Za-z0-9]+)/)?.[1];
+        const embed = id ? await json<{ title: string; thumbnail_url: string }>(`https://open.spotify.com/oembed?url=${encodeURIComponent(`https://open.spotify.com/track/${id}`)}`) : null;
         const title = pick.title ?? embed?.title;
         const apple = title && pick.artist ? await findOnApple(title, pick.artist) : null;
         return {
           pick,
           title: title ?? 'Song title',
           artist: pick.artist ?? apple?.artistName ?? 'Artist',
-          album: pick.album ?? apple?.collectionName ?? 'Album',
-          year: pick.year ?? apple?.releaseDate?.slice(0, 4) ?? 'Year',
+          album: pick.album ?? apple?.collectionName ?? null,
+          year: pick.year ?? apple?.releaseDate?.slice(0, 4) ?? null,
           credits: [...(apple?.primaryGenreName ? [`Genre · ${apple.primaryGenreName}`] : []), ...(pick.credits ?? [])],
-          cover: apple?.artworkUrl100?.replace('100x100bb', '600x600bb') ?? embed?.thumbnail_url ?? null,
-          preview: apple?.previewUrl ?? null,
-          link: spotify ?? null,
+          cover: embed ? bigCover(embed.thumbnail_url) : null,
+          uri: id && embed ? `spotify:track:${id}` : null,
           missing: !embed || !pick.artist,
         };
       })(),

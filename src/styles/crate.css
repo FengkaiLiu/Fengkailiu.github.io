@@ -223,12 +223,25 @@
   opacity: 0.45;
   cursor: not-allowed;
 }
-.crate__link {
+.crate__hint {
   font-size: var(--text-small);
-  font-weight: 700;
-  color: var(--lamp-300);
+  opacity: 0.75;
 }
-.crate__link[hidden] {
+.crate__hint:empty {
+  display: none;
+}
+/* Spotify swaps the placeholder div for its iframe; reserve the height so nothing jumps. */
+.crate__embed {
+  min-height: 80px;
+  border-radius: 12px;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.05);
+}
+.crate__embed iframe {
+  display: block;
+  border: 0;
+}
+.crate__embed[hidden] {
   display: none;
 }
 

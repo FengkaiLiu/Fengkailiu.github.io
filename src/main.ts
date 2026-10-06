@@ -107,7 +107,7 @@ const dock = mountPlayerDock(
   { canSkip: tracks.length > 1 },
 );
 
-// Liner notes previews spin on the same turntable, with the song's cover on the label.
+// Liner notes picks borrow the same turntable, with the song's cover on the label.
 let label: ReturnType<typeof coverLabel> | null = null;
 mountCrate(document.querySelector<HTMLElement>('#records .chapter__slot')!, player, {
   setLabel(tint, cover) {
