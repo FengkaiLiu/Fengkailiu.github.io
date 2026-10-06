@@ -98,7 +98,7 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   const haloTex = haloTexture();
   const addFocus = (id: string, w: number, h: number, at: Vector3, facing: 'left' | 'back', frame?: MeshStandardMaterial, picture?: MeshStandardMaterial) => {
     const halo = new MeshBasicMaterial({ map: haloTex, color: '#ffb873', transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false });
-    const plane = new Mesh(new PlaneGeometry(w + 0.7, h + 0.7), halo);
+    const plane = new Mesh(new PlaneGeometry(w * 1.9 + 0.5, h * 1.9 + 0.5), halo);
     plane.position.copy(at);
     if (facing === 'left') plane.rotation.y = Math.PI / 2;
     plane.renderOrder = -1;
@@ -556,7 +556,7 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
         f.level += (target - f.level) * (1 - Math.exp(-dt * 4));
         if (Math.abs(f.level - target) < 0.002) f.level = target;
         const k = f.level * f.level * (3 - 2 * f.level);
-        f.halo.opacity = k * 0.55 * (0.4 + 0.6 * glow);
+        f.halo.opacity = k * 0.6 * (0.4 + 0.6 * glow);
         if (f.frame) f.frame.emissiveIntensity = k * 0.55;
         if (f.picture) {
           if (f.picture.emissiveMap !== f.picture.map) {
@@ -617,17 +617,32 @@ function fitCover(tex: Texture, planeAspect: number) {
 
 /** A soft rounded-rectangle glow, like light spilling onto the wall around a frame. */
 function haloTexture() {
+  // Computed per pixel: full under the frame, then a long smooth falloff that reaches exactly
+  // zero before the texture's border, so the plane's square edge can never show.
+  const N = 256;
   const c = document.createElement('canvas');
-  c.width = c.height = 256;
+  c.width = c.height = N;
   const g = c.getContext('2d')!;
-  // Layered blurs: a bright core under the frame, fading out softly with no hard edge.
-  g.filter = 'blur(26px)';
-  for (const [inset, alpha] of [[40, 0.35], [62, 0.45], [80, 0.6]] as const) {
-    g.fillStyle = `rgba(255, 255, 255, ${alpha})`;
-    g.beginPath();
-    g.roundRect(inset, inset, 256 - inset * 2, 256 - inset * 2, 30);
-    g.fill();
+  const img = g.createImageData(N, N);
+  const core = 0.13; // radius of the bright core, as a fraction of the texture
+  const fade = 0.35; // falloff distance; core + fade < 0.5 keeps the border at zero
+  const round = core; // fully rounded: an oval of light, stretched to the frame's shape
+  for (let y = 0; y < N; y++) {
+    for (let x = 0; x < N; x++) {
+      // Distance outside a rounded square centered in the texture.
+      const qx = Math.abs((x + 0.5) / N - 0.5) - (core - round);
+      const qy = Math.abs((y + 0.5) / N - 0.5) - (core - round);
+      const d = Math.max(Math.hypot(Math.max(qx, 0), Math.max(qy, 0)) - round, 0);
+      const t = Math.min(d / fade, 1);
+      const a = (Math.exp(-4 * t * t) - Math.exp(-4)) / (1 - Math.exp(-4)); // gaussian, pinned to zero at the end
+      // A hair of noise breaks up 8-bit banding in the faint outer ring.
+      const v = Math.max(0, Math.min(255, a * 255 + (Math.random() - 0.5) * 2 * (a > 0 ? 1 : 0)));
+      const i = (y * N + x) * 4;
+      img.data[i] = img.data[i + 1] = img.data[i + 2] = 255;
+      img.data[i + 3] = v;
+    }
   }
+  g.putImageData(img, 0, 0);
   const tex = new CanvasTexture(c);
   tex.colorSpace = SRGBColorSpace;
   return tex;
