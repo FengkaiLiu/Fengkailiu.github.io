@@ -16,6 +16,7 @@ import { createPlayer } from './audio/player';
 import { tracks } from './content/tracks';
 import { mountPlayerDock } from './ui/playerDock';
 import { mountCrate } from './ui/crate';
+import { mountMixer } from './ui/mixer';
 import { mountScopePanel } from './ui/scopePanel';
 import { createSmoothScroll } from './ui/scroll';
 import { mountTrackNav } from './ui/trackNav';
@@ -41,12 +42,12 @@ interface Chapter {
   floor?: string;
   needs?: readonly string[];
   /** Built content instead of a placeholder. */
-  custom?: 'crate';
+  custom?: 'crate' | 'mixer';
 }
 
 // Chapters read like a record's track list. Each one is replaced by its floor (see ROADMAP.md).
 const chapters: Chapter[] = [
-  { id: 'about', shot: 'about', track: 'A1', nav: 'About', title: 'Code on one screen, sound on the other.', text: profile.bio[0], floor: 'Floor 9', needs: ['About content on the laptop screen (Floor 9)', 'Portrait photo (optional)'] },
+  { id: 'about', shot: 'about', track: 'A1', nav: 'About', title: 'Code on one screen, sound on the other.', text: profile.bio[0], custom: 'mixer' },
   ...projects.map((p, i) => ({ id: p.id, shot: p.id, track: `A${i + 2}`, nav: p.title, title: p.title, text: p.subtitle, tags: p.tags, floor: 'Floors 10 to 14', needs: p.needs })),
   { id: 'records', shot: 'record', track: 'B1', nav: 'Liner notes', title: 'Liner notes.', text: '3 records I keep coming back to. Flip through the crate and put one on the turntable.', custom: 'crate' },
   { id: 'lab', shot: 'lab', track: 'B2', nav: 'The Lab', title: 'How this room hears.', text: 'A live map of the audio graph running this page, and an FFT you can play with.', floor: 'Floor 15' },
@@ -97,11 +98,13 @@ initSheen();
 
 let ambience: Ambience | null = null;
 
+const mixer = mountMixer(document.querySelector<HTMLElement>('#about .chapter__slot')!);
 const player = createPlayer(tracks);
 const dock = mountPlayerDock(
   player,
   (b, playing, spectrum) => {
     room?.setAudio(b.bass, b.mid, b.treble, b.level);
+    mixer.setBands(b);
     room?.setSpectrum(spectrum);
     room?.setPlaying(playing);
   },
@@ -191,6 +194,10 @@ showGate(
   room?.lightsOn();
   document.documentElement.classList.add('is-on');
   scroll.start();
+  // Dev helper: /?nogate&lit&at=sonare jumps straight to a chapter once the gate opens.
+  const at = import.meta.env.DEV ? new URLSearchParams(location.search).get('at') : null;
+  const atEl = at ? document.getElementById(at) : null;
+  if (atEl) requestAnimationFrame(() => scroll.to(atEl, { instant: true }));
   window.setTimeout(() => {
     dock.show();
     nav.show();
@@ -205,11 +212,7 @@ showGate(
   }
 });
 
-// Dev helper: /?nogate&lit&at=sonare jumps straight to a chapter with the lights on.
 if (import.meta.env.DEV) {
-  const at = new URLSearchParams(location.search).get('at');
-  const atEl = at ? document.getElementById(at) : null;
-  if (atEl) setTimeout(() => scroll.to(atEl, { instant: true }), 50);
   // /?play starts the music right away (headless needs --autoplay-policy=no-user-gesture-required).
   if (new URLSearchParams(location.search).has('play')) setTimeout(() => void player.play(), 800);
 }

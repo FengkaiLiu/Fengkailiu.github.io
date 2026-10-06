@@ -43,7 +43,7 @@ Dev helpers (dev server only):
 | 6 | Audio-reactive room: speakers pump, fairy lights = spectrum, laptop shows live FFT, lamp breathes | ✅ |
 | 7 | Smooth scroll (Lenis), track list nav with progress | ✅ |
 | 8 | Room interactions: play the keyboard (click or drag), pet the cat, switch the lamp, tap the record player; pointer hints | ✅ |
-| 9 | About: mixer channel strip | ⬜ |
+| 9 | About: mixing desk (Code, Sound, Visual strips with skill inserts, live meters, solo; master strip with stats) | ✅ |
 | 10 | Project chapter engine: pinned scroll chapters + expandable liquid glass sheet | ⬜ |
 | 11 | Chapter: VR Music Room | ⬜ |
 | 12 | Chapter: Sonare of the Lake | ⬜ |
