@@ -18,6 +18,7 @@ import {
   PlaneGeometry,
   Points,
   PointsMaterial,
+  SRGBColorSpace,
   Shape,
   ShapeGeometry,
   SphereGeometry,
@@ -67,6 +68,8 @@ export interface RoomProps {
   setRain(on: boolean): void;
   /** Music state: moves the tonearm and spins the record. */
   setPlaying(on: boolean): void;
+  /** Light up the project on screen (its frame and the wall behind it); null for none. */
+  setFocus(id: string | null): void;
   /** Show a song cover on the record label; null restores the house label. */
   setLabel(texture: Texture | null): void;
   /** `eye` is the camera position: the laptop only types while it is close enough to read. */
@@ -89,6 +92,22 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
     const base = 'emissive' in mat ? mat.emissive.clone() : mat.color.clone();
     glowMats.push({ mat, base, max });
   };
+  // Projects that light up while their section is on screen: a warm frame, a glow on the
+  // wall behind, and the picture itself a touch brighter.
+  const focusables: Record<string, { level: number; halo: MeshBasicMaterial; frame?: MeshStandardMaterial; picture?: MeshStandardMaterial }> = {};
+  const haloTex = haloTexture();
+  const addFocus = (id: string, w: number, h: number, at: Vector3, facing: 'left' | 'back', frame?: MeshStandardMaterial, picture?: MeshStandardMaterial) => {
+    const halo = new MeshBasicMaterial({ map: haloTex, color: '#ffb873', transparent: true, opacity: 0, blending: AdditiveBlending, depthWrite: false });
+    const plane = new Mesh(new PlaneGeometry(w + 0.7, h + 0.7), halo);
+    plane.position.copy(at);
+    if (facing === 'left') plane.rotation.y = Math.PI / 2;
+    plane.renderOrder = -1;
+    root.add(plane);
+    if (frame) frame.setValues({ emissive: '#ffc890', emissiveIntensity: 0 });
+    if (picture) picture.setValues({ emissive: '#ffffff', emissiveIntensity: 0 });
+    focusables[id] = { level: 0, halo, frame, picture };
+  };
+  let focusId: string | null = null;
 
   // ---------- Shell ----------
   const floor = box(8, 0.2, 8, std('#ffffff', { map: floorTexture(), roughness: 0.7 }), 0, -0.1, 0, 0.02);
@@ -317,6 +336,7 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   handheld.add(box(0.07, 0.014, 0.03, std('#e8738a'), -0.14, 0.1, -0.004, 0.006));
   handheld.add(box(0.07, 0.014, 0.03, std('#e8738a'), 0.14, 0.1, -0.004, 0.006));
   root.add(shadowed(handheld));
+  addFocus('hotfooter', 0.5, 0.3, new Vector3(-2.4, shelfY - 0.46, -3.995), 'back');
   // Clear acrylic stand behind it
   const stand = box(0.14, 0.12, 0.012, std('#ffffff', { transparent: true, opacity: 0.25, roughness: 0.1 }), -2.4, shelfY - 0.54, -3.83, 0.004);
   stand.rotation.x = 0.45;
@@ -402,13 +422,18 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
     poster.rotation.y = Math.PI / 2;
     poster.position.set(-3.97, y, z);
     poster.receiveShadow = true;
-    root.add(box(0.03, h + 0.08, w + 0.08, std('#f6efe6'), -3.99, y, z, 0.01), poster);
+    const frameMat = std('#f6efe6');
+    root.add(box(0.03, h + 0.08, w + 0.08, frameMat, -3.99, y, z, 0.01), poster);
+    addFocus(id, w, h, new Vector3(-3.996, y, z), 'left', frameMat, mat);
     anchors[`poster-${id}`] = new Vector3(-3.95, y, z);
   }
   // Empty frame waiting for Project 5, on the back wall
-  const p5 = new Mesh(new PlaneGeometry(0.7, 0.95), std('#ffffff', { map: placeholderPoster() }));
+  const p5Mat = std('#ffffff', { map: placeholderPoster() });
+  const p5 = new Mesh(new PlaneGeometry(0.7, 0.95), p5Mat);
   p5.position.set(3.05, 3.0, -3.97);
-  root.add(box(0.78, 1.03, 0.03, std('#f6efe6'), 3.05, 3.0, -3.99, 0.01), p5);
+  const p5Frame = std('#f6efe6');
+  root.add(box(0.78, 1.03, 0.03, p5Frame, 3.05, 3.0, -3.99, 0.01), p5);
+  addFocus('project5', 0.7, 0.95, new Vector3(3.05, 3.0, -3.996), 'back', p5Frame, p5Mat);
   anchors.project5 = p5.position.clone();
 
   const coverLoads = Object.entries(covers).map(async ([id, url]) => {
@@ -501,6 +526,9 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
     setPlaying(on) {
       playing = on;
     },
+    setFocus(id) {
+      focusId = id;
+    },
     setLabel(texture) {
       labelMat.map = texture ?? label;
       labelMat.needsUpdate = true;
@@ -522,6 +550,22 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
         screenDrawn = true;
       }
       win.uniforms.uTime.value = now / 1000;
+      for (const [id, f] of Object.entries(focusables)) {
+        const target = id === focusId ? 1 : 0;
+        if (f.level === target) continue;
+        f.level += (target - f.level) * (1 - Math.exp(-dt * 4));
+        if (Math.abs(f.level - target) < 0.002) f.level = target;
+        const k = f.level * f.level * (3 - 2 * f.level);
+        f.halo.opacity = k * 0.55 * (0.4 + 0.6 * glow);
+        if (f.frame) f.frame.emissiveIntensity = k * 0.55;
+        if (f.picture) {
+          if (f.picture.emissiveMap !== f.picture.map) {
+            f.picture.emissiveMap = f.picture.map; // follows the cover once it loads
+            f.picture.needsUpdate = true;
+          }
+          f.picture.emissiveIntensity = k * 0.22;
+        }
+      }
       rain += (rainTarget - rain) * (1 - Math.exp(-dt * 0.8));
       win.uniforms.uRain.value = rain;
       // The arm swings over first; the platter spins up once the needle is down.
@@ -569,6 +613,24 @@ function fitCover(tex: Texture, planeAspect: number) {
     tex.repeat.set(1, aspect / planeAspect);
     tex.offset.set(0, (1 - tex.repeat.y) / 2);
   }
+}
+
+/** A soft rounded-rectangle glow, like light spilling onto the wall around a frame. */
+function haloTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 256;
+  const g = c.getContext('2d')!;
+  // Layered blurs: a bright core under the frame, fading out softly with no hard edge.
+  g.filter = 'blur(26px)';
+  for (const [inset, alpha] of [[40, 0.35], [62, 0.45], [80, 0.6]] as const) {
+    g.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+    g.beginPath();
+    g.roundRect(inset, inset, 256 - inset * 2, 256 - inset * 2, 30);
+    g.fill();
+  }
+  const tex = new CanvasTexture(c);
+  tex.colorSpace = SRGBColorSpace;
+  return tex;
 }
 
 /** Soft round sprite so dust motes are circles, not squares. */

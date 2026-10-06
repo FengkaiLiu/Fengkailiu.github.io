@@ -176,7 +176,7 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   const vec = (v: [number, number, number]) => new Vector3(...v);
   const keyframes = sections.map((s) => {
     const shot: Shot = shots[s.shot] ?? shots.hero;
-    return { el: s.el, pos: vec(shot.pos), target: vec(shot.target), frame: shot.frame ?? DEFAULT_FRAME };
+    return { el: s.el, shot: s.shot, pos: vec(shot.pos), target: vec(shot.target), frame: shot.frame ?? DEFAULT_FRAME };
   });
 
   const desired = { pos: new Vector3(), target: new Vector3(), frame: DEFAULT_FRAME };
@@ -201,6 +201,7 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
       desired.pos.set(...s.pos);
       desired.target.set(...s.target);
       desired.frame = s.frame ?? DEFAULT_FRAME;
+      room.setFocus(debugShot);
       portraitPullback();
       return;
     }
@@ -217,6 +218,8 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     desired.pos.y += Math.sin(t * Math.PI) * 0.45; // a gentle dolly arc between shots
     desired.target.lerpVectors(a.target, b.target, t);
     desired.frame = a.frame + (b.frame - a.frame) * t;
+    // The project being read lights up; it hands over as the camera passes halfway.
+    room.setFocus((t < 0.5 ? a : b).shot);
     portraitPullback();
   };
   sampleScroll();
