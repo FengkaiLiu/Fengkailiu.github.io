@@ -18,6 +18,8 @@ import {
   PlaneGeometry,
   Points,
   PointsMaterial,
+  Sprite,
+  SpriteMaterial,
   SRGBColorSpace,
   Shape,
   ShapeGeometry,
@@ -60,8 +62,19 @@ function cyl(rTop: number, rBottom: number, h: number, mat: Material | Material[
   return shadowed(m);
 }
 
+export type HotspotId = 'keys' | 'cat' | 'lamp' | 'record';
+
 export interface RoomProps {
   root: Group;
+  /** Things you can click, each with the meshes a raycast should test. */
+  hotspots: { id: HotspotId; objects: Object3D[] }[];
+  /** The note under a point on the keyboard (uv of a raycast hit), or null. */
+  noteAt(u: number, v: number): number | null;
+  pressKey(midi: number, now: number): void;
+  /** The cat nuzzles and a few hearts float up. */
+  petCat(now: number): void;
+  /** The desk lamp's own glow, 0 off to 1 on (the room dims its lights to match). */
+  setLamp(level: number): void;
   /** Fades the room's own light sources (0 off, 1 on). */
   setGlow(level: number): void;
   /** Rain on the window: eases toward on (1) or off (0). */
@@ -203,7 +216,8 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   kb.position.set(-0.15, deskY + 0.03, -3.05);
   kb.rotation.y = 0.12;
   kb.add(box(1.0, 0.06, 0.32, std('#2b2836'), 0, 0, 0, 0.015));
-  const keys = new Mesh(new PlaneGeometry(0.94, 0.17), std('#ffffff', { map: keysTexture(), roughness: 0.5 }));
+  const keyTex = keysTexture();
+  const keys = new Mesh(new PlaneGeometry(0.94, 0.17), std('#ffffff', { map: keyTex.texture, roughness: 0.5 }));
   keys.rotation.x = -Math.PI / 2;
   keys.position.set(0, 0.032, 0.06);
   kb.add(keys);
@@ -237,7 +251,8 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
 
   // Desk lamp: the warm key light of the whole room
   const lampMat = std('#f2c14e', { roughness: 0.4 });
-  root.add(cyl(0.12, 0.13, 0.04, lampMat, 1.95, deskY + 0.02, -3.3));
+  const lampBase = cyl(0.12, 0.13, 0.04, lampMat, 1.95, deskY + 0.02, -3.3);
+  root.add(lampBase);
   const arm = cyl(0.015, 0.015, 0.7, lampMat, 1.9, deskY + 0.33, -3.25, 10);
   arm.rotation.z = 0.25;
   root.add(arm);
@@ -410,6 +425,16 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   tail.position.set(-0.05, -0.08, 0);
   cat.add(body, head, earL, earR, tail);
   root.add(shadowed(cat));
+  // Hearts that float up when the cat is petted.
+  const heartMat = new SpriteMaterial({ map: heartTexture(), transparent: true, depthWrite: false, opacity: 0 });
+  const hearts = Array.from({ length: 4 }, () => {
+    const s = new Sprite(heartMat.clone());
+    s.scale.setScalar(0.09);
+    s.visible = false;
+    root.add(s);
+    return { s, born: -1e9, dx: 0 };
+  });
+  let pettedAt = -1e9;
 
   // ---------- Posters: project covers on the left wall ----------
   const posterMats: Record<string, MeshStandardMaterial> = {};
@@ -521,7 +546,18 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   const voidPoints = new Points(voidGeo, voidMat);
   root.add(voidPoints);
 
+  // Invisible, slightly generous hit shapes, so small things are easy to click from afar.
+  const hitMat = new MeshBasicMaterial({ visible: false });
+  const catHit = new Mesh(new SphereGeometry(0.34, 12, 8), hitMat);
+  catHit.position.set(cat.position.x + 0.08, cat.position.y + 0.02, cat.position.z);
+  const lampHit = new Mesh(new BoxGeometry(0.5, 0.8, 0.45), hitMat);
+  lampHit.position.set(1.82, deskY + 0.38, -3.22);
+  const recordHit = new Mesh(new BoxGeometry(0.76, 0.16, 0.56), hitMat);
+  recordHit.position.set(-2.6, 0.9, -3.6);
+  root.add(catHit, lampHit, recordHit);
+
   let glow = 0;
+  let lamp = 1;
   let rain = 1;
   let rainTarget = 1;
   let playing = false;
@@ -531,6 +567,24 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
   return {
     root,
     anchors,
+    hotspots: [
+      { id: 'keys', objects: [keys] },
+      { id: 'cat', objects: [cat, catHit] },
+      { id: 'lamp', objects: [shade, bulb, arm, lampBase, lampHit] },
+      { id: 'record', objects: [vinyl, tonearm, recordHit] },
+    ],
+    noteAt: keyTex.noteAt,
+    pressKey: keyTex.press,
+    petCat(now) {
+      pettedAt = now;
+      hearts.forEach((h, i) => {
+        h.born = now + i * 220;
+        h.dx = (i - 1.5) * 0.06;
+      });
+    },
+    setLamp(level) {
+      lamp = level;
+    },
     ready: Promise.all(coverLoads).then(() => undefined),
     setRain(on) {
       rainTarget = on ? 1 : 0;
@@ -599,13 +653,26 @@ export function buildRoom(covers: Record<string, string>): RoomProps {
       const needleDown = playing && Math.abs(tonearm.rotation.y - ARM_PLAYING) < 0.05;
       spin += ((needleDown ? 3.5 : 0) - spin) * (1 - Math.exp(-dt * (needleDown ? 2 : 1.2))); // 33 rpm, give or take
       vinyl.rotation.y -= dt * spin;
-      body.scale.y = 0.75 + Math.sin(now / 900) * 0.025;
+      body.scale.y = 0.75 + Math.sin(now / 900) * 0.025 + Math.sin(Math.max(0, 1 - (now - pettedAt) / 1400) * Math.PI) * 0.06;
       const kick = 1 + audio[0] * 0.25;
       for (const w of woofers) w.scale.set(kick, 1, kick);
       const flutter = 1 + audio[2] * 0.3;
       for (const t of tweeters) t.scale.set(flutter, 1, flutter);
-      // The lamp's bulb breathes with the lamp light (see room.ts).
-      bulbMat.color.multiplyScalar(1 + breathe * 0.35);
+      // The lamp's bulb breathes with the lamp light (see room.ts), and goes dark when switched off.
+      bulbMat.color.multiplyScalar((1 + breathe * 0.35) * (0.06 + 0.94 * lamp));
+      keyTex.tick(now);
+      // Petting: the cat stretches up into your hand, then settles; hearts drift up and fade.
+      const pet = Math.max(0, 1 - (now - pettedAt) / 1400);
+      head.position.y = 0.02 + Math.sin(pet * Math.PI) * 0.035;
+      head.rotation.z = Math.sin(pet * Math.PI * 3) * 0.12 * pet;
+      tail.rotation.z = 1.2 + Math.sin(now / 160) * 0.25 * pet;
+      for (const h of hearts) {
+        const age = (now - h.born) / 1400;
+        h.s.visible = age >= 0 && age < 1;
+        if (!h.s.visible) continue;
+        h.s.position.set(cat.position.x + 0.3 + h.dx, cat.position.y + 0.2 + age * 0.45, cat.position.z + Math.sin(age * 6 + h.dx * 40) * 0.03);
+        (h.s.material as SpriteMaterial).opacity = Math.sin(age * Math.PI) * 0.9;
+      }
       bulbs.forEach((b, i) => {
         const twinkle = 0.85 + 0.15 * Math.sin(now / 600 + i * 1.7);
         b.color.set(i % 3 === 0 ? '#ff9ec0' : '#ffcf85');
@@ -646,6 +713,28 @@ function fitCover(tex: Texture, planeAspect: number) {
     tex.repeat.set(1, aspect / planeAspect);
     tex.offset.set(0, (1 - tex.repeat.y) / 2);
   }
+}
+
+/** A little pink heart for the cat. */
+function heartTexture() {
+  const c = document.createElement('canvas');
+  c.width = c.height = 64;
+  const g = c.getContext('2d')!;
+  g.fillStyle = '#ff8fb1';
+  g.shadowColor = 'rgba(255, 143, 177, 0.9)';
+  g.shadowBlur = 8;
+  // Drawn at 70% around the center so its glow fades out well inside the texture's edge.
+  g.translate(32, 32);
+  g.scale(0.7, 0.7);
+  g.translate(-32, -32);
+  g.beginPath();
+  g.moveTo(32, 52);
+  g.bezierCurveTo(6, 34, 10, 10, 32, 22);
+  g.bezierCurveTo(54, 10, 58, 34, 32, 52);
+  g.fill();
+  const tex = new CanvasTexture(c);
+  tex.colorSpace = SRGBColorSpace;
+  return tex;
 }
 
 /** A soft rounded-rectangle glow, like light spilling onto the wall around a frame. */

@@ -8,6 +8,7 @@ import {
   PCFShadowMap,
   PerspectiveCamera,
   PointLight,
+  Raycaster,
   Scene,
   SpotLight,
   type Texture,
@@ -21,7 +22,7 @@ import { RenderPass } from 'three/addons/postprocessing/RenderPass.js';
 import { UnrealBloomPass } from 'three/addons/postprocessing/UnrealBloomPass.js';
 import { OutputPass } from 'three/addons/postprocessing/OutputPass.js';
 import { ShaderPass } from 'three/addons/postprocessing/ShaderPass.js';
-import { buildRoom } from './props';
+import { buildRoom, type HotspotId } from './props';
 import { buildMoods, MOODS, type MoodId } from './moods';
 import { DEFAULT_FRAME, shots, type Shot } from './shots';
 
@@ -39,7 +40,25 @@ export interface Room {
   setLabel(texture: Texture | null): void;
   /** Turn the record player's corner into a song's scene, or null for the plain room. */
   setMood(id: MoodId | null): void;
+  /** Clicks on the room's objects: a key (with its note), the cat, the lamp, the record. */
+  onInteract(fn: (hit: RoomHit) => void): void;
+  /** Hovering an object (or null), with the pointer position, for hints. */
+  onHover(fn: (id: HotspotId | null, x: number, y: number) => void): void;
+  /** Switch the desk lamp; returns whether it is now on. */
+  toggleLamp(): boolean;
+  petCat(): void;
+  pressKey(midi: number): void;
 }
+
+export interface RoomHit {
+  id: HotspotId;
+  /** For the keyboard: the MIDI note under the pointer. */
+  note?: number;
+}
+
+/** True when the pointer is over open room, not over page content or controls. */
+const overRoom = (target: EventTarget | null) =>
+  target instanceof Element && !target.closest('a, button, input, label, iframe, h1, h2, h3, p, li, .chapter__card, .liquid, .dockbar, .scope, .tracknav, .gate');
 
 const MAX_DPR = 1.75;
 const MIN_DPR = 0.8;
@@ -243,6 +262,8 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   // ---------- Loop ----------
   const audio = [0, 0, 0, 0];
   let breathe = 0;
+  let lampOn = true;
+  let lampLevel = 1;
   const reducedMotion = matchMedia('(prefers-reduced-motion: reduce)');
   const debugLit = import.meta.env.DEV && new URLSearchParams(location.search).has('lit');
   let lightsStart = debugLit ? -LIGHTS_ON_MS : -1;
@@ -316,8 +337,10 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     breathe += (audio[3] - breathe) * (1 - Math.exp(-dt * 1.6));
     const lampBreath = 1 + breathe * 0.22;
     hemi.intensity = 0.42 + lit * 0.25 + Math.min(moodWeight, 1) * 0.15;
-    lampSpot.intensity = lit * 3.6 * dim * lampBreath;
-    lampFill.intensity = lit * 2.2 * dim * lampBreath;
+    lampLevel += ((lampOn ? 1 : 0) - lampLevel) * (1 - Math.exp(-dt * (lampOn ? 9 : 14)));
+    lampSpot.intensity = lit * 3.6 * dim * lampBreath * lampLevel;
+    lampFill.intensity = lit * 2.2 * dim * lampBreath * lampLevel;
+    room.setLamp(lampLevel);
     fairyFill.intensity = lit * 3.4;
     posterLight.intensity = lit * 2.6 * (0.4 + 0.6 * dim);
     screenGlow.intensity = lit * 1.1;
@@ -375,6 +398,84 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
   });
   requestAnimationFrame(loop);
 
+  // ---------- Clicking things in the room ----------
+  const raycaster = new Raycaster();
+  const ndc = new Vector2();
+  const owner = new Map<object, HotspotId>();
+  for (const h of room.hotspots) for (const o of h.objects) o.traverse((c) => owner.set(c, h.id));
+  const interactFns: ((hit: RoomHit) => void)[] = [];
+  const hoverFns: ((id: HotspotId | null, x: number, y: number) => void)[] = [];
+  /** The object under a screen point, if the first solid thing there is a hotspot. */
+  const pick = (x: number, y: number): RoomHit | null => {
+    ndc.set((x / window.innerWidth) * 2 - 1, -(y / window.innerHeight) * 2 + 1);
+    raycaster.setFromCamera(ndc, camera);
+    for (const hit of raycaster.intersectObject(room.root, true)) {
+      const o = hit.object as { isMesh?: boolean; visible: boolean };
+      if (!o.isMesh || !o.visible) continue; // dust, motes and hidden things don't block
+      let node: typeof hit.object | null = hit.object;
+      while (node && !owner.has(node)) node = node.parent;
+      const id = node ? owner.get(node)! : null;
+      if (!id) return null; // something solid is in front
+      if (id === 'keys') {
+        const note = hit.uv ? room.noteAt(hit.uv.x, hit.uv.y) : null;
+        return note === null ? null : { id, note };
+      }
+      return { id };
+    }
+    return null;
+  };
+  let hovered: HotspotId | null = null;
+  let down: { hit: RoomHit; x: number; y: number; at: number } | null = null;
+  let lastNote: number | null = null;
+  let pendingMove: PointerEvent | null = null;
+  window.addEventListener(
+    'pointermove',
+    (e) => {
+      pendingMove = e;
+    },
+    { passive: true },
+  );
+  // Hover (and dragging across the keys) is resolved at most once per frame.
+  const hoverLoop = () => {
+    const e = pendingMove;
+    pendingMove = null;
+    if (e && lightsStart !== -1) {
+      const hit = overRoom(e.target) ? pick(e.clientX, e.clientY) : null;
+      const id = hit?.id ?? null;
+      if (id !== hovered) {
+        hovered = id;
+        document.body.style.cursor = id ? 'pointer' : '';
+      }
+      for (const fn of hoverFns) fn(id, e.clientX, e.clientY);
+      // Glissando: holding the pointer down and sliding plays each new key.
+      if (down?.hit.id === 'keys' && hit?.id === 'keys' && hit.note !== lastNote) {
+        lastNote = hit.note ?? null;
+        for (const fn of interactFns) fn(hit);
+      }
+    }
+    requestAnimationFrame(hoverLoop);
+  };
+  requestAnimationFrame(hoverLoop);
+  window.addEventListener('pointerdown', (e) => {
+    if (lightsStart === -1 || e.button !== 0 || !overRoom(e.target)) return;
+    const hit = pick(e.clientX, e.clientY);
+    if (!hit) return;
+    down = { hit, x: e.clientX, y: e.clientY, at: performance.now() };
+    // Keys sound on press, like a real keyboard; the rest act on release (a tap, not a drag).
+    if (hit.id === 'keys') {
+      lastNote = hit.note ?? null;
+      for (const fn of interactFns) fn(hit);
+    }
+  });
+  window.addEventListener('pointerup', (e) => {
+    const d = down;
+    down = null;
+    lastNote = null;
+    if (!d || d.hit.id === 'keys') return;
+    const still = Math.hypot(e.clientX - d.x, e.clientY - d.y) < 10 && performance.now() - d.at < 600;
+    if (still && pick(e.clientX, e.clientY)?.id === d.hit.id) for (const fn of interactFns) fn(d.hit);
+  });
+
   return {
     ready: Promise.all([room.ready, firstFrame]).then(() => undefined),
     lightsOn() {
@@ -391,6 +492,22 @@ export function initRoom(sections: { el: HTMLElement; shot: string }[], covers: 
     },
     setMood(id) {
       moods.set(id);
+    },
+    onInteract(fn) {
+      interactFns.push(fn);
+    },
+    onHover(fn) {
+      hoverFns.push(fn);
+    },
+    toggleLamp() {
+      lampOn = !lampOn;
+      return lampOn;
+    },
+    petCat() {
+      room.petCat(performance.now());
+    },
+    pressKey(midi) {
+      room.pressKey(midi, performance.now());
     },
     setSpectrum(bands) {
       room.setSpectrum(bands);

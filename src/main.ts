@@ -7,7 +7,11 @@ import { initSheen } from './ui/sheen';
 import { initLiquidGlass } from './ui/liquidGlass';
 import { showGate } from './ui/gate';
 import { initRoom } from './room/room';
-import { playLightsOnChord, startAmbience, type Ambience } from './audio/lofi';
+import { playLightsOnChord, rhodesNote, startAmbience, type Ambience } from './audio/lofi';
+import { lampClick, purr } from './audio/foley';
+import { getAudio, unlockAudio } from './audio/context';
+import { getMusicBus } from './audio/bus';
+import { mountRoomHints } from './ui/roomHints';
 import { createPlayer } from './audio/player';
 import { tracks } from './content/tracks';
 import { mountPlayerDock } from './ui/playerDock';
@@ -135,6 +139,35 @@ const nav = mountTrackNav(
   scroll,
 );
 initLiquidGlass();
+
+// Things to play with in the room: the keys, the cat, the lamp and the record player.
+if (room) {
+  room.onHover(mountRoomHints());
+  let purring = 0;
+  room.onInteract(async (hit) => {
+    // Visuals first, so a press feels instant; sound follows once audio is unlocked
+    // (a click is a gesture, so this works even after entering silently).
+    if (hit.id === 'keys' && hit.note !== undefined) {
+      room.pressKey(hit.note);
+      await unlockAudio();
+      const { ctx } = getAudio();
+      // Into the music bus, so the scope and the room hear your playing too.
+      rhodesNote(ctx, getMusicBus().input, hit.note, ctx.currentTime, 1.8, 0.12);
+    } else if (hit.id === 'cat') {
+      if (performance.now() < purring) return; // let one purr finish
+      purring = performance.now() + 2000;
+      room.petCat();
+      await unlockAudio();
+      purr();
+    } else if (hit.id === 'lamp') {
+      room.toggleLamp();
+      await unlockAudio();
+      lampClick();
+    } else if (hit.id === 'record') {
+      void player.toggle();
+    }
+  });
+}
 
 // "Look around" glides to the first chapter; the camera follows the scroll on its own.
 document.querySelector<HTMLAnchorElement>('[data-look]')!.addEventListener('click', (e) => {

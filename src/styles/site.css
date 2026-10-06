@@ -211,3 +211,25 @@ html.is-on .hero__tagline {
 .btn:hover .btn__arrow {
   transform: translateY(3px);
 }
+
+/* Room hints: a small tag that follows the pointer over clickable things in the room. */
+.roomhint {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--z-nav);
+  padding: 6px 12px;
+  border-radius: var(--radius-pill);
+  background: rgba(20, 15, 40, 0.78);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+  color: var(--white);
+  font-size: var(--text-micro);
+  font-weight: 700;
+  white-space: nowrap;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.2s var(--ease-out);
+}
+.roomhint.is-shown {
+  opacity: 1;
+}

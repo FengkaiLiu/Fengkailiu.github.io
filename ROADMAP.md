@@ -42,7 +42,7 @@ Dev helpers (dev server only):
 | 5 | Visualizers: waveform, spectrum, spectrogram, vectorscope, chromagram, BPM/key (Scope panel on the bottom bar) | ✅ |
 | 6 | Audio-reactive room: speakers pump, fairy lights = spectrum, laptop shows live FFT, lamp breathes | ✅ |
 | 7 | Smooth scroll (Lenis), track list nav with progress | ✅ |
-| 8 | Room interactions: click the keyboard to play notes, pet the cat, flip the lamp | ⬜ |
+| 8 | Room interactions: play the keyboard (click or drag), pet the cat, switch the lamp, tap the record player; pointer hints | ✅ |
 | 9 | About: mixer channel strip | ⬜ |
 | 10 | Project chapter engine: pinned scroll chapters + expandable liquid glass sheet | ⬜ |
 | 11 | Chapter: VR Music Room | ⬜ |

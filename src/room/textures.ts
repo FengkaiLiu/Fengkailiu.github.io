@@ -186,26 +186,80 @@ export function laptopDeckGlow() {
 }
 
 /** MIDI keyboard keys, seen from above. */
+// The MIDI keyboard's keys: 25 white keys, C to C over three octaves, black keys toward
+// the back. Also maps a point on the texture to a MIDI note and lights pressed keys.
+const WHITE_KEYS = 25;
+const SCALE = [0, 2, 4, 5, 7, 9, 11];
+const LOWEST = 48; // C3
+const hasBlackAfter = (i: number) => i < WHITE_KEYS - 1 && ![2, 6].includes(i % 7);
+const whiteMidi = (i: number) => LOWEST + Math.floor(i / 7) * 12 + SCALE[i % 7];
+
 export function keysTexture() {
   const { c, ctx } = canvas(1024, 160);
-  ctx.fillStyle = '#f4f1ea';
-  ctx.fillRect(0, 0, c.width, c.height);
-  const white = 25;
-  const kw = c.width / white;
-  ctx.strokeStyle = '#b9b2a6';
-  ctx.lineWidth = 3;
-  for (let i = 0; i <= white; i++) {
-    ctx.beginPath();
-    ctx.moveTo(i * kw, 0);
-    ctx.lineTo(i * kw, c.height);
-    ctx.stroke();
-  }
-  ctx.fillStyle = '#1b1a24';
-  for (let i = 0; i < white - 1; i++) {
-    if ([2, 6].includes(i % 7)) continue;
-    ctx.fillRect(i * kw + kw * 0.65, 0, kw * 0.7, c.height * 0.6);
-  }
-  return toTexture(c);
+  const kw = c.width / WHITE_KEYS;
+  const blackH = c.height * 0.6;
+  const texture = toTexture(c);
+  const lit = new Map<number, number>(); // midi -> time it was pressed
+
+  const draw = (now: number) => {
+    const glow = (midi: number) => {
+      const at = lit.get(midi);
+      return at === undefined ? 0 : Math.max(0, 1 - (now - at) / 320);
+    };
+    ctx.fillStyle = '#f4f1ea';
+    ctx.fillRect(0, 0, c.width, c.height);
+    for (let i = 0; i < WHITE_KEYS; i++) {
+      const g = glow(whiteMidi(i));
+      if (g > 0) {
+        ctx.fillStyle = `rgba(255, 157, 77, ${0.25 + g * 0.6})`;
+        ctx.fillRect(i * kw, 0, kw, c.height);
+      }
+    }
+    ctx.strokeStyle = '#b9b2a6';
+    ctx.lineWidth = 3;
+    for (let i = 0; i <= WHITE_KEYS; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * kw, 0);
+      ctx.lineTo(i * kw, c.height);
+      ctx.stroke();
+    }
+    for (let i = 0; i < WHITE_KEYS; i++) {
+      if (!hasBlackAfter(i)) continue;
+      const g = glow(whiteMidi(i) + 1);
+      ctx.fillStyle = g > 0 ? `rgb(${27 + g * 228}, ${26 + g * 131}, ${36 + g * 41})` : '#1b1a24';
+      ctx.fillRect(i * kw + kw * 0.65, 0, kw * 0.7, blackH);
+    }
+    texture.needsUpdate = true;
+  };
+  draw(0);
+
+  let fading = false;
+  return {
+    texture,
+    /** The note under a point on the keys (uv from a raycast), or null between keys. */
+    noteAt(u: number, v: number): number | null {
+      const x = u * c.width;
+      const y = (1 - v) * c.height;
+      if (y < blackH) {
+        const j = Math.floor((x - kw * 0.65) / kw);
+        if (j >= 0 && hasBlackAfter(j) && x >= j * kw + kw * 0.65 && x <= j * kw + kw * 1.35) return whiteMidi(j) + 1;
+      }
+      const i = Math.floor(x / kw);
+      return i >= 0 && i < WHITE_KEYS ? whiteMidi(i) : null;
+    },
+    press(midi: number, now: number) {
+      lit.set(midi, now);
+      fading = true;
+      draw(now);
+    },
+    /** Fade lit keys back to plain; only redraws while something is fading. */
+    tick(now: number) {
+      if (!fading) return;
+      for (const [m, at] of lit) if (now - at > 320) lit.delete(m);
+      fading = lit.size > 0;
+      draw(now);
+    },
+  };
 }
 
 /** Record label: hand-lettered side A. */
