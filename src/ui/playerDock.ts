@@ -100,6 +100,8 @@ export function mountPlayerDock(
     $('[data-title]').textContent = s.track.title;
     $('[data-artist]').textContent = s.guest ? `${s.track.artist} · via Spotify` : s.track.artist;
     dock.classList.toggle('is-guest', Boolean(s.guest));
+    // Spotify sets its own volume inside its frame, so the slider steps aside while it plays.
+    vol.hidden = Boolean(s.guest);
     $('[data-time]').textContent = s.time === null ? (s.playing ? 'live' : '') : `${fmt(s.time)}${s.duration ? ` / ${fmt(s.duration)}` : ''}`;
     toggleBtn.innerHTML = icon(s.playing ? 'pause' : 'play');
     toggleBtn.setAttribute('aria-label', s.playing ? 'Pause' : 'Play');
