@@ -40,7 +40,7 @@ export const projects: Project[] = [
       { heading: 'Key features', bullets: ['Integrated Spotify, Last.fm, and Gemini APIs for AI-driven music analysis and real-time synchronization.', 'Dynamic lighting that responds uniquely to every song.'] },
       { heading: 'What I learned', text: 'How to architect communication between multiple services and keep performance smooth while handling real-time data streams from different APIs.' },
     ],
-    links: { github: 'https://github.com/FengkaiLiu/vrmusicroom' },
+    links: { github: 'https://github.com/FengkaiLiu/XR-Coop-Project' },
     media: [
       {
         caption: 'Dev stage video recording',
