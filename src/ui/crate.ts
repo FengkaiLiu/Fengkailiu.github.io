@@ -106,6 +106,7 @@ export function mountCrate(slot: HTMLElement, player: Player, hooks: CrateHooks)
   const embedFor = (uri: string) => {
     if (!spotify) {
       loadedUri = uri;
+      card.classList.add('liquid--plain'); // the iframe and the refraction don't mix (see glass.css)
       spotify = createSpotifyPlayer($<HTMLElement>('[data-embed]'), uri);
       spotify.then((c) => c.addListener('playback_update', (e) => onUpdate(e.data))).catch(() => {
         spotify = null;

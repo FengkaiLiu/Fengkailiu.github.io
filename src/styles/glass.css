@@ -229,6 +229,16 @@
 .chip--sound { --chip-dot: var(--leaf-300); }
 .chip--visual { --chip-dot: var(--sun); }
 
+/* Plain glass: the frosted blur instead of the refraction, for cards that hold an iframe.
+   Chrome mishandles an SVG backdrop filter around a cross-origin iframe (the Spotify player,
+   a live demo): it renders a rectangle of the card differently and blurs nearby content. The
+   lower quality tiers below are more specific, so they still win. */
+.liquid.liquid--plain {
+  background: rgba(24, 18, 48, 0.42) !important;
+  backdrop-filter: blur(16px) saturate(150%) !important;
+  -webkit-backdrop-filter: blur(14px) saturate(170%) !important;
+}
+
 /* ---------- Effect budget ----------
    Glass over the live 3D canvas is re-blurred every frame. When the room drops to a
    lower quality tier (src/room/room.ts sets data-fx), the glass gets cheaper too. */

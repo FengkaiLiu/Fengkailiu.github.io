@@ -69,6 +69,7 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
 
   const render = () => {
     disposeViewer();
+    dialog.classList.remove('liquid--plain'); // a new page: no demo iframe (yet)
     const { project: p, track } = tracks[index];
     const groups = (p.media ?? []).map((g, gi) => [g, gi] as const);
     const videoGroups = groups.filter(([g]) => g.items.some((m) => m.type === 'video'));
@@ -180,6 +181,7 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
     if (embed.allow) iframe.allow = embed.allow;
     iframe.className = 'sheet__embed-iframe';
     frame.replaceChildren(iframe);
+    dialog.classList.add('liquid--plain'); // the iframe and the refraction don't mix (see glass.css)
   });
 
   // ---------- Lightbox: photos at full size, with arrows through the group ----------
@@ -230,6 +232,7 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
   dialog.addEventListener('close', () => {
     disposeViewer();
     body.querySelector('[data-embed] iframe')?.remove(); // stop the demo (and its mic) on close
+    dialog.classList.remove('liquid--plain');
     body.querySelectorAll('video').forEach((v) => v.pause());
     document.documentElement.classList.remove('has-sheet');
     scroll.start();
