@@ -172,7 +172,19 @@ export function initRoom(
   const target = new WebGLRenderTarget(1, 1, { samples: 4, type: HalfFloatType });
   const composer = new EffectComposer(renderer, target);
   composer.addPass(new RenderPass(scene, camera));
-  const bloom = new UnrealBloomPass(new Vector2(1, 1), 0.7, 0.42, 0.9);
+  const BLOOM_STRENGTH = 0.7;
+  const bloom = new UnrealBloomPass(new Vector2(1, 1), BLOOM_STRENGTH, 0.42, 0.9);
+  // Bright things fade out of the glow at the screen's border. The blur repeats edge pixels,
+  // so the lamp crossing the edge (scrolling toward the laptop) flared into a big smear.
+  bloom.materialHighPassFilter.fragmentShader = bloom.materialHighPassFilter.fragmentShader.replace(
+    /}\s*$/,
+    /* glsl */ `
+      vec2 edge = smoothstep(0.0, 0.06, vUv) * smoothstep(1.0, 0.94, vUv);
+      gl_FragColor.rgb *= edge.x * edge.y;
+    }`,
+  );
+  // The glow eases in and out when a tier turns it on or off, instead of popping.
+  let bloomLevel = 1;
   // Bloom blurs at half the render size; cheaper tiers blur at a quarter (a soft glow hides it).
   const bloomSetSize = bloom.setSize.bind(bloom);
   bloom.setSize = (w, h) => bloomSetSize(w * tiers[tier].bloomScale, h * tiers[tier].bloomScale);
@@ -330,7 +342,6 @@ export function initRoom(
         rt.dispose(); // re-created with the new sample count on next use
       }
     }
-    bloom.enabled = t.bloom;
     document.documentElement.dataset.fx = t.fx;
     resize();
   };
@@ -421,8 +432,29 @@ export function initRoom(
     fpsMeter?.update(fps, dpr, bloom.enabled, tier);
   };
 
+  // ---------- Resting ----------
+  // While nothing moves (no input for a moment, the camera settled, no music), the room draws
+  // at 30 fps instead of every display refresh. Dust, rain and grain still drift, for half the
+  // GPU work and battery on any device; the next input brings back the full rate at once.
+  const REST_AFTER = 2500;
+  const REST_FRAME = 1000 / 30;
+  let lastInput = performance.now();
+  let lastDrawn = 0;
+  let playing = false;
+  let settled = false;
+  const wake = () => (lastInput = performance.now());
+  for (const type of ['pointermove', 'pointerdown', 'wheel', 'keydown', 'touchstart', 'touchmove', 'scroll', 'resize']) {
+    window.addEventListener(type, wake, { passive: true });
+  }
+
   const loop = (now: number) => {
     if (!running) return;
+    const resting = settled && !playing && drawn && !warming && now - lastInput > REST_AFTER;
+    if (resting && now - lastDrawn < REST_FRAME - 4) {
+      requestAnimationFrame(loop);
+      return;
+    }
+    lastDrawn = now;
     // The game console covers the room with a dark backdrop: hold the last frame and give
     // the GPU to the game. (The governor skips these frames too, so it isn't fooled.)
     if (document.documentElement.classList.contains('has-console')) {
@@ -471,6 +503,7 @@ export function initRoom(
     up.setFromMatrixColumn(camera.matrixWorld, 1);
     if (!reducedMotion.matches) camera.position.addScaledVector(right, pointer.x * 0.12).addScaledVector(up, -pointer.y * 0.08);
     camera.lookAt(lookAt);
+    settled = basePos.distanceToSquared(desired.pos) < 1e-6 && lookAt.distanceToSquared(desired.target) < 1e-6 && (lit === 1 || lit === 0);
 
     // Frame the subject off-center on wide screens so the text card fits beside it.
     frame += (desired.frame - frame) * k;
@@ -482,10 +515,15 @@ export function initRoom(
     else camera.setViewOffset(w, h, 0, h * 0.14, w, h);
 
     room.tick(now, dt, audio, camera.position, moods.tint, breathe);
+    bloomLevel += ((tiers[tier].bloom ? 1 : 0) - bloomLevel) * (1 - Math.exp(-dt * 6));
+    bloom.strength = BLOOM_STRENGTH * bloomLevel;
+    bloom.enabled = tiers[tier].bloom || bloomLevel > 0.01;
     grain.uniforms.uTime.value = now / 1000;
     // While shaders warm up (behind the gate), hold the first frame: drawing now would wait on them.
     if (!warming || !drawn) composer.render(dt);
-    if (!warming) governQuality(now, dt);
+    // Resting frames are slow on purpose: the governor sits them out.
+    if (resting) gov.frames = gov.time = 0;
+    else if (!warming) governQuality(now, dt);
 
     if (!drawn) {
       drawn = true;
@@ -534,15 +572,19 @@ export function initRoom(
   let down: { hit: RoomHit; x: number; y: number; at: number } | null = null;
   let lastNote: number | null = null;
   let pendingMove: PointerEvent | null = null;
+  let hoverFrame = 0;
+  // Hover (and dragging across the keys) is resolved at most once per frame, and only when the
+  // pointer actually moved.
   window.addEventListener(
     'pointermove',
     (e) => {
       pendingMove = e;
+      hoverFrame ||= requestAnimationFrame(hover);
     },
     { passive: true },
   );
-  // Hover (and dragging across the keys) is resolved at most once per frame.
-  const hoverLoop = () => {
+  const hover = () => {
+    hoverFrame = 0;
     const e = pendingMove;
     pendingMove = null;
     if (e && lightsStart !== -1) {
@@ -559,9 +601,7 @@ export function initRoom(
         for (const fn of interactFns) fn(hit);
       }
     }
-    requestAnimationFrame(hoverLoop);
   };
-  requestAnimationFrame(hoverLoop);
   window.addEventListener('pointerdown', (e) => {
     if (lightsStart === -1 || e.button !== 0 || !overRoom(e.target)) return;
     const hit = pick(e.clientX, e.clientY);
@@ -591,6 +631,7 @@ export function initRoom(
       room.setRain(on);
     },
     setPlaying(on) {
+      playing = on;
       room.setPlaying(on);
     },
     setLabel(texture) {
