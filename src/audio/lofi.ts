@@ -109,19 +109,31 @@ function loop(ctx: AudioContext, buffer: AudioBuffer) {
 
 export interface Ambience {
   rain: boolean;
+  crackle: boolean;
   setRain(on: boolean): void;
+  setCrackle(on: boolean): void;
+  /** Hush everything for a while (the game console), keeping the rain and crackle settings. */
+  setPaused(paused: boolean): void;
+  paused: boolean;
 }
 
-/** Vinyl crackle (always on with sound) plus rain against the window (toggleable). */
-export function startAmbience(): Ambience {
-  const { ctx, master } = getAudio();
+/** Vinyl crackle and rain against the window, each switchable, on one bus that can pause. */
+export function startAmbience(opts: { rain?: boolean; crackle?: boolean } = {}): Ambience {
+  const { ctx, master: out } = getAudio();
+  const master = ctx.createGain(); // the ambience bus: pausing fades this, not the settings
+  master.connect(out);
+  const ramp = (param: AudioParam, to: number, seconds: number) => {
+    const t = ctx.currentTime;
+    param.cancelScheduledValues(t);
+    param.setValueAtTime(param.value, t);
+    param.linearRampToValueAtTime(to, t + seconds);
+  };
 
   const crackleHp = ctx.createBiquadFilter();
   crackleHp.type = 'highpass';
   crackleHp.frequency.value = 900;
   const crackleGain = ctx.createGain();
   crackleGain.gain.setValueAtTime(0, ctx.currentTime);
-  crackleGain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 2);
   loop(ctx, crackleBuffer(ctx, 5)).connect(crackleHp).connect(crackleGain).connect(master);
 
   const rainBus = ctx.createGain();
@@ -150,14 +162,22 @@ export function startAmbience(): Ambience {
 
   const amb: Ambience = {
     rain: false,
+    crackle: false,
+    paused: false,
     setRain(on) {
       amb.rain = on;
-      const t = ctx.currentTime;
-      rainBus.gain.cancelScheduledValues(t);
-      rainBus.gain.setValueAtTime(rainBus.gain.value, t);
-      rainBus.gain.linearRampToValueAtTime(on ? 1 : 0, t + (on ? 2.5 : 1.2));
+      ramp(rainBus.gain, on ? 1 : 0, on ? 2.5 : 1.2);
+    },
+    setCrackle(on) {
+      amb.crackle = on;
+      ramp(crackleGain.gain, on ? 0.18 : 0, on ? 2 : 0.6);
+    },
+    setPaused(paused) {
+      amb.paused = paused;
+      ramp(master.gain, paused ? 0 : 1, paused ? 0.4 : 1.2);
     },
   };
-  amb.setRain(true);
+  amb.setRain(opts.rain ?? true);
+  amb.setCrackle(opts.crackle ?? true);
   return amb;
 }

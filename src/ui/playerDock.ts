@@ -1,4 +1,4 @@
-// The bottom bar: the record player's remote, a volume pill and a rain pill, side by side.
+// The bottom bar: the record player's remote, then volume, rain and record crackle pills.
 // While music plays it also pumps the analyser bands into the 3D room every frame. A guest
 // in the Spotify embed is out of the analyser's reach, so it gets a beat-shaped pulse instead.
 import { getMusicBus, type Bands } from '../audio/bus';
@@ -11,12 +11,12 @@ const BARS = 18;
 export function mountPlayerDock(
   player: Player,
   onBands: (b: Bands, playing: boolean, spectrum: Float32Array) => void,
-  opts: { canSkip: boolean; onRain(on: boolean): void },
+  opts: { canSkip: boolean; onRain(on: boolean): void; onCrackle(on: boolean): void },
 ) {
   const bar = document.createElement('div');
   bar.className = 'dockbar';
   bar.setAttribute('role', 'region'); // a landmark, so screen readers can jump to the player
-  bar.setAttribute('aria-label', 'Room controls: music, volume, rain and scope');
+  bar.setAttribute('aria-label', 'Room controls: music, volume, rain, record crackle and scope');
   const dock = document.createElement('div');
   dock.className = 'player liquid liquid--pill';
   dock.dataset.liquidBezel = '18';
@@ -55,7 +55,17 @@ export function mountPlayerDock(
   rain.title = 'Rain on the window, and its sound if audio is on';
   rain.innerHTML = `${icon('rain')}<span class="pill__label" data-rain-label>Rain on</span>`;
 
-  bar.append(dock, vol, rain);
+  // Record crackle: the vinyl noise under everything. With rain off, crackle off and the
+  // volume muted, the page is silent.
+  const crackle = document.createElement('button');
+  crackle.type = 'button';
+  crackle.className = 'pill pill--rain pill--crackle liquid liquid--pill';
+  crackle.dataset.liquidBezel = '18';
+  crackle.setAttribute('aria-pressed', 'true');
+  crackle.title = 'The record crackle under the room';
+  crackle.innerHTML = `${icon('vinyl')}<span class="pill__label" data-crackle-label>Crackle on</span>`;
+
+  bar.append(dock, vol, rain, crackle);
   document.body.append(bar);
 
   const $ = <T extends Element>(sel: string) => dock.querySelector<T>(sel)!;
@@ -70,6 +80,12 @@ export function mountPlayerDock(
     rain.setAttribute('aria-pressed', String(on));
     rain.querySelector('[data-rain-label]')!.textContent = on ? 'Rain on' : 'Rain off';
     opts.onRain(on);
+  });
+  crackle.addEventListener('click', () => {
+    const on = crackle.getAttribute('aria-pressed') !== 'true';
+    crackle.setAttribute('aria-pressed', String(on));
+    crackle.querySelector('[data-crackle-label]')!.textContent = on ? 'Crackle on' : 'Crackle off';
+    opts.onCrackle(on);
   });
 
   const slider = vol.querySelector<HTMLInputElement>('[data-volume]')!;
@@ -214,7 +230,7 @@ function fmt(sec: number) {
   return `${m}:${String(Math.floor(sec % 60)).padStart(2, '0')}`;
 }
 
-function icon(name: 'play' | 'pause' | 'prev' | 'next' | 'rain' | 'muted' | 'low' | 'loud') {
+function icon(name: 'play' | 'pause' | 'prev' | 'next' | 'rain' | 'vinyl' | 'muted' | 'low' | 'loud') {
   const paths = {
     play: '<path d="M8 5.5v13l11-6.5z" />',
     pause: '<rect x="6.5" y="5" width="4" height="14" rx="1.2" /><rect x="13.5" y="5" width="4" height="14" rx="1.2" />',
@@ -223,6 +239,7 @@ function icon(name: 'play' | 'pause' | 'prev' | 'next' | 'rain' | 'muted' | 'low
     muted: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path class="icon-line" d="M15.5 9.5l5 5M20.5 9.5l-5 5" />',
     low: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path class="icon-line" d="M15.5 9a4 4 0 0 1 0 6" />',
     loud: '<path d="M4 9.5h3.5L12 5.5v13l-4.5-4H4z" /><path class="icon-line" d="M15.5 9a4 4 0 0 1 0 6M18 6.5a7.5 7.5 0 0 1 0 11" />',
+    vinyl: '<circle cx="12" cy="12" r="8.5" /><circle class="player__vinyl-label" cx="12" cy="12" r="2.6" /><path class="player__drops" d="M18.5 4.5l1.2-1.2M20.2 7.6l1.4-.4M16 2.6l.3-1.4" />',
     rain: '<path d="M7 15.5a4.5 4.5 0 0 1-.6-8.96 5.5 5.5 0 0 1 10.45 1.47A3.75 3.75 0 0 1 17.25 15.5z" /><path class="player__drops" d="M8.5 17.5l-1 2.5M12.5 17.5l-1 2.5M16.5 17.5l-1 2.5" />',
   };
   return `<svg viewBox="0 0 24 24" aria-hidden="true">${paths[name]}</svg>`;

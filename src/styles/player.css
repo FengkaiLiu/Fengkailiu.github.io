@@ -265,3 +265,8 @@
 .player__btn[hidden] {
   display: none;
 }
+
+/* Crackle pill: a little record, its sparks fading out when switched off. */
+.pill--crackle .player__vinyl-label {
+  fill: var(--night-900);
+}

@@ -12,7 +12,13 @@ export interface GameConsole {
   open(): void;
 }
 
-export function mountGameConsole(player: Player, scroll: SmoothScroll): GameConsole {
+/** The room's own sounds (music, rain, crackle): hushed while the game plays, then restored. */
+export interface RoomSounds {
+  pause(): void;
+  resume(): void;
+}
+
+export function mountGameConsole(player: Player, scroll: SmoothScroll, roomSounds?: RoomSounds): GameConsole {
   const dialog = document.createElement('dialog');
   dialog.className = 'console';
   dialog.setAttribute('aria-label', 'Lava Rising, playable');
@@ -98,6 +104,7 @@ export function mountGameConsole(player: Player, scroll: SmoothScroll): GameCons
     opening = null;
     slot?.end();
     slot = null;
+    roomSounds?.resume();
     document.documentElement.classList.remove('has-console');
     scroll.start();
   });
@@ -105,6 +112,7 @@ export function mountGameConsole(player: Player, scroll: SmoothScroll): GameCons
   return {
     open() {
       if (dialog.open) return;
+      roomSounds?.pause(); // before the game takes the turntable, so we know what was playing
       dialog.showModal();
       canvas.focus({ preventScroll: true }); // so Space and Enter go to the game, not a button
       document.documentElement.classList.add('has-console');

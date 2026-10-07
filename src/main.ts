@@ -145,6 +145,9 @@ const room = initRoom(sections, covers, previews, projects.find((p) => p.id === 
 initSheen();
 
 let ambience: Ambience | null = null;
+// The visitor's ambience settings, kept even before sound starts (the ambience picks them up).
+let rainOn = true;
+let crackleOn = true;
 
 const mixer = mountMixer(document.querySelector<HTMLElement>('#about .chapter__slot')!);
 const player = createPlayer(tracks);
@@ -160,8 +163,13 @@ const dock = mountPlayerDock(
     canSkip: tracks.length > 1,
     // Rain lives on the dock so it can be switched off from anywhere on the page.
     onRain(on) {
+      rainOn = on;
       room?.setRain(on);
       ambience?.setRain(on);
+    },
+    onCrackle(on) {
+      crackleOn = on;
+      ambience?.setCrackle(on);
     },
   },
 );
@@ -198,7 +206,21 @@ document.addEventListener('click', (e) => {
   if (id) sheet.open(id);
 });
 // Hot Footer: the shelf's handheld, life-size and playable.
-const gameConsole = mountGameConsole(player, scroll);
+// While Hot Footer plays, the room goes quiet: its music, the rain and the crackle pause,
+// and come back as they were when the console closes.
+let musicBeforeGame = false;
+const gameConsole = mountGameConsole(player, scroll, {
+  pause() {
+    const s = player.state();
+    musicBeforeGame = s.playing && !s.guest; // the room's own record, not a borrowed one
+    ambience?.setPaused(true);
+  },
+  resume() {
+    ambience?.setPaused(false);
+    if (musicBeforeGame && !player.state().playing) void player.play();
+    musicBeforeGame = false;
+  },
+});
 document.addEventListener('click', (e) => {
   if (!(e.target as HTMLElement).closest('[data-game]')) return;
   document.querySelector<HTMLDialogElement>('dialog.sheet[open]')?.close(); // the liner notes step aside
@@ -290,7 +312,7 @@ showGate(
   }, 2600);
   if (sound) {
     playLightsOnChord();
-    ambience = startAmbience();
+    ambience = startAmbience({ rain: rainOn, crackle: crackleOn });
     // The record drops in once the lights-on chord has rung out.
     window.setTimeout(() => {
       if (!player.state().playing) void player.play();
@@ -299,6 +321,8 @@ showGate(
 });
 
 if (import.meta.env.DEV) {
+  // Test hook for headless checks of the room's sound state.
+  (window as unknown as { __room: unknown }).__room = { player, ambience: () => ambience };
   // /?play starts the music right away (headless needs --autoplay-policy=no-user-gesture-required).
   if (new URLSearchParams(location.search).has('play')) setTimeout(() => void player.play(), 800);
 }
