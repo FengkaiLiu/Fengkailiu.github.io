@@ -164,13 +164,9 @@
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
 }
 .fft__plots figcaption {
-  font-family: var(--font-mono);
-  font-size: var(--text-micro);
   opacity: 0.6;
 }
 .fft__readout {
-  font-family: var(--font-mono);
-  font-size: var(--text-micro);
   color: var(--lamp-300);
 }
 @media (max-width: 560px) {

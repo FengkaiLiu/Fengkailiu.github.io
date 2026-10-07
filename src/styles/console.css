@@ -115,8 +115,6 @@
   inset: 0;
   display: grid;
   place-items: center;
-  font-family: var(--font-mono);
-  font-size: var(--text-small);
   color: var(--lamp-300);
 }
 
@@ -240,11 +238,6 @@ button.console__dir {
   border: 0;
   background: none;
   color: rgba(38, 35, 47, 0.75);
-  font-family: var(--font-mono);
-  font-size: var(--text-micro);
-  font-weight: 700;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   cursor: pointer;
 }
 .console__pill::before {

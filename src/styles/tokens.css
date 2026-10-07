@@ -57,6 +57,7 @@
   --font-body: 'Nunito Variable', 'Segoe UI Variable Text', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', monospace;
   --font-hand: 'Caveat Variable', 'Segoe Print', cursive;
+  --font-neon: 'Tilt Neon Variable', 'Nunito Variable', system-ui, sans-serif;
 
   --text-hero: clamp(3.2rem, 9vw, 8.5rem);
   --text-h1: clamp(2.4rem, 5.5vw, 4.75rem);

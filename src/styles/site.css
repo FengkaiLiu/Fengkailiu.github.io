@@ -52,11 +52,6 @@ html.is-on .hero > :nth-child(6) { transition-delay: 2.6s; }
 
 .hero__chip {
   padding: 0.5em 1.2em;
-  font-family: var(--font-mono);
-  font-size: var(--text-micro);
-  font-weight: 600;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
 }
 
 .hero__name {
@@ -72,16 +67,24 @@ html.is-on .hero > :nth-child(6) { transition-delay: 2.6s; }
 }
 
 .hero__tagline {
-  font-family: var(--font-hand);
-  font-size: clamp(1.8rem, 3vw, 2.6rem);
-  font-weight: 600;
-  line-height: 1;
-  color: var(--lamp-300);
+  --neon-on: #ffe9d2;
+  --neon-off: rgba(255, 228, 200, 0.2);
+  --neon-glow:
+    0 0 1px #fff4e6,
+    0 0 6px rgba(255, 213, 158, 0.85),
+    0 0 14px rgba(255, 157, 77, 0.65),
+    0 0 30px rgba(255, 143, 177, 0.4);
+  font-size: clamp(1.7rem, 2.8vw, 2.4rem);
+  line-height: 1.1;
+  letter-spacing: 0.01em;
+  color: var(--neon-on);
+  text-shadow: var(--neon-glow);
   transform: rotate(-2deg);
-  text-shadow: 0 0 18px rgba(255, 157, 77, 0.45);
 }
+/* Hung a touch crooked; it flickers on as it drifts in (held unlit through its delay). */
 html.is-on .hero__tagline {
   transform: rotate(-2deg);
+  animation: neon-ignite 1.3s 1.75s step-end backwards;
 }
 
 .hero__sub {
@@ -152,10 +155,6 @@ html.is-on .hero__tagline {
   border-radius: var(--radius-pill);
   background: var(--lamp-300);
   color: var(--night-900);
-  font-family: var(--font-mono);
-  font-size: var(--text-micro);
-  font-weight: 700;
-  letter-spacing: 0.1em;
 }
 
 .chapter__title {
@@ -194,7 +193,6 @@ html.is-on .hero__tagline {
 .footer {
   padding: var(--space-7) var(--gutter) calc(var(--space-7) + 72px); /* clear the player dock */
   text-align: center;
-  font-size: var(--text-small);
   opacity: 0.55;
 }
 
@@ -223,8 +221,6 @@ html.is-on .hero__tagline {
   background: rgba(20, 15, 40, 0.78);
   box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
   color: var(--white);
-  font-size: var(--text-micro);
-  font-weight: 700;
   white-space: nowrap;
   opacity: 0;
   pointer-events: none;
