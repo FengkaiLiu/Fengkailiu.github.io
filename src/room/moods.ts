@@ -176,9 +176,9 @@ export function buildMoods(): Moods {
       let total = 0;
       for (const id of MOODS) {
         // Grow in over ~2.5 s, wilt away a little faster.
-        const target = active === id ? 1 : 0;
-        const rate = target ? 0.45 : 0.7;
-        weight[id] = target > weight[id] ? Math.min(weight[id] + dt * rate, 1) : Math.max(weight[id] - dt * rate, 0);
+        // (Compared against the target, not against the weight: a full weight used to dip and
+        // refill every frame, and the late-sprouting flowers shook with it.)
+        weight[id] = active === id ? Math.min(weight[id] + dt * 0.45, 1) : Math.max(weight[id] - dt * 0.7, 0);
         const scene = scenes[id];
         scene.root.visible = weight[id] > 0.001;
         if (scene.root.visible) scene.update(weight[id], now, audio);

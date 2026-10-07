@@ -227,6 +227,9 @@
   border-radius: 12px;
   overflow: hidden;
   background: rgba(255, 255, 255, 0.05);
+  /* An iframe inside liquid glass made Chrome draw part of the card through the glass's
+     blur (the song title went soft). Containing the embed's paint keeps it to its own box. */
+  contain: paint;
 }
 .crate__embed iframe {
   display: block;

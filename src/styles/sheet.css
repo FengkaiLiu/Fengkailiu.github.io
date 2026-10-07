@@ -469,6 +469,7 @@
 .sheet__embed-frame:has(iframe) {
   padding: 0;
   overflow: hidden;
+  contain: paint; /* keeps the glass's blur off the sheet's text (see .crate__embed) */
 }
 .sheet__embed-note {
   max-width: 46ch;
