@@ -202,9 +202,12 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
   };
   const solidAt = (x: number, y: number) => solids.has(`${Math.floor(x)},${Math.floor(y)}`);
   /** Physics2D.Raycast along a horizontal segment, sampled every quarter unit. */
+  // Samples along the ray every quarter unit and always at its end. (The end used to be
+  // skipped when the length wasn't a multiple of 0.25, so the 0.7 wall rays stopped at 0.5,
+  // short of a wall the player was pressed against, and wall jumps never fired.)
   const rayHits = (x: number, y: number, dir: number, length: number) => {
-    for (let d = 0; d <= length + 1e-6; d += 0.25) if (solidAt(x + dir * Math.min(d, length), y)) return true;
-    return false;
+    for (let d = 0; d < length; d += 0.25) if (solidAt(x + dir * d, y)) return true;
+    return solidAt(x + dir * length, y);
   };
 
   const p = { x: 0, y: 0, vx: 0, vy: 0, airJumps: MAX_AIR_JUMPS, grounded: false, facingRight: true, lowest: 0, anim: 0 };
@@ -280,7 +283,11 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
       if (!wasGrounded) void sfx('landing');
       p.airJumps = MAX_AIR_JUMPS;
     }
-    const wall = (rayHits(p.x, crown, -1, WALL_CHECK) && rayHits(p.x, feet, -1, WALL_CHECK)) || (rayHits(p.x, crown, 1, WALL_CHECK) && rayHits(p.x, feet, 1, WALL_CHECK));
+    // Wall cling: Player.cs needs the head and feet rays to both touch the wall. Here any of
+    // head, middle or feet will do, so you can keep wall jumping where only part of you is
+    // against it (up near a wall's top edge, or past a ledge). Wall jumps are unlimited.
+    const touches = (dir: number) => [crown, p.y + BOX.oy, feet].some((y) => rayHits(p.x, y, dir, WALL_CHECK));
+    const wall = !p.grounded && (touches(-1) || touches(1));
     if (jumpQueued && (p.airJumps > 0 || wall)) {
       p.vy = JUMP_DV;
       if (!p.grounded) {
