@@ -160,7 +160,8 @@ export function startAmbience(opts: { rain?: boolean; crackle?: boolean } = {}):
     },
     setCrackle(on) {
       amb.crackle = on;
-      ramp(crackleGain.gain, on ? 0.18 : 0, on ? 2 : 0.6);
+      // 0.057: about half as loud to the ear as the first 0.18, so it stays under the music.
+      ramp(crackleGain.gain, on ? 0.057 : 0, on ? 2 : 0.6);
     },
     setPaused(paused) {
       amb.paused = paused;
