@@ -2,7 +2,11 @@
 import { tr } from '../i18n';
 
 export const profile = {
-  name: 'Fengkai Liu',
+  name: tr('Fengkai Liu', '刘丰恺'),
+  /** The name in Latin letters, whichever language the page speaks. */
+  nameLatin: 'Fengkai Liu',
+  /** "Fengkai" / "丰恺", where the English uses the first name alone. */
+  firstName: tr('Fengkai', '丰恺'),
   role: tr('CS + Music Technology', '计算机科学 + 音乐科技'),
   tagline: tr(
     'I build things where code meets sound: VR worlds, lyric visualizers, games, and tools that feel alive.',
@@ -14,7 +18,7 @@ export const profile = {
       "When I'm not coding or designing virtual worlds, I'm producing music, experimenting with photography, or diving into the latest XR technologies.",
     ],
     [
-      '你好！我是 Fengkai，一名开发者和创意技术人，喜欢做既好看又好用的产品。我相信最好的体验来自艺术与工程的结合。',
+      '你好！我是丰恺，一名开发者和创意技术人，喜欢做既好看又好用的产品。我相信最好的体验来自艺术与工程的结合。',
       '不写代码、不搭虚拟世界的时候，我在做音乐、玩摄影，或者研究最新的 XR 技术。',
     ],
   ),

@@ -585,7 +585,7 @@ export function mountLavaDeepDive(host: HTMLElement): { dispose(): void } {
       .then((commits: { date: string; author: string; merge: boolean; message: string }[]) => {
         if (!box.isConnected) return;
         const lanes = [
-          { id: 'FengkaiLiu', label: tr('Fengkai (me)', 'Fengkai（我）'), color: lamp },
+          { id: 'FengkaiLiu', label: tr('Fengkai (me)', '丰恺（我）'), color: lamp },
           { id: 'nbalog7', label: 'nbalog7', color: moon },
           { id: 'avafacciolo', label: 'Ava', color: '#ff8fb1' },
         ];

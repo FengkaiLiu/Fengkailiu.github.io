@@ -1,29 +1,16 @@
-// The site speaks English or Simplified Chinese. The language is picked once, before anything
-// renders: a ?lang= link wins (and is remembered), then the visitor's last choice, and
-// otherwise English. Every module builds its text when it mounts, so switching reloads the
+// The site speaks English or Simplified Chinese. English unless the address says ?lang=zh:
+// the switch and the links you send carry it, so nothing is stored and a plain visit is
+// always English. Every module builds its text when it mounts, so switching reloads the
 // page in the other language. Text lives next to its English as tr('English', '中文').
 
 export type Lang = 'en' | 'zh';
 
-const KEY = 'room-lang';
-const valid = (v: string | null): v is Lang => v === 'en' || v === 'zh';
+// An earlier version remembered the choice here; forget it, so it can't keep a visitor in Chinese.
+try {
+  localStorage.removeItem('room-lang');
+} catch {}
 
-function pick(): Lang {
-  const fromLink = new URLSearchParams(location.search).get('lang');
-  if (valid(fromLink)) {
-    try {
-      localStorage.setItem(KEY, fromLink);
-    } catch {}
-    return fromLink;
-  }
-  try {
-    const saved = localStorage.getItem(KEY);
-    if (valid(saved)) return saved;
-  } catch {}
-  return 'en';
-}
-
-export const lang: Lang = pick();
+export const lang: Lang = new URLSearchParams(location.search).get('lang') === 'zh' ? 'zh' : 'en';
 export const isZh = lang === 'zh';
 
 /** The English or the Chinese, whichever the page speaks. Works for strings and lists alike. */
