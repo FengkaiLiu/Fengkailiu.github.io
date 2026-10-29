@@ -2,6 +2,7 @@
 // a diagram you can play with, then the team's six weeks of commits as an arrangement view.
 // Code excerpts are quoted from GameDevGroup4/Unity-Project (Player.cs, CameraFollow.cs).
 // Mounted into the liner notes on demand; dispose() stops every loop and listener.
+import { locale, tr } from '../i18n';
 
 const IMG_PLAYER = '/hotfooter/game/img/player/player-idle1.png';
 const LEVEL1 = '/hotfooter/game/level1.json';
@@ -11,6 +12,9 @@ const COMMITS = '/hotfooter/commits.json';
 const BOX = { ox: 0.025, oy: -0.22, hw: 0.525, hh: 0.725 };
 const FIXED_DT = 0.02;
 const G = 9.81;
+
+/** Rough label width in the timeline's 10 px type: CJK characters run about twice as wide. */
+const labelWidth = (s: string) => [...s].reduce((w, ch) => w + (ch > '⹿' ? 10.5 : 6.2), 0);
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]!);
 
@@ -101,44 +105,56 @@ const css = (name: string, fallback: string) => getComputedStyle(document.docume
 
 export function mountLavaDeepDive(host: HTMLElement): { dispose(): void } {
   host.innerHTML = `
-    <h3>Under the hood</h3>
-    <p>Four pieces of my code from the Unity project, each with a diagram you can play with. The numbers in the diagrams are the game's own.</p>
+    <h3>${tr('Under the hood', '代码幕后')}</h3>
+    <p>${tr(
+      "Four pieces of my code from the Unity project, each with a diagram you can play with. The numbers in the diagrams are the game's own.",
+      '下面是我在 Unity 项目里写的四段代码，每段都配了一个可以上手玩的示意图。图里的数值都和游戏本身一致。',
+    )}</p>
 
     <section class="deep__part">
-      <h4>1 · Am I standing on something? The ground check</h4>
-      <p>Two short rays leave the player's feet, one to each side. If either one touches a tile on the ground layer, the player is grounded and the air jump refills. Drag the hero around: <b class="deep__key deep__key--mine">orange</b> is my ground check. The <b class="deep__key deep__key--team">blue</b> head and feet rays are the wall check my teammate nbalog7 built on the same idea.</p>
+      <h4>${tr('1 · Am I standing on something? The ground check', '1 · 我脚下有东西吗？地面检测')}</h4>
+      <p>${tr(
+        `Two short rays leave the player's feet, one to each side. If either one touches a tile on the ground layer, the player is grounded and the air jump refills. Drag the hero around: <b class="deep__key deep__key--mine">orange</b> is my ground check. The <b class="deep__key deep__key--team">blue</b> head and feet rays are the wall check my teammate nbalog7 built on the same idea.`,
+        `从角色脚下向左右各射出一条短射线。只要有一条碰到地面层的砖块，角色就算着地，空中跳跃的次数也会回满。拖动小人试试：<b class="deep__key deep__key--mine">橙色</b>是我写的地面检测；<b class="deep__key deep__key--team">蓝色</b>的头部和脚部射线，是队友 nbalog7 基于同样思路做的墙面检测。`,
+      )}</p>
       <div class="deep__split">
-        ${pre(CODE_GROUND, 'Player.cs (trimmed)')}
+        ${pre(CODE_GROUND, tr('Player.cs (trimmed)', 'Player.cs（节选）'))}
         <div class="deep__viz">
-          <canvas class="deep__canvas deep__canvas--rays" data-rays tabindex="0" aria-label="Ray diagram: drag the hero, or use the arrow keys"></canvas>
+          <canvas class="deep__canvas deep__canvas--rays" data-rays tabindex="0" aria-label="${tr('Ray diagram: drag the hero, or use the arrow keys', '射线示意图：拖动小人，或者用方向键')}"></canvas>
           <p class="deep__readout" data-rays-out aria-live="polite"></p>
         </div>
       </div>
     </section>
 
     <section class="deep__part">
-      <h4>2 · Making the double jump matter</h4>
-      <p>A jump is one push: <code>AddForce</code> for a single 0.02 s physics step on a 1 kg body, so the speed it adds is 25 × jumpHeight × 0.02. At my first value of 20 that is 10 units/s, enough to clear five tiles in one hop. I halved it so the platforms ask for the double jump. From the commit: <q>Make adjustment to jump: 20 ---> 10 so that player need to use more double jump to go through the platform.</q></p>
+      <h4>${tr('2 · Making the double jump matter', '2 · 让二段跳变得必不可少')}</h4>
+      <p>${tr(
+        'A jump is one push: <code>AddForce</code> for a single 0.02 s physics step on a 1 kg body, so the speed it adds is 25 × jumpHeight × 0.02. At my first value of 20 that is 10 units/s, enough to clear five tiles in one hop. I halved it so the platforms ask for the double jump. From the commit:',
+        '一次跳跃就是推一下：在单个 0.02 秒的物理步里对 1 kg 的刚体施加 <code>AddForce</code>，所以它增加的速度是 25 × jumpHeight × 0.02。我最初设的 20 对应每秒 10 个单位，一跳就能越过五格砖。我把它减半，让平台必须用二段跳才能过去。提交记录里是这样写的：',
+      )} <q lang="en">Make adjustment to jump: 20 ---> 10 so that player need to use more double jump to go through the platform.</q></p>
       <div class="deep__split">
-        ${pre(CODE_JUMP, 'Player.cs (trimmed)')}
+        ${pre(CODE_JUMP, tr('Player.cs (trimmed)', 'Player.cs（节选）'))}
         <div class="deep__viz">
-          <div class="deep__toggle" role="group" aria-label="Jump force">
-            <button type="button" data-jump="20" aria-pressed="false">jumpHeight = 20 (before)</button>
-            <button type="button" data-jump="10" aria-pressed="true">jumpHeight = 10 (shipped)</button>
+          <div class="deep__toggle" role="group" aria-label="${tr('Jump force', '跳跃力')}">
+            <button type="button" data-jump="20" aria-pressed="false">jumpHeight = 20 ${tr('(before)', '（修改前）')}</button>
+            <button type="button" data-jump="10" aria-pressed="true">jumpHeight = 10 ${tr('(shipped)', '（最终版）')}</button>
           </div>
-          <canvas class="deep__canvas deep__canvas--jump" data-jump-canvas aria-label="Jump arcs"></canvas>
+          <canvas class="deep__canvas deep__canvas--jump" data-jump-canvas aria-label="${tr('Jump arcs', '跳跃轨迹')}"></canvas>
           <p class="deep__readout" data-jump-out></p>
         </div>
       </div>
     </section>
 
     <section class="deep__part">
-      <h4>3 · A camera that follows without jerking</h4>
-      <p>Each physics step the camera moves a fraction of the way toward the player (a linear interpolation), then it is clamped so it never shows past the edge of the level. This is the real Level 1 map. Move your pointer over it to steer the player, and drag the slider: it is the same <code>[Range(1, 10)] smooth</code> field the Unity inspector shows.</p>
+      <h4>${tr('3 · A camera that follows without jerking', '3 · 跟得上又不抖的镜头')}</h4>
+      <p>${tr(
+        'Each physics step the camera moves a fraction of the way toward the player (a linear interpolation), then it is clamped so it never shows past the edge of the level. This is the real Level 1 map. Move your pointer over it to steer the player, and drag the slider: it is the same <code>[Range(1, 10)] smooth</code> field the Unity inspector shows.',
+        '每个物理步，镜头都朝玩家移动一小段距离（线性插值），再被限制在范围内，永远不会拍到关卡边界之外。这是真实的第 1 关地图。把指针移到上面就能操控玩家，再拖动滑块试试：它就是 Unity Inspector 里那个 <code>[Range(1, 10)] smooth</code> 字段。',
+      )}</p>
       <div class="deep__split">
         ${pre(CODE_CAMERA, 'CameraFollow.cs')}
         <div class="deep__viz">
-          <canvas class="deep__canvas deep__canvas--cam" data-cam aria-label="Camera follow diagram on the Level 1 map"></canvas>
+          <canvas class="deep__canvas deep__canvas--cam" data-cam aria-label="${tr('Camera follow diagram on the Level 1 map', '第 1 关地图上的镜头跟随示意图')}"></canvas>
           <label class="deep__slider">smooth <input type="range" min="1" max="10" step="1" value="3" data-smooth /> <output data-smooth-out>3</output></label>
           <p class="deep__readout" data-cam-out></p>
         </div>
@@ -146,25 +162,31 @@ export function mountLavaDeepDive(host: HTMLElement): { dispose(): void } {
     </section>
 
     <section class="deep__part">
-      <h4>4 · Two soundtracks, one secret</h4>
-      <p>On the title screen you pick whose music plays: Harry (me) or Ava. The choice follows you into every level, and it also decides whether the terminal in Level 2 does anything. Pick one and walk into the terminal.</p>
+      <h4>${tr('4 · Two soundtracks, one secret', '4 · 两套配乐，一个秘密')}</h4>
+      <p>${tr(
+        'On the title screen you pick whose music plays: Harry (me) or Ava. The choice follows you into every level, and it also decides whether the terminal in Level 2 does anything. Pick one and walk into the terminal.',
+        '在标题画面上，你可以选用谁的音乐：Harry（我）或 Ava。这个选择会跟着你进入每一关，也决定了第 2 关的终端会不会有反应。选一个，然后走进终端试试。',
+      )}</p>
       <div class="deep__split">
         ${pre(CODE_SECRET, 'Player.cs · OnTriggerEnter2D')}
         <div class="deep__viz deep__secret">
-          <div class="deep__toggle" role="group" aria-label="Soundtrack">
+          <div class="deep__toggle" role="group" aria-label="${tr('Soundtrack', '配乐')}">
             <button type="button" data-music="Harry" aria-pressed="true">Harry</button>
             <button type="button" data-music="Ava" aria-pressed="false">Ava</button>
           </div>
-          <button type="button" class="btn btn--ghost deep__terminal" data-terminal>Walk into the terminal</button>
-          <pre class="deep__console" data-console aria-live="polite">&gt; waiting for the player…</pre>
+          <button type="button" class="btn btn--ghost deep__terminal" data-terminal>${tr('Walk into the terminal', '走进终端')}</button>
+          <pre class="deep__console" data-console aria-live="polite">&gt; ${tr('waiting for the player…', '等待玩家…')}</pre>
         </div>
       </div>
     </section>
 
     <section class="deep__part">
-      <h4>Six weeks in commits</h4>
-      <p>All 39 commits, laid out like tracks in a DAW: one lane per teammate, time running left to right. Hover or focus a clip to read it.</p>
-      <div class="deep__timeline" data-timeline><p class="deep__readout">Loading the history…</p></div>
+      <h4>${tr('Six weeks in commits', '六周的提交记录')}</h4>
+      <p>${tr(
+        'All 39 commits, laid out like tracks in a DAW: one lane per teammate, time running left to right. Hover or focus a clip to read it.',
+        '全部 39 次提交，像 DAW 里的音轨一样排开：每位队友一条轨道，时间从左往右走。把指针悬停在片段上（或用键盘聚焦）就能看到提交内容。',
+      )}</p>
+      <div class="deep__timeline" data-timeline><p class="deep__readout">${tr('Loading the history…', '正在加载提交历史…')}</p></div>
     </section>
   `;
 
@@ -338,8 +360,9 @@ export function mountLavaDeepDive(host: HTMLElement): { dispose(): void } {
 
       const grounded = gl || gr;
       const wall = wl ? 1 : wr ? 2 : 0;
-      const jump = grounded ? 'ground jump' : wall ? 'wall jump' : 'air jump (if one is left)';
-      out.innerHTML = `<code>isGrounded = ${grounded}</code> · <code>wallCling() = ${wall}${wall ? (wall === 1 ? ' (left)' : ' (right)') : ''}</code> · Space now: <b>${jump}</b>`;
+      const jump = grounded ? tr('ground jump', '地面跳') : wall ? tr('wall jump', '蹬墙跳') : tr('air jump (if one is left)', '空中跳（如果还剩一次）');
+      const side = wall ? (wall === 1 ? tr(' (left)', '（左）') : tr(' (right)', '（右）')) : '';
+      out.innerHTML = `<code>isGrounded = ${grounded}</code> · <code>wallCling() = ${wall}${side}</code> · ${tr('Space now', '现在按空格')}: <b>${jump}</b>`;
     });
   }
 
@@ -419,13 +442,13 @@ export function mountLavaDeepDive(host: HTMLElement): { dispose(): void } {
       // apex markers
       const peak = doubleJump ? apex * 2 : apex;
       g.fillStyle = lamp;
-      g.fillText(`peak ${peak.toFixed(2)} units`, sx(0.6), sy(Math.min(peak, SPAN_Y - 0.4)) - 6 * dpr);
+      g.fillText(tr(`peak ${peak.toFixed(2)} units`, `最高 ${peak.toFixed(2)} 单位`), sx(0.6), sy(Math.min(peak, SPAN_Y - 0.4)) - 6 * dpr);
       if (doubleJump) {
         const [ax, ay] = [0.5 + RUN * tApex, apex];
         g.beginPath();
         g.arc(sx(ax), sy(ay), 4 * dpr, 0, Math.PI * 2);
         g.fill();
-        g.fillText('air jump', sx(ax) + 6 * dpr, sy(ay) + 12 * dpr);
+        g.fillText(tr('air jump', '空中跳'), sx(ax) + 6 * dpr, sy(ay) + 12 * dpr);
       }
       // the hero riding the arc
       t = still ? 0.42 : (t + dt * 0.6) % 1.3; // with reduced motion the hero rests at the air jump
@@ -435,7 +458,10 @@ export function mountLavaDeepDive(host: HTMLElement): { dispose(): void } {
         g.imageSmoothingEnabled = false;
         g.drawImage(playerImg, sx(hx - 0.4), sy(hy + 0.95), 0.8 * u, 0.95 * u);
       }
-      out.innerHTML = `Δv = 25 × ${force} × 0.02 = <b>${v0} units/s</b> · one jump peaks at <b>${apex.toFixed(2)}</b> units${doubleJump ? `, with the air jump <b>${(apex * 2).toFixed(2)}</b>` : ''}`;
+      out.innerHTML = tr(
+        `Δv = 25 × ${force} × 0.02 = <b>${v0} units/s</b> · one jump peaks at <b>${apex.toFixed(2)}</b> units${doubleJump ? `, with the air jump <b>${(apex * 2).toFixed(2)}</b>` : ''}`,
+        `Δv = 25 × ${force} × 0.02 = <b>${v0} 单位/秒</b> · 一跳最高 <b>${apex.toFixed(2)}</b> 单位${doubleJump ? `，加上空中跳可达 <b>${(apex * 2).toFixed(2)}</b>` : ''}`,
+      );
     });
   }
 
@@ -527,7 +553,8 @@ export function mountLavaDeepDive(host: HTMLElement): { dispose(): void } {
       g.arc(sx(player.x), sy(player.y), 5 * dpr, 0, Math.PI * 2);
       g.fill();
       const clamped = player.x < min.x || player.x > max.x || player.y < min.y || player.y > max.y;
-      out.innerHTML = `Lerp factor per step = smooth × 0.02 = <b>${(smooth * FIXED_DT).toFixed(2)}</b>${clamped ? ' · <b>clamped</b>: the camera stops at the level edge' : ''}`;
+      const clampNote = clamped ? tr(' · <b>clamped</b>: the camera stops at the level edge', ' · <b>已限位</b>：镜头停在关卡边缘') : '';
+      out.innerHTML = `${tr('Lerp factor per step', '每步的插值系数')} = smooth × 0.02 = <b>${(smooth * FIXED_DT).toFixed(2)}</b>${clampNote}`;
     });
   }
 
@@ -558,7 +585,7 @@ export function mountLavaDeepDive(host: HTMLElement): { dispose(): void } {
       .then((commits: { date: string; author: string; merge: boolean; message: string }[]) => {
         if (!box.isConnected) return;
         const lanes = [
-          { id: 'FengkaiLiu', label: 'Fengkai (me)', color: lamp },
+          { id: 'FengkaiLiu', label: tr('Fengkai (me)', 'Fengkai（我）'), color: lamp },
           { id: 'nbalog7', label: 'nbalog7', color: moon },
           { id: 'avafacciolo', label: 'Ava', color: '#ff8fb1' },
         ];
@@ -571,15 +598,15 @@ export function mountLavaDeepDive(host: HTMLElement): { dispose(): void } {
         const H = top + lanes.length * laneH + 34;
         const x = (d: string) => left + ((Date.parse(d) - t0) / (t1 - t0)) * (W - left - 12);
         const milestones: [RegExp, string][] = [
-          [/^Initial commit/, 'Repo + team guide'],
-          [/horizontal movement/, 'Movement'],
-          [/camera follow/, 'Camera'],
-          [/^implemented double jumping/, 'Double jump'],
-          [/^die when touch lava/, 'Lava'],
-          [/^Implemented wall jumps/, 'Wall jumps'],
-          [/^Add 2 sound system/, 'Two soundtracks'],
-          [/^level3 & level secret/, 'Secret level'],
-          [/^FINAL UPDATE/, 'Final build'],
+          [/^Initial commit/, tr('Repo + team guide', '仓库 + 协作指南')],
+          [/horizontal movement/, tr('Movement', '移动')],
+          [/camera follow/, tr('Camera', '镜头')],
+          [/^implemented double jumping/, tr('Double jump', '二段跳')],
+          [/^die when touch lava/, tr('Lava', '岩浆')],
+          [/^Implemented wall jumps/, tr('Wall jumps', '蹬墙跳')],
+          [/^Add 2 sound system/, tr('Two soundtracks', '双配乐')],
+          [/^level3 & level secret/, tr('Secret level', '隐藏关卡')],
+          [/^FINAL UPDATE/, tr('Final build', '最终版本')],
         ];
         // Label rows: each remembers where its last label ended, so labels never overlap.
         const rowEnds = [-999, -999, -999, -999];
@@ -593,14 +620,14 @@ export function mountLavaDeepDive(host: HTMLElement): { dispose(): void } {
           laneLastX[lane] = cx;
           const cy = top + lane * laneH;
           const color = lanes[lane].color;
-          const label = `${new Date(c.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · ${lanes[lane].label}: ${c.message}`;
+          const label = `${new Date(c.date).toLocaleDateString(locale, { month: 'short', day: 'numeric' })} · ${lanes[lane].label}: ${c.message}`;
           const shape = c.merge
             ? `<rect x="${cx - 5}" y="${cy + laneH / 2 - 5}" width="10" height="10" transform="rotate(45 ${cx} ${cy + laneH / 2})" />`
             : `<rect x="${cx - 4}" y="${cy + 6}" width="8" height="${laneH - 12}" rx="3" />`;
           clips.push(`<g class="tl__clip" tabindex="0" data-i="${i}" fill="${color}" aria-label="${esc(label)}"><title>${esc(label)}</title>${shape}</g>`);
           const m = milestones.find(([re]) => re.test(c.message));
           if (m) {
-            const width = m[1].length * 6.2 + 8;
+            const width = labelWidth(m[1]) + 8;
             let row = rowEnds.findIndex((end) => cx > end);
             if (row < 0) row = rowEnds.length - 1;
             rowEnds[row] = cx + width;
@@ -611,18 +638,19 @@ export function mountLavaDeepDive(host: HTMLElement): { dispose(): void } {
         const weeks: string[] = [];
         for (let t = t0 + 24 * 3600e3; t < t1; t += 7 * 24 * 3600e3) {
           const d = new Date(t).toISOString();
-          weeks.push(`<line x1="${x(d)}" x2="${x(d)}" y1="${top}" y2="${top + lanes.length * laneH}" class="tl__grid" /><text x="${x(d)}" y="${H - 12}" class="tl__date">${new Date(t).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</text>`);
+          weeks.push(`<line x1="${x(d)}" x2="${x(d)}" y1="${top}" y2="${top + lanes.length * laneH}" class="tl__grid" /><text x="${x(d)}" y="${H - 12}" class="tl__date">${new Date(t).toLocaleDateString(locale, { month: 'short', day: 'numeric' })}</text>`);
         }
+        const mine = commits.filter((c) => c.author === 'FengkaiLiu').length;
         box.innerHTML = `
           <div class="tl__scroll">
-            <svg class="tl" viewBox="0 0 ${W} ${H}" role="img" aria-label="Commit timeline, October to December 2024">
+            <svg class="tl" viewBox="0 0 ${W} ${H}" role="img" aria-label="${tr('Commit timeline, October to December 2024', '提交时间线，2024 年 10 月至 12 月')}">
               ${lanes.map((l, i) => `<rect x="0" y="${top + i * laneH}" width="${W}" height="${laneH}" class="tl__lane${i === 0 ? ' tl__lane--me' : ''}" /><text x="8" y="${top + i * laneH + laneH / 2 + 4}" class="tl__name">${esc(l.label)}</text>`).join('')}
               ${weeks.join('')}
               ${flags.join('')}
               ${clips.join('')}
             </svg>
           </div>
-          <p class="deep__readout" data-tl-out>${commits.length} commits · ${commits.filter((c) => c.author === 'FengkaiLiu').length} mine</p>
+          <p class="deep__readout" data-tl-out>${tr(`${commits.length} commits · ${mine} mine`, `${commits.length} 次提交 · 其中 ${mine} 次是我的`)}</p>
         `;
         const readout = box.querySelector<HTMLElement>('[data-tl-out]')!;
         const show = (e: Event) => {
@@ -633,7 +661,7 @@ export function mountLavaDeepDive(host: HTMLElement): { dispose(): void } {
         box.addEventListener('focusin', show);
       })
       .catch(() => {
-        box.innerHTML = '<p class="deep__readout">The history snapshot did not load.</p>';
+        box.innerHTML = `<p class="deep__readout">${tr('The history snapshot did not load.', '提交历史没能加载。')}</p>`;
       });
   }
 

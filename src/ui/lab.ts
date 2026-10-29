@@ -6,6 +6,7 @@
 import { getMusicBus } from '../audio/bus';
 import { getAudio, unlockAudio } from '../audio/context';
 import { fftMagnitudes, hann } from '../viz/fft';
+import { tr } from '../i18n';
 
 export interface LabState {
   /** The room's own music is playing (demo loop or a track). */
@@ -31,17 +32,17 @@ interface GNode {
 }
 const H = 36;
 const NODES: GNode[] = [
-  { id: 'demo', x: 8, y: 20, w: 128, title: 'Demo loop', sub: 'drums · bass · Rhodes' },
-  { id: 'keys', x: 8, y: 80, w: 128, title: 'Your keys', sub: 'the desk keyboard' },
-  { id: 'tone', x: 8, y: 140, w: 128, title: 'Lab tone', sub: 'the FFT playground' },
-  { id: 'amb', x: 8, y: 212, w: 128, title: 'Rain + vinyl', sub: 'ambience' },
-  { id: 'spotify', x: 8, y: 272, w: 128, title: 'Spotify', sub: 'plays in its own frame', outside: true },
-  { id: 'lofi', x: 166, y: 20, w: 120, title: 'Lofi chain', sub: 'lowpass · tanh · reverb' },
-  { id: 'bus', x: 296, y: 84, w: 126, title: 'Music bus', sub: 'gain' },
-  { id: 'analyser', x: 296, y: 160, w: 126, title: 'Analyser', sub: 'FFT, 2048 points' },
-  { id: 'room', x: 470, y: 50, w: 162, title: 'The room', sub: 'lights · laptop · scope', outside: true },
-  { id: 'master', x: 470, y: 160, w: 162, title: 'Master', sub: 'volume' },
-  { id: 'speakers', x: 470, y: 250, w: 162, title: 'Speakers', sub: 'your device' },
+  { id: 'demo', x: 8, y: 20, w: 128, title: tr('Demo loop', '演示循环'), sub: tr('drums · bass · Rhodes', '鼓 · 贝斯 · Rhodes') },
+  { id: 'keys', x: 8, y: 80, w: 128, title: tr('Your keys', '你弹的键'), sub: tr('the desk keyboard', '桌上的键盘') },
+  { id: 'tone', x: 8, y: 140, w: 128, title: tr('Lab tone', '实验音'), sub: tr('the FFT playground', 'FFT 试验台') },
+  { id: 'amb', x: 8, y: 212, w: 128, title: tr('Rain + vinyl', '雨声 + 黑胶'), sub: tr('ambience', '环境音') },
+  { id: 'spotify', x: 8, y: 272, w: 128, title: 'Spotify', sub: tr('plays in its own frame', '在独立的 iframe 里播放'), outside: true },
+  { id: 'lofi', x: 166, y: 20, w: 120, title: tr('Lofi chain', 'Lofi 效果链'), sub: tr('lowpass · tanh · reverb', '低通 · tanh · 混响') },
+  { id: 'bus', x: 296, y: 84, w: 126, title: tr('Music bus', '音乐总线'), sub: tr('gain', '增益') },
+  { id: 'analyser', x: 296, y: 160, w: 126, title: tr('Analyser', '分析器'), sub: tr('FFT, 2048 points', 'FFT，2048 点') },
+  { id: 'room', x: 470, y: 50, w: 162, title: tr('The room', '房间'), sub: tr('lights · laptop · scope', '灯光 · 笔记本 · 示波器'), outside: true },
+  { id: 'master', x: 470, y: 160, w: 162, title: tr('Master', '主输出'), sub: tr('volume', '音量') },
+  { id: 'speakers', x: 470, y: 250, w: 162, title: tr('Speakers', '扬声器'), sub: tr('your device', '你的设备') },
 ];
 type Edge = { from: NodeId; to: NodeId; d: string; data?: boolean };
 const EDGES: Edge[] = [
@@ -58,10 +59,10 @@ const EDGES: Edge[] = [
 ];
 
 const WAVES = [
-  { id: 'sine', name: 'Sine' },
-  { id: 'pair', name: 'Two sines' },
-  { id: 'square', name: 'Square' },
-  { id: 'saw', name: 'Saw' },
+  { id: 'sine', name: tr('Sine', '正弦波') },
+  { id: 'pair', name: tr('Two sines', '双正弦') },
+  { id: 'square', name: tr('Square', '方波') },
+  { id: 'saw', name: tr('Saw', '锯齿波') },
 ] as const;
 type Wave = (typeof WAVES)[number]['id'];
 
@@ -73,13 +74,16 @@ const HANN = hann(N);
 export function mountLab(slot: HTMLElement, state: () => LabState) {
   slot.innerHTML = `
     <div class="lab">
-      <div class="lab__tabs" role="tablist" aria-label="Lab view">
-        <button class="lab__tab" type="button" role="tab" aria-selected="true" data-view="graph">Signal graph</button>
-        <button class="lab__tab" type="button" role="tab" aria-selected="false" data-view="fft">FFT playground</button>
+      <div class="lab__tabs" role="tablist" aria-label="${tr('Lab view', '实验室视图')}">
+        <button class="lab__tab" type="button" role="tab" aria-selected="true" data-view="graph">${tr('Signal graph', '信号图')}</button>
+        <button class="lab__tab" type="button" role="tab" aria-selected="false" data-view="fft">${tr('FFT playground', 'FFT 试验台')}</button>
       </div>
 
       <div class="lab__view" data-panel="graph">
-        <svg class="graph" viewBox="0 0 640 316" role="img" aria-label="Diagram of this page's audio graph: sources flow into a music bus, through an analyser and the master volume to the speakers; the analyser also feeds the room's visuals.">
+        <svg class="graph" viewBox="0 0 640 316" role="img" aria-label="${tr(
+          "Diagram of this page's audio graph: sources flow into a music bus, through an analyser and the master volume to the speakers; the analyser also feeds the room's visuals.",
+          '这个页面的音频图示意：各个声源汇入音乐总线，经过分析器和主音量送到扬声器；分析器同时驱动房间里的视觉效果。',
+        )}">
           ${EDGES.map((e, i) => `<path class="graph__edge${e.data ? ' graph__edge--data' : ''}" d="${e.d}" data-edge="${i}" />`).join('')}
           ${NODES.map(
             (n) => `
@@ -90,30 +94,36 @@ export function mountLab(slot: HTMLElement, state: () => LabState) {
             </g>`,
           ).join('')}
         </svg>
-        <p class="lab__caption">Live: a node glows while sound passes through it. Solid lines carry audio; dashed ones carry data (the analyser's numbers feed the room's lights and meters) or, for Spotify, sound the page can't touch.</p>
+        <p class="lab__caption">${tr(
+          "Live: a node glows while sound passes through it. Solid lines carry audio; dashed ones carry data (the analyser's numbers feed the room's lights and meters) or, for Spotify, sound the page can't touch.",
+          '实时：声音流经某个节点时，节点会亮起。实线传递音频；虚线传递数据（分析器的数值驱动房间的灯光和电平表），Spotify 那条则是页面碰不到的声音。',
+        )}</p>
       </div>
 
       <div class="lab__view" data-panel="fft" hidden>
         <div class="fft">
           <div class="fft__controls">
-            <div class="fft__waves" role="radiogroup" aria-label="Waveform">
+            <div class="fft__waves" role="radiogroup" aria-label="${tr('Waveform', '波形')}">
               ${WAVES.map((w, i) => `<button class="fft__wave" type="button" role="radio" aria-checked="${i === 0}" data-wave="${w.id}">${w.name}</button>`).join('')}
             </div>
             <label class="fft__freq">
-              <span>Pitch <output data-freq-out></output></span>
+              <span>${tr('Pitch', '音高')} <output data-freq-out></output></span>
               <input type="range" min="0" max="1" step="0.001" value="0.42" data-freq />
             </label>
             <div class="fft__toggles">
-              <button class="fft__toggle" type="button" aria-pressed="false" data-window>Hann window</button>
-              <button class="fft__toggle" type="button" aria-pressed="false" data-listen>Play it in the room</button>
+              <button class="fft__toggle" type="button" aria-pressed="false" data-window>${tr('Hann window', '汉宁窗')}</button>
+              <button class="fft__toggle" type="button" aria-pressed="false" data-listen>${tr('Play it in the room', '在房间里播放')}</button>
             </div>
           </div>
           <div class="fft__plots">
-            <figure><canvas data-wave-canvas></canvas><figcaption>256 samples in time</figcaption></figure>
-            <figure><canvas data-spec-canvas></canvas><figcaption>FFT magnitude per bin (31.25 Hz each)</figcaption></figure>
+            <figure><canvas data-wave-canvas></canvas><figcaption>${tr('256 samples in time', '时域上的 256 个采样')}</figcaption></figure>
+            <figure><canvas data-spec-canvas></canvas><figcaption>${tr('FFT magnitude per bin (31.25 Hz each)', '每个频点的 FFT 幅度（每格 31.25 Hz）')}</figcaption></figure>
           </div>
           <p class="fft__readout" aria-live="polite" data-readout></p>
-          <p class="lab__caption">Any sound is a sum of sine waves; the FFT finds how much of each. A pure sine lands in one bin, a square adds odd harmonics, a saw every harmonic. When the pitch falls between bins, energy smears into neighbours (leakage); the Hann window tapers the frame's edges to tame it. This one is a 40-line radix-2 Cooley-Tukey FFT in TypeScript: bit-reverse, then 8 stages of butterflies.</p>
+          <p class="lab__caption">${tr(
+            "Any sound is a sum of sine waves; the FFT finds how much of each. A pure sine lands in one bin, a square adds odd harmonics, a saw every harmonic. When the pitch falls between bins, energy smears into neighbours (leakage); the Hann window tapers the frame's edges to tame it. This one is a 40-line radix-2 Cooley-Tukey FFT in TypeScript: bit-reverse, then 8 stages of butterflies.",
+            '任何声音都可以拆成正弦波的叠加，FFT 算出每个频率各占多少。纯正弦波只落在一个频点上，方波会加上奇次谐波，锯齿波则包含所有谐波。音高落在两个频点之间时，能量会扩散到相邻频点（频谱泄漏）；汉宁窗把每一帧的两端逐渐压低来抑制它。这里用的是一个 40 行的 TypeScript radix-2 Cooley-Tukey FFT：先做位反转，再做 8 级蝶形运算。',
+          )}</p>
         </div>
       </div>
     </div>
@@ -162,11 +172,11 @@ export function mountLab(slot: HTMLElement, state: () => LabState) {
       let sq = 0;
       for (let i = 0; i < wave.length; i++) sq += wave[i] * wave[i];
       const rms = Math.sqrt(sq / wave.length);
-      subEls.get('bus')!.textContent = rms > 1e-4 ? `gain · ${(20 * Math.log10(rms)).toFixed(0)} dBFS` : 'gain · silent';
+      subEls.get('bus')!.textContent = rms > 1e-4 ? `${tr('gain', '增益')} · ${(20 * Math.log10(rms)).toFixed(0)} dBFS` : tr('gain · silent', '增益 · 无声');
       const hz = bus.analyser.context.sampleRate / bus.analyser.fftSize;
-      subEls.get('analyser')!.textContent = `FFT · ${hz.toFixed(1)} Hz bins`;
+      subEls.get('analyser')!.textContent = tr(`FFT · ${hz.toFixed(1)} Hz bins`, `FFT · 每格 ${hz.toFixed(1)} Hz`);
       const vol = getAudio().master.gain.value;
-      subEls.get('master')!.textContent = `volume · ${Math.round(Math.sqrt(vol) * 100)}%`;
+      subEls.get('master')!.textContent = `${tr('volume', '音量')} · ${Math.round(Math.sqrt(vol) * 100)}%`;
     }
   };
 
@@ -254,7 +264,12 @@ export function mountLab(slot: HTMLElement, state: () => LabState) {
       for (const [k, t] of [[16, '500'], [32, '1k'], [48, '1.5k']] as const) g.fillText(t, k * slot, 12 * dpr);
     }
     const leak = mags.reduce((s, m, k) => (Math.abs(k - peak) > 1 ? s + m : s), 0) / Math.max(mags[peak], 1e-6);
-    $('[data-readout]').textContent = `Strongest: bin ${peak} · ${Math.round(peak * (RATE / N))} Hz. Spread outside it: ${(leak * 100).toFixed(0)}% of the peak.`;
+    const peakHz = Math.round(peak * (RATE / N));
+    const spread = (leak * 100).toFixed(0);
+    $('[data-readout]').textContent = tr(
+      `Strongest: bin ${peak} · ${peakHz} Hz. Spread outside it: ${spread}% of the peak.`,
+      `最强：第 ${peak} 个频点 · ${peakHz} Hz。泄漏到其他频点的能量：峰值的 ${spread}%。`,
+    );
     retune();
   };
 

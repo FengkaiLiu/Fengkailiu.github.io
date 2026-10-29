@@ -3,6 +3,7 @@
 // music, plus a master strip that carries the stats. Solo a strip to spotlight it.
 import { profile } from '../content/profile';
 import type { Bands } from '../audio/bus';
+import { tr } from '../i18n';
 
 interface Strip {
   id: string;
@@ -15,9 +16,9 @@ interface Strip {
 }
 
 const STRIPS: Strip[] = [
-  { id: 'code', name: 'Code', skills: profile.skills.code, level: 0.82, band: 'treble' },
-  { id: 'sound', name: 'Sound', skills: profile.skills.sound, level: 0.74, band: 'bass' },
-  { id: 'visual', name: 'Visual', skills: profile.skills.visual, level: 0.56, band: 'mid' },
+  { id: 'code', name: tr('Code', '代码'), skills: profile.skills.code, level: 0.82, band: 'treble' },
+  { id: 'sound', name: tr('Sound', '声音'), skills: profile.skills.sound, level: 0.74, band: 'bass' },
+  { id: 'visual', name: tr('Visual', '视觉'), skills: profile.skills.visual, level: 0.56, band: 'mid' },
 ];
 
 /** Fader travel to a dB label, like the scale printed beside a real fader. */
@@ -28,11 +29,11 @@ const db = (level: number) => {
 
 export function mountMixer(slot: HTMLElement) {
   slot.innerHTML = `
-    <div class="mixer" role="group" aria-label="Skills, as a mixing desk">
+    <div class="mixer" role="group" aria-label="${tr('Skills, as a mixing desk', '技能，以调音台的形式呈现')}">
       ${STRIPS.map(
         (s) => `
         <section class="strip" data-strip="${s.id}" aria-label="${s.name}">
-          <ul class="strip__inserts" aria-label="${s.name} skills">
+          <ul class="strip__inserts" aria-label="${tr(`${s.name} skills`, `${s.name}技能`)}">
             ${s.skills.map((k) => `<li class="strip__insert">${k}</li>`).join('')}
           </ul>
           <div class="strip__body">
@@ -42,11 +43,11 @@ export function mountMixer(slot: HTMLElement) {
             </div>
           </div>
           <p class="strip__db" aria-hidden="true">${db(s.level)} dB</p>
-          <button class="strip__solo" type="button" aria-pressed="false" title="Solo ${s.name}">S</button>
+          <button class="strip__solo" type="button" aria-pressed="false" title="${tr(`Solo ${s.name}`, `独奏：${s.name}`)}">S</button>
           <p class="strip__name">${s.name}</p>
         </section>`,
       ).join('')}
-      <section class="strip strip--master" aria-label="Master">
+      <section class="strip strip--master" aria-label="${tr('Master', '总线')}">
         <dl class="strip__stats">
           ${profile.stats.map((st) => `<div class="strip__stat"><dt>${st.label}</dt><dd>${st.value}</dd></div>`).join('')}
         </dl>

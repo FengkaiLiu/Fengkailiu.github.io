@@ -4,6 +4,7 @@
 import type { MediaGroup, Project } from '../content/projects';
 import { placeholder } from './placeholder';
 import type { SmoothScroll } from './scroll';
+import { tr } from '../i18n';
 
 const esc = (s: string) => s.replace(/[&<>"]/g, (ch) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[ch]!);
 const arrow = '<svg class="sheet__ext" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 16L16 8M9 8h7v7" /></svg>';
@@ -24,7 +25,7 @@ const mediaGroup = (g: MediaGroup, gi: number) => `
         .map((m, i) =>
           m.type === 'video'
             ? `<video src="${esc(m.src)}" muted loop playsinline controls preload="metadata" aria-label="${esc(m.alt)}"${reducedMotion() ? '' : ' autoplay'}></video>`
-            : `<button class="sheet__photo" type="button" data-photo="${gi}:${i}" aria-label="Enlarge: ${esc(m.alt)}"><img src="${esc(m.src)}" alt="${esc(m.alt)}" loading="lazy" /></button>`,
+            : `<button class="sheet__photo" type="button" data-photo="${gi}:${i}" aria-label="${tr('Enlarge', '放大')}: ${esc(m.alt)}"><img src="${esc(m.src)}" alt="${esc(m.alt)}" loading="lazy" /></button>`,
         )
         .join('')}
     </div>
@@ -40,13 +41,13 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
     <div class="sheet__scroll" data-lenis-prevent>
       <header class="sheet__head">
         <span class="chapter__track" data-track></span>
-        <button class="sheet__close" type="button" aria-label="Close" data-close>
+        <button class="sheet__close" type="button" aria-label="${tr('Close', '关闭')}" data-close>
           <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" /></svg>
         </button>
       </header>
       <div data-body></div>
     </div>
-    <nav class="sheet__nav" aria-label="Other projects">
+    <nav class="sheet__nav" aria-label="${tr('Other projects', '其他项目')}">
       <button class="sheet__step" type="button" data-step="-1"></button>
       <button class="sheet__step sheet__step--next" type="button" data-step="1"></button>
     </nav>
@@ -69,15 +70,16 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
 
   const render = () => {
     disposeViewer();
+    dialog.classList.remove('liquid--plain'); // a new page: no demo iframe (yet)
     const { project: p, track } = tracks[index];
     const groups = (p.media ?? []).map((g, gi) => [g, gi] as const);
     const videoGroups = groups.filter(([g]) => g.items.some((m) => m.type === 'video'));
     const photoGroups = groups.filter(([g]) => !g.items.some((m) => m.type === 'video'));
     dialog.querySelector('[data-track]')!.textContent = track;
     const links = [
-      p.game && '<button class="btn btn--play" type="button" data-game>Play it here</button>',
-      p.links.demo && `<a class="btn" href="${esc(p.links.demo)}" target="_blank" rel="noopener">${esc(p.links.demoLabel ?? 'Live demo')} ${arrow}</a>`,
-      p.links.github && `<a class="btn btn--ghost" href="${esc(p.links.github)}" target="_blank" rel="noopener">Source on GitHub ${arrow}</a>`,
+      p.game && '<button class="btn btn--play" type="button" data-game>' + tr('Play it here', '在这里玩') + '</button>',
+      p.links.demo && `<a class="btn" href="${esc(p.links.demo)}" target="_blank" rel="noopener">${esc(p.links.demoLabel ?? tr('Live demo', '在线演示'))} ${arrow}</a>`,
+      p.links.github && `<a class="btn btn--ghost" href="${esc(p.links.github)}" target="_blank" rel="noopener">${tr('Source on GitHub', 'GitHub 源码')} ${arrow}</a>`,
     ].filter(Boolean);
     body.innerHTML = `
       <h2 class="sheet__title" id="sheet-title">${esc(p.title)}</h2>
@@ -88,7 +90,7 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
         videoGroups.length
           ? videoGroups.map(([g, gi]) => mediaGroup(g, gi)).join('')
           : p.cover
-            ? `<figure class="sheet__cover"><img src="${esc(p.cover)}" alt="${esc(p.title)} cover" loading="lazy" /></figure>`
+            ? `<figure class="sheet__cover"><img src="${esc(p.cover)}" alt="${esc(tr(`${p.title} cover`, `${p.title} 封面`))}" loading="lazy" /></figure>`
             : ''
       }
       ${p.sections
@@ -106,7 +108,7 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
           ? `<section class="sheet__section sheet__embed">
               <h3>${esc(p.embed.title)}</h3>
               <div class="sheet__embed-frame" data-embed>
-                <button class="btn" type="button" data-embed-load>Load the live demo</button>
+                <button class="btn" type="button" data-embed-load>${tr('Load the live demo', '加载在线演示')}</button>
                 <p class="sheet__embed-note">${esc(p.embed.note)}</p>
               </div>
             </section>`
@@ -129,8 +131,8 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
     nextBtn.hidden = !next;
     if (prev) prevBtn.innerHTML = `<span aria-hidden="true">←</span> <span class="sheet__step-no">${prev.track}</span> ${esc(prev.project.title)}`;
     if (next) nextBtn.innerHTML = `<span class="sheet__step-no">${next.track}</span> ${esc(next.project.title)} <span aria-hidden="true">→</span>`;
-    prevBtn.setAttribute('aria-label', prev ? `Previous: ${prev.project.title}` : '');
-    nextBtn.setAttribute('aria-label', next ? `Next: ${next.project.title}` : '');
+    prevBtn.setAttribute('aria-label', prev ? `${tr('Previous', '上一个')}: ${prev.project.title}` : '');
+    nextBtn.setAttribute('aria-label', next ? `${tr('Next', '下一个')}: ${next.project.title}` : '');
     scroller.scrollTop = 0;
     const host = body.querySelector<HTMLElement>('[data-models]');
     if (host && p.models) {
@@ -176,21 +178,22 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
     if (!embed || !frame) return;
     const iframe = document.createElement('iframe');
     iframe.src = embed.src;
-    iframe.title = `${tracks[index].project.title}: live demo`;
+    iframe.title = `${tracks[index].project.title}: ${tr('live demo', '在线演示')}`;
     if (embed.allow) iframe.allow = embed.allow;
     iframe.className = 'sheet__embed-iframe';
     frame.replaceChildren(iframe);
+    dialog.classList.add('liquid--plain'); // the iframe and the refraction don't mix (see glass.css)
   });
 
   // ---------- Lightbox: photos at full size, with arrows through the group ----------
   const box = document.createElement('dialog');
   box.className = 'lightbox';
-  box.setAttribute('aria-label', 'Photo');
+  box.setAttribute('aria-label', tr('Photo', '照片'));
   box.innerHTML = `
     <figure class="lightbox__frame"><img data-lb-img alt="" /><figcaption data-lb-cap></figcaption></figure>
-    <button class="lightbox__btn lightbox__btn--close" type="button" data-lb-close aria-label="Close">✕</button>
-    <button class="lightbox__btn lightbox__btn--prev" type="button" data-lb-step="-1" aria-label="Previous photo">‹</button>
-    <button class="lightbox__btn lightbox__btn--next" type="button" data-lb-step="1" aria-label="Next photo">›</button>
+    <button class="lightbox__btn lightbox__btn--close" type="button" data-lb-close aria-label="${tr('Close', '关闭')}">✕</button>
+    <button class="lightbox__btn lightbox__btn--prev" type="button" data-lb-step="-1" aria-label="${tr('Previous photo', '上一张')}">‹</button>
+    <button class="lightbox__btn lightbox__btn--next" type="button" data-lb-step="1" aria-label="${tr('Next photo', '下一张')}">›</button>
   `;
   document.body.append(box);
   let lb = { group: 0, item: 0 };
@@ -230,6 +233,7 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
   dialog.addEventListener('close', () => {
     disposeViewer();
     body.querySelector('[data-embed] iframe')?.remove(); // stop the demo (and its mic) on close
+    dialog.classList.remove('liquid--plain');
     body.querySelectorAll('video').forEach((v) => v.pause());
     document.documentElement.classList.remove('has-sheet');
     scroll.start();

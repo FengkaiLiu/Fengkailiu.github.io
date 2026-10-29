@@ -6,6 +6,7 @@
 // looked up in Apple's public catalog by title + artist and left out if it has no match.
 // Anything you fill in by hand wins over the fetched value.
 import type { MoodId } from '../room/moods';
+import { tr } from '../i18n';
 
 export interface RecordPick {
   id: string;
@@ -28,7 +29,7 @@ export const records: RecordPick[] = [
     id: 'pick-1',
     spotify: 'https://open.spotify.com/track/6jg8bLxvV2k8gtYPkgOufy?si=91922e13feb94bac',
     artist: 'SadSvit',
-    note: 'This song brings me energy',
+    note: tr('This song brings me energy', '这首歌给我能量'),
     mood: 'neon',
     tint: '#ff9d4d',
   },
@@ -36,7 +37,7 @@ export const records: RecordPick[] = [
     id: 'pick-2',
     spotify: 'https://open.spotify.com/track/7LMajLn4v2ZWmLcfE1a7DY?si=d66ea5cd6bef4c52',
     artist: 'Porter Robinson',
-    note: 'This song brings me hope',
+    note: tr('This song brings me hope', '这首歌给我希望'),
     mood: 'meadow',
     tint: '#90ee90',
   },
@@ -45,7 +46,7 @@ export const records: RecordPick[] = [
     spotify: 'https://open.spotify.com/track/1H2pPtoPS8kNlqCN7HfT6g?si=c8ca5caaf7e744b8',
     artist: 'Jamie Paige',
     mood: 'teto',
-    note: 'This song brings me happiness',
+    note: tr('This song brings me happiness', '这首歌让我快乐'),
     tint: '#ff2b00',
   },
 ];
@@ -118,11 +119,11 @@ export function resolvePick(pick: RecordPick): Promise<ResolvedPick> {
         const apple = title && pick.artist ? await findOnApple(title, pick.artist) : null;
         return {
           pick,
-          title: title ?? 'Song title',
-          artist: pick.artist ?? apple?.artistName ?? 'Artist',
+          title: title ?? tr('Song title', '歌名'),
+          artist: pick.artist ?? apple?.artistName ?? tr('Artist', '歌手'),
           album: pick.album ?? apple?.collectionName ?? null,
           year: pick.year ?? apple?.releaseDate?.slice(0, 4) ?? null,
-          credits: [...(apple?.primaryGenreName ? [`Genre · ${apple.primaryGenreName}`] : []), ...(pick.credits ?? [])],
+          credits: [...(apple?.primaryGenreName ? [`${tr('Genre', '流派')} · ${apple.primaryGenreName}`] : []), ...(pick.credits ?? [])],
           cover: embed ? bigCover(embed.thumbnail_url) : null,
           uri: id && embed ? `spotify:track:${id}` : null,
           missing: !embed || !pick.artist,

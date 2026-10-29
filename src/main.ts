@@ -25,6 +25,16 @@ import { mountScopePanel } from './ui/scopePanel';
 import { createSmoothScroll } from './ui/scroll';
 import { mountTrackNav } from './ui/trackNav';
 import { coverLabel } from './room/textures';
+import { mountLangSwitch, tr } from './i18n';
+
+document.title = tr('Fengkai Liu · CS + Music Technology', 'Fengkai Liu · 计算机科学 + 音乐科技');
+document.querySelector('meta[name="description"]')?.setAttribute(
+  'content',
+  tr(
+    'Portfolio of Fengkai Liu, a Computer Science and Music Technology student building audio, XR, and interactive web experiences.',
+    'Fengkai Liu 的作品集。计算机科学与音乐科技专业学生，做音频、XR 和交互式网页体验。',
+  ),
+);
 
 // Always start at the top so the first shot is the whole room.
 history.scrollRestoration = 'manual';
@@ -51,22 +61,46 @@ interface Chapter {
 
 // Chapters read like a record's track list. Each one is replaced by its floor (see ROADMAP.md).
 const chapters: Chapter[] = [
-  { id: 'about', shot: 'about', track: 'A1', nav: 'About', title: 'Code on one screen, sound on the other.', text: profile.bio[0], custom: 'mixer' },
+  { id: 'about', shot: 'about', track: 'A1', nav: tr('About', '关于我'), title: tr('Code on one screen, sound on the other.', '一块屏幕写代码，另一块做声音。'), text: profile.bio[0], custom: 'mixer' },
   ...projects.map((p, i) => ({ id: p.id, shot: p.id, track: `A${i + 2}`, nav: p.title, title: p.title, text: p.subtitle, tags: p.tags, custom: 'project' as const })),
-  { id: 'records', shot: 'record', track: 'B1', nav: 'Liner notes', title: 'Liner notes.', text: '3 records I keep coming back to. Flip through the crate and put one on the turntable.', custom: 'crate' },
-  { id: 'lab', shot: 'lab', track: 'B2', nav: 'The Lab', title: 'How this room hears.', text: 'A live map of the audio graph running this page, and an FFT you can play with.', custom: 'lab' },
-  { id: 'contact', shot: 'contact', track: 'B3', nav: 'Contact', title: 'Leave me a beat.', text: 'Sequence a 4-bar loop and send it with your message.', custom: 'beat' },
+  {
+    id: 'records',
+    shot: 'record',
+    track: 'B1',
+    nav: tr('Liner notes', '唱片内页'),
+    title: tr('Liner notes.', '唱片内页。'),
+    text: tr('3 records I keep coming back to. Flip through the crate and put one on the turntable.', '三张我反复在听的唱片。翻一翻唱片箱，挑一张放上唱机。'),
+    custom: 'crate',
+  },
+  {
+    id: 'lab',
+    shot: 'lab',
+    track: 'B2',
+    nav: tr('The Lab', '实验室'),
+    title: tr('How this room hears.', '这个房间如何「听」声音。'),
+    text: tr('A live map of the audio graph running this page, and an FFT you can play with.', '这个页面正在运行的音频图的实时示意，还有一个可以上手玩的 FFT。'),
+    custom: 'lab',
+  },
+  {
+    id: 'contact',
+    shot: 'contact',
+    track: 'B3',
+    nav: tr('Contact', '联系我'),
+    title: tr('Leave me a beat.', '给我留一段节拍。'),
+    text: tr('Sequence a 4-bar loop and send it with your message.', '编一段 4 小节的循环，和留言一起发给我。'),
+    custom: 'beat',
+  },
 ];
 
 app.innerHTML = `
-  <a class="skip-link" href="#about">Skip to the content</a>
+  <a class="skip-link" href="#about">${tr('Skip to the content', '跳到正文')}</a>
   <header class="hero" id="top" data-shot="hero">
     <span class="hero__chip liquid liquid--pill" data-liquid-bezel="14">${profile.role}</span>
     <h1 class="hero__name">${profile.name}</h1>
-    <p class="hero__tagline">beats to code &amp; compose to</p>
+    <p class="hero__tagline">${tr('beats to code &amp; compose to', '陪你写代码、写歌的节拍')}</p>
     <p class="hero__sub">${profile.tagline}</p>
     <div class="hero__dock liquid liquid--pill" data-liquid-bezel="22">
-      <a class="btn" href="#about" data-look>Look around <svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" /></svg></a>
+      <a class="btn" href="#about" data-look>${tr('Look around', '四处看看')} <svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 5v14M6 13l6 6 6-6" /></svg></a>
     </div>
     <div class="hero__cue" aria-hidden="true"><span></span></div>
   </header>
@@ -88,8 +122,9 @@ app.innerHTML = `
       )
       .join('')}
   </main>
-  <footer class="footer">Built from scratch by ${profile.name} · lights off at your own risk</footer>
+  <footer class="footer">${tr(`Built from scratch by ${profile.name} · lights off at your own risk`, `由 ${profile.name} 从零搭建 · 关灯后果自负`)}</footer>
 `;
+mountLangSwitch();
 
 document.querySelectorAll<HTMLElement>('.chapter').forEach((el, i) => {
   const c = chapters[i];
@@ -103,9 +138,9 @@ projects.forEach((p) => {
   const slot = document.querySelector<HTMLElement>(`#${p.id} .chapter__slot`)!;
   slot.classList.add('chapter__actions');
   slot.innerHTML = `
-    ${p.game ? '<button class="btn btn--play" type="button" data-game>Play it <svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor" stroke="none" /></svg></button>' : ''}
-    <button class="${p.game ? 'btn btn--ghost' : 'btn'}" type="button" data-sheet="${p.id}">${p.placeholder ? 'What it needs' : 'Liner notes'}</button>
-    ${p.links.demo ? `<a class="chapter__link" href="${p.links.demo}" target="_blank" rel="noopener">${p.links.demoLabel ?? 'Live demo'} ${extArrow}</a>` : ''}
+    ${p.game ? `<button class="btn btn--play" type="button" data-game>${tr('Play it', '玩一下')} <svg class="btn__arrow" viewBox="0 0 24 24" aria-hidden="true"><path d="M8 5l11 7-11 7z" fill="currentColor" stroke="none" /></svg></button>` : ''}
+    <button class="${p.game ? 'btn btn--ghost' : 'btn'}" type="button" data-sheet="${p.id}">${p.placeholder ? 'What it needs' : tr('Liner notes', '项目详情')}</button>
+    ${p.links.demo ? `<a class="chapter__link" href="${p.links.demo}" target="_blank" rel="noopener">${p.links.demoLabel ?? tr('Live demo', '在线演示')} ${extArrow}</a>` : ''}
     ${p.links.github ? `<a class="chapter__link" href="${p.links.github}" target="_blank" rel="noopener">GitHub ${extArrow}</a>` : ''}
   `;
 });
@@ -145,6 +180,9 @@ const room = initRoom(sections, covers, previews, projects.find((p) => p.id === 
 initSheen();
 
 let ambience: Ambience | null = null;
+// The visitor's ambience settings, kept even before sound starts (the ambience picks them up).
+let rainOn = true;
+let crackleOn = true;
 
 const mixer = mountMixer(document.querySelector<HTMLElement>('#about .chapter__slot')!);
 const player = createPlayer(tracks);
@@ -160,8 +198,13 @@ const dock = mountPlayerDock(
     canSkip: tracks.length > 1,
     // Rain lives on the dock so it can be switched off from anywhere on the page.
     onRain(on) {
+      rainOn = on;
       room?.setRain(on);
       ambience?.setRain(on);
+    },
+    onCrackle(on) {
+      crackleOn = on;
+      ambience?.setCrackle(on);
     },
   },
 );
@@ -198,7 +241,21 @@ document.addEventListener('click', (e) => {
   if (id) sheet.open(id);
 });
 // Hot Footer: the shelf's handheld, life-size and playable.
-const gameConsole = mountGameConsole(player, scroll);
+// While Hot Footer plays, the room goes quiet: its music, the rain and the crackle pause,
+// and come back as they were when the console closes.
+let musicBeforeGame = false;
+const gameConsole = mountGameConsole(player, scroll, {
+  pause() {
+    const s = player.state();
+    musicBeforeGame = s.playing && !s.guest; // the room's own record, not a borrowed one
+    ambience?.setPaused(true);
+  },
+  resume() {
+    ambience?.setPaused(false);
+    if (musicBeforeGame && !player.state().playing) void player.play();
+    musicBeforeGame = false;
+  },
+});
 document.addEventListener('click', (e) => {
   if (!(e.target as HTMLElement).closest('[data-game]')) return;
   document.querySelector<HTMLDialogElement>('dialog.sheet[open]')?.close(); // the liner notes step aside
@@ -256,14 +313,14 @@ document.querySelector<HTMLAnchorElement>('[data-look]')!.addEventListener('clic
 
 showGate(
   [
-    { label: 'Fonts unpacked', run: document.fonts.ready },
-    { label: 'Room assembled', run: room?.ready ?? Promise.resolve() },
+    { label: tr('Fonts unpacked', '字体已就位'), run: document.fonts.ready },
+    { label: tr('Room assembled', '房间已布置好'), run: room?.ready ?? Promise.resolve() },
   ],
   {
-    eyebrow: 'Portfolio · CS + Music Technology',
-    title: "Fengkai's Room",
-    hint: 'best with headphones',
-    ready: 'Ready. Turn on the lamp',
+    eyebrow: tr('Portfolio · CS + Music Technology', '作品集 · 计算机科学 + 音乐科技'),
+    title: tr("Fengkai's Room", 'Fengkai 的房间'),
+    hint: tr('best with headphones', '戴上耳机效果更好'),
+    ready: tr('Ready. Turn on the lamp', '准备好了，打开台灯吧'),
   },
 ).then(({ sound }) => {
   room?.lightsOn();
@@ -290,7 +347,7 @@ showGate(
   }, 2600);
   if (sound) {
     playLightsOnChord();
-    ambience = startAmbience();
+    ambience = startAmbience({ rain: rainOn, crackle: crackleOn });
     // The record drops in once the lights-on chord has rung out.
     window.setTimeout(() => {
       if (!player.state().playing) void player.play();
@@ -299,6 +356,8 @@ showGate(
 });
 
 if (import.meta.env.DEV) {
+  // Test hook for headless checks of the room's sound state.
+  (window as unknown as { __room: unknown }).__room = { player, ambience: () => ambience };
   // /?play starts the music right away (headless needs --autoplay-policy=no-user-gesture-required).
   if (new URLSearchParams(location.search).has('play')) setTimeout(() => void player.play(), 800);
 }

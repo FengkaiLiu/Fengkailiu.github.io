@@ -8,6 +8,7 @@
 // subdivisions) wins, steadied by a median of the last few estimates. Key: the chromagram is averaged over ~10 s and correlated with the
 // Krumhansl-Kessler major and minor profiles in all 12 keys.
 import type { MusicBus } from '../audio/bus';
+import { tr } from '../i18n';
 
 export const PITCHES = ['C', 'C♯', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
 
@@ -223,7 +224,7 @@ export function createAnalysis(bus: MusicBus): Analysis {
         const r = corr(minor ? MINOR : MAJOR, t);
         if (r > best) {
           best = r;
-          key = { tonic: t, minor, name: `${PITCHES[t]} ${minor ? 'minor' : 'major'}` };
+          key = { tonic: t, minor, name: `${PITCHES[t]} ${minor ? tr('minor', '小调') : tr('major', '大调')}` };
         }
       }
     }

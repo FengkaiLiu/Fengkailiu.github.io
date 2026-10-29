@@ -1,6 +1,7 @@
 // Startup gate: loads everything behind a glowing switch. The click is the user gesture
 // that unlocks audio; what happens next (lights, sound) is up to the caller.
 import { unlockAudio } from '../audio/context';
+import { tr } from '../i18n';
 
 export interface GateTask {
   label: string;
@@ -24,12 +25,12 @@ export function showGate(tasks: GateTask[], copy: GateCopy): Promise<{ sound: bo
   gate.className = 'gate';
   gate.setAttribute('role', 'dialog');
   gate.setAttribute('aria-modal', 'true');
-  gate.setAttribute('aria-label', 'Start the portfolio');
+  gate.setAttribute('aria-label', tr('Start the portfolio', '进入作品集'));
   gate.innerHTML = `
     <div class="gate__inner">
       <span class="eyebrow gate__eyebrow">${copy.eyebrow}</span>
       <h1 class="gate__title">${copy.title}</h1>
-      <button class="orb" type="button" disabled aria-label="Turn on the lamp">
+      <button class="orb" type="button" disabled aria-label="${tr('Turn on the lamp', '打开台灯')}">
         <svg class="orb__ring" viewBox="0 0 120 120" aria-hidden="true">
           <circle class="orb__track" cx="60" cy="60" r="54" />
           <circle class="orb__progress" cx="60" cy="60" r="54" stroke-dasharray="${RING}" stroke-dashoffset="${RING}" />
@@ -38,9 +39,9 @@ export function showGate(tasks: GateTask[], copy: GateCopy): Promise<{ sound: bo
           <svg class="orb__icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4" /><path d="M12 3a6 6 0 0 0-4 10.5c.8.8 1 1.5 1 2.5h6c0-1 .2-1.7 1-2.5A6 6 0 0 0 12 3z" /></svg>
         </span>
       </button>
-      <p class="gate__status" aria-live="polite">Starting up</p>
+      <p class="gate__status" aria-live="polite">${tr('Starting up', '正在启动')}</p>
       <p class="gate__hint">${copy.hint}</p>
-      <button class="gate__silent" type="button" disabled>Enter without sound</button>
+      <button class="gate__silent" type="button" disabled>${tr('Enter without sound', '静音进入')}</button>
     </div>
   `;
   document.body.append(gate);

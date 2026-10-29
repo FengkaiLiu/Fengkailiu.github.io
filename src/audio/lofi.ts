@@ -1,6 +1,8 @@
-// Room sound, all synthesized: an electric-piano chord when the lamp turns on,
-// then a quiet bed of rain and vinyl crackle that can be toggled.
+// Room sound: an electric-piano chord when the lamp turns on, then a quiet bed of rain
+// and vinyl crackle that can be toggled. The crackle is synthesized; the rain is a real
+// recording (raining.mp3), fetched only once the room starts making sound.
 import { getAudio, makeReverb } from './context';
+import rainUrl from './raining.mp3?url';
 
 const midiToHz = (m: number) => 440 * Math.pow(2, (m - 69) / 12);
 
@@ -55,34 +57,37 @@ export function rhodesNote(ctx: BaseAudioContext, dest: AudioNode, midi: number,
   }
 }
 
-/** Rain wash: white noise with slow gusts. Brown noise sat below what laptop speakers can play. */
-function rainBuffer(ctx: BaseAudioContext, seconds: number) {
-  const buffer = ctx.createBuffer(2, Math.floor(ctx.sampleRate * seconds), ctx.sampleRate);
-  for (let ch = 0; ch < 2; ch++) {
-    const d = buffer.getChannelData(ch);
-    const phase = Math.random() * Math.PI * 2;
-    for (let i = 0; i < d.length; i++) {
-      const gust = 0.75 + 0.25 * Math.sin((i / d.length) * Math.PI * 2 * 3 + phase); // loops seamlessly
-      d[i] = (Math.random() * 2 - 1) * gust;
-    }
-  }
-  return buffer;
-}
+// The rain recording, ready to loop: brought to a quiet background level (about half as
+// loud to the ear as the old synthesized rain, so it sits under the music), its few
+// loudest drops rounded off so they don't clip, and its end crossfaded into its start so
+// a 12 s clip repeats without a seam.
+const RAIN_RMS = 0.011;
+const RAIN_KNEE = 0.4; // above this a drop is softly limited, never past 1
+const RAIN_XFADE = 1.5; // seconds
 
-/** Individual drops tapping the glass: short, bright, decaying noise bursts. */
-function patterBuffer(ctx: BaseAudioContext, seconds: number) {
-  const buffer = ctx.createBuffer(2, Math.floor(ctx.sampleRate * seconds), ctx.sampleRate);
-  for (let ch = 0; ch < 2; ch++) {
-    const d = buffer.getChannelData(ch);
-    for (let i = 0; i < d.length; i++) {
-      if (Math.random() < 0.0004) {
-        const amp = 0.3 + Math.random() * 0.7;
-        const len = 200 + Math.floor(Math.random() * 600);
-        for (let j = 0; j < len && i + j < d.length; j++) d[i + j] += (Math.random() * 2 - 1) * amp * Math.exp(-j / (len / 5));
-      }
+async function rainLoop(ctx: BaseAudioContext) {
+  const raw = await ctx.decodeAudioData(await (await fetch(rainUrl)).arrayBuffer());
+  const fade = Math.min(Math.floor(RAIN_XFADE * raw.sampleRate), Math.floor(raw.length / 3));
+  const len = raw.length - fade;
+  let sq = 0;
+  for (let ch = 0; ch < raw.numberOfChannels; ch++) for (const v of raw.getChannelData(ch)) sq += v * v;
+  const gain = RAIN_RMS / Math.max(Math.sqrt(sq / (raw.length * raw.numberOfChannels)), 1e-6);
+  const limit = (x: number) => {
+    const a = Math.abs(x * gain);
+    const y = a < RAIN_KNEE ? a : RAIN_KNEE + (1 - RAIN_KNEE) * Math.tanh((a - RAIN_KNEE) / (1 - RAIN_KNEE));
+    return Math.sign(x) * y;
+  };
+  const out = ctx.createBuffer(raw.numberOfChannels, len, raw.sampleRate);
+  for (let ch = 0; ch < raw.numberOfChannels; ch++) {
+    const src = raw.getChannelData(ch);
+    const d = out.getChannelData(ch);
+    for (let i = 0; i < len; i++) {
+      // Equal-power crossfade: rain is noise, so the two halves add as power, not amplitude.
+      const v = i < fade ? src[i] * Math.sin((i / fade) * Math.PI * 0.5) + src[len + i] * Math.cos((i / fade) * Math.PI * 0.5) : src[i];
+      d[i] = limit(v);
     }
   }
-  return buffer;
+  return out;
 }
 
 function crackleBuffer(ctx: BaseAudioContext, seconds: number) {
@@ -109,55 +114,60 @@ function loop(ctx: AudioContext, buffer: AudioBuffer) {
 
 export interface Ambience {
   rain: boolean;
+  crackle: boolean;
   setRain(on: boolean): void;
+  setCrackle(on: boolean): void;
+  /** Hush everything for a while (the game console), keeping the rain and crackle settings. */
+  setPaused(paused: boolean): void;
+  paused: boolean;
 }
 
-/** Vinyl crackle (always on with sound) plus rain against the window (toggleable). */
-export function startAmbience(): Ambience {
-  const { ctx, master } = getAudio();
+/** Vinyl crackle and rain against the window, each switchable, on one bus that can pause. */
+export function startAmbience(opts: { rain?: boolean; crackle?: boolean } = {}): Ambience {
+  const { ctx, master: out } = getAudio();
+  const master = ctx.createGain(); // the ambience bus: pausing fades this, not the settings
+  master.connect(out);
+  const ramp = (param: AudioParam, to: number, seconds: number) => {
+    const t = ctx.currentTime;
+    param.cancelScheduledValues(t);
+    param.setValueAtTime(param.value, t);
+    param.linearRampToValueAtTime(to, t + seconds);
+  };
 
   const crackleHp = ctx.createBiquadFilter();
   crackleHp.type = 'highpass';
   crackleHp.frequency.value = 900;
   const crackleGain = ctx.createGain();
   crackleGain.gain.setValueAtTime(0, ctx.currentTime);
-  crackleGain.gain.linearRampToValueAtTime(0.18, ctx.currentTime + 2);
   loop(ctx, crackleBuffer(ctx, 5)).connect(crackleHp).connect(crackleGain).connect(master);
 
   const rainBus = ctx.createGain();
   rainBus.gain.value = 0;
   rainBus.connect(master);
 
-  // Wash: band-limited to the "shhh" range real rain lives in.
-  const washHp = ctx.createBiquadFilter();
-  washHp.type = 'highpass';
-  washHp.frequency.value = 500;
-  const washLp = ctx.createBiquadFilter();
-  washLp.type = 'lowpass';
-  washLp.frequency.value = 6500;
-  const wash = ctx.createGain();
-  wash.gain.value = 0.11;
-  loop(ctx, rainBuffer(ctx, 6)).connect(washHp).connect(washLp).connect(wash).connect(rainBus);
-
-  // Patter: drops on glass, brighter and sparser.
-  const patterBp = ctx.createBiquadFilter();
-  patterBp.type = 'bandpass';
-  patterBp.frequency.value = 3200;
-  patterBp.Q.value = 0.8;
-  const patter = ctx.createGain();
-  patter.gain.value = 0.5;
-  loop(ctx, patterBuffer(ctx, 7)).connect(patterBp).connect(patter).connect(rainBus);
+  // The recording joins the bus once it has loaded; the bus's fade-in covers the wait.
+  rainLoop(ctx)
+    .then((buffer) => loop(ctx, buffer).connect(rainBus))
+    .catch((err) => console.warn('[ambience] rain recording unavailable', err));
 
   const amb: Ambience = {
     rain: false,
+    crackle: false,
+    paused: false,
     setRain(on) {
       amb.rain = on;
-      const t = ctx.currentTime;
-      rainBus.gain.cancelScheduledValues(t);
-      rainBus.gain.setValueAtTime(rainBus.gain.value, t);
-      rainBus.gain.linearRampToValueAtTime(on ? 1 : 0, t + (on ? 2.5 : 1.2));
+      ramp(rainBus.gain, on ? 1 : 0, on ? 2.5 : 1.2);
+    },
+    setCrackle(on) {
+      amb.crackle = on;
+      ramp(crackleGain.gain, on ? 0.18 : 0, on ? 2 : 0.6);
+    },
+    setPaused(paused) {
+      amb.paused = paused;
+      ramp(master.gain, paused ? 0 : 1, paused ? 0.4 : 1.2);
     },
   };
-  amb.setRain(true);
+  amb.setRain(opts.rain ?? true);
+  amb.setCrackle(opts.crackle ?? true);
   return amb;
 }

@@ -3,6 +3,8 @@
 // The rules follow the original C#: Player.cs (movement, double jump, wall jump, lava),
 // LevelManager.cs (level order, timer, music), CameraFollow.cs and GUIManager.cs (HUD).
 
+import { tr } from '../i18n';
+
 const BASE = '/hotfooter/game/';
 
 // ---------- Numbers straight from Player.cs and the project settings ----------
@@ -19,7 +21,10 @@ const BOX = { ox: 0.025, oy: -0.22, hw: 0.525, hh: 0.725 };
 const LAVA_TILE = 'tileset_23';
 
 type LevelId = 'level1' | 'level2' | 'level3' | 'secret';
-const LEVEL_NAMES: Record<LevelId, string> = { level1: 'Level 1', level2: 'Level 2', level3: 'Level 3', secret: 'Secret level' };
+const LEVEL_NAMES: Record<LevelId, string> = tr(
+  { level1: 'Level 1', level2: 'Level 2', level3: 'Level 3', secret: 'Secret level' },
+  { level1: '第 1 关', level2: '第 2 关', level3: '第 3 关', secret: '隐藏关卡' },
+);
 // LevelManager.NextLevel: Level 1's door -> Level 2 -> Level 3, whose gate wins the game.
 // Level 2 hides a terminal that leads to the secret level; its back door returns to Level 3.
 const NEXT: Partial<Record<LevelId, LevelId>> = { level1: 'level2', level2: 'level3' };
@@ -88,6 +93,32 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
   await Promise.all([...files].map(async (f) => images.set(f, await loadImage(BASE + f))));
 
   const g = canvas.getContext('2d')!;
+
+  // ---------- Collision shapes ----------
+  // Unity generated each tile's physics shape from its sprite's transparency (the tileset
+  // .meta has no hand-drawn shapes), so slopes and ragged edges only block where there are
+  // pixels. Same here: a 16 x 16 solidity mask per sprite, row 0 at the top.
+  const TILE_PX = 16;
+  const maskCache = new Map<string, Uint8Array | null>(); // null: fully solid
+  const maskFor = (a: AtlasSprite): Uint8Array | null => {
+    const key = `${a.file}:${a.x},${a.y}`;
+    if (maskCache.has(key)) return maskCache.get(key)!;
+    const img = images.get(a.file);
+    let mask: Uint8Array | null = null;
+    if (img && a.w === TILE_PX && a.h === TILE_PX) {
+      const c = document.createElement('canvas');
+      c.width = c.height = TILE_PX;
+      const cg = c.getContext('2d', { willReadFrequently: true })!;
+      cg.drawImage(img, a.x, a.y, TILE_PX, TILE_PX, 0, 0, TILE_PX, TILE_PX);
+      const px = cg.getImageData(0, 0, TILE_PX, TILE_PX).data;
+      const m = new Uint8Array(TILE_PX * TILE_PX);
+      let filled = 0;
+      for (let i = 0; i < m.length; i++) filled += m[i] = px[i * 4 + 3] > 0 ? 1 : 0;
+      mask = filled === m.length ? null : m;
+    }
+    maskCache.set(key, mask);
+    return mask;
+  };
 
   // ---------- Audio ----------
   const { ctx } = opts;
@@ -179,14 +210,23 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
   // ---------- World ----------
   let levelId: LevelId = 'level1';
   let level = levelData.level1;
-  let solids = new Map<string, boolean>(); // "x,y" -> is lava
+  interface SolidTile {
+    lava: boolean;
+    mask: Uint8Array | null;
+    fx: boolean;
+    fy: boolean;
+  }
+  let solids = new Map<string, SolidTile>(); // "x,y" -> the tile there
   const loadLevel = (id: LevelId) => {
     levelId = id;
     level = levelData[id];
     solids = new Map();
     for (const layer of level.layers) {
       if (!layer.solid) continue;
-      for (const [x, y, s] of layer.tiles) solids.set(`${x + layer.origin.x},${y + layer.origin.y}`, level.atlas[s].name === LAVA_TILE);
+      for (const [x, y, s, fx, fy] of layer.tiles) {
+        const a = level.atlas[s];
+        solids.set(`${x + layer.origin.x},${y + layer.origin.y}`, { lava: a.name === LAVA_TILE, mask: maskFor(a), fx: Boolean(fx), fy: Boolean(fy) });
+      }
     }
     p.x = level.spawn.x;
     p.y = level.spawn.y;
@@ -200,11 +240,28 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
     banner = { text: LEVEL_NAMES[id], until: elapsedReal + 1.6 };
     void playMusic(id === 'secret' ? 'secret' : 'bgm', id === 'secret' ? 0.5 : 0.3);
   };
-  const solidAt = (x: number, y: number) => solids.has(`${Math.floor(x)},${Math.floor(y)}`);
+  /** Is the pixel at world point (x, y) solid? Tiles are 1 unit and 16 px; y points up. */
+  const pixelSolid = (t: SolidTile, u: number, v: number) => {
+    if (!t.mask) return true;
+    let col = Math.min(Math.floor(u * TILE_PX), TILE_PX - 1);
+    let row = TILE_PX - 1 - Math.min(Math.floor(v * TILE_PX), TILE_PX - 1); // mask rows run top-down
+    if (t.fx) col = TILE_PX - 1 - col;
+    if (t.fy) row = TILE_PX - 1 - row;
+    return t.mask[row * TILE_PX + col] === 1;
+  };
+  const solidAt = (x: number, y: number) => {
+    const tx = Math.floor(x);
+    const ty = Math.floor(y);
+    const t = solids.get(`${tx},${ty}`);
+    return Boolean(t && pixelSolid(t, x - tx, y - ty));
+  };
   /** Physics2D.Raycast along a horizontal segment, sampled every quarter unit. */
+  // Samples along the ray every quarter unit and always at its end. (The end used to be
+  // skipped when the length wasn't a multiple of 0.25, so the 0.7 wall rays stopped at 0.5,
+  // short of a wall the player was pressed against, and wall jumps never fired.)
   const rayHits = (x: number, y: number, dir: number, length: number) => {
-    for (let d = 0; d <= length + 1e-6; d += 0.25) if (solidAt(x + dir * Math.min(d, length), y)) return true;
-    return false;
+    for (let d = 0; d < length; d += 0.25) if (solidAt(x + dir * d, y)) return true;
+    return solidAt(x + dir * length, y);
   };
 
   const p = { x: 0, y: 0, vx: 0, vy: 0, airJumps: MAX_AIR_JUMPS, grounded: false, facingRight: true, lowest: 0, anim: 0 };
@@ -236,33 +293,85 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
     void sfx('burnt');
   };
 
-  // Moves the box along one axis, stopping at solid tiles. Touching lava burns.
-  const moveAxis = (dx: number, dy: number) => {
-    const cx = p.x + BOX.ox + dx;
-    const cy = p.y + BOX.oy + dy;
-    const x0 = Math.floor(cx - BOX.hw + 1e-4);
-    const x1 = Math.floor(cx + BOX.hw - 1e-4);
-    const y0 = Math.floor(cy - BOX.hh + 1e-4);
-    const y1 = Math.floor(cy + BOX.hh - 1e-4);
-    let hit: { x: number; y: number } | null = null;
-    for (let ty = y0; ty <= y1; ty++) {
-      for (let tx = x0; tx <= x1; tx++) {
-        if (!solids.has(`${tx},${ty}`)) continue;
-        if (!hit || (dx > 0 ? tx < hit.x : dx < 0 ? tx > hit.x : dy > 0 ? ty < hit.y : ty > hit.y)) hit = { x: tx, y: ty };
+  // Does the player's box, centred at (cx, cy), overlap any solid pixel? Reports lava too.
+  const P = 1 / TILE_PX;
+  const boxHit = (cx: number, cy: number): { lava: boolean } | null => {
+    const left = cx - BOX.hw + 1e-4;
+    const right = cx + BOX.hw - 1e-4;
+    const bottom = cy - BOX.hh + 1e-4;
+    const top = cy + BOX.hh - 1e-4;
+    let hit: { lava: boolean } | null = null;
+    for (let ty = Math.floor(bottom); ty <= Math.floor(top); ty++) {
+      for (let tx = Math.floor(left); tx <= Math.floor(right); tx++) {
+        const t = solids.get(`${tx},${ty}`);
+        if (!t) continue;
+        let solid = !t.mask;
+        if (!solid) {
+          // Only the pixels the box covers inside this tile.
+          const c0 = Math.max(0, Math.floor((left - tx) * TILE_PX));
+          const c1 = Math.min(TILE_PX - 1, Math.floor((right - tx) * TILE_PX));
+          const r0 = Math.max(0, Math.floor((bottom - ty) * TILE_PX));
+          const r1 = Math.min(TILE_PX - 1, Math.floor((top - ty) * TILE_PX));
+          for (let v = r0; v <= r1 && !solid; v++) for (let u = c0; u <= c1 && !solid; u++) solid = pixelSolid(t, (u + 0.5) * P, (v + 0.5) * P);
+        }
+        if (!solid) continue;
+        if (t.lava) return { lava: true };
+        hit = { lava: false };
       }
     }
-    if (!hit) {
-      p.x += dx;
-      p.y += dy;
-      return false;
+    return hit;
+  };
+  // Moving into lava burns; `probe` only asks (the slope helpers look ahead without touching).
+  const freeAt = (x: number, y: number, probe = false) => {
+    const hit = boxHit(x + BOX.ox, y + BOX.oy);
+    if (hit?.lava && !probe) die();
+    return !hit;
+  };
+
+  // Moves the box along one axis in small sweeps, stopping flush against the first solid
+  // pixel (a binary search pins the contact). Returns true if it was blocked.
+  const moveAxis = (dx: number, dy: number) => {
+    const dist = Math.abs(dx || dy);
+    const steps = Math.max(1, Math.ceil(dist / (P / 2)));
+    const sx = dx / steps;
+    const sy = dy / steps;
+    for (let i = 0; i < steps; i++) {
+      if (freeAt(p.x + sx, p.y + sy)) {
+        p.x += sx;
+        p.y += sy;
+        continue;
+      }
+      let lo = 0;
+      let hi = 1;
+      for (let k = 0; k < 6; k++) {
+        const mid = (lo + hi) / 2;
+        if (freeAt(p.x + sx * mid, p.y + sy * mid)) lo = mid;
+        else hi = mid;
+      }
+      p.x += sx * lo;
+      p.y += sy * lo;
+      return true;
     }
-    if (solids.get(`${hit.x},${hit.y}`)) die();
-    if (dx > 0) p.x = hit.x - BOX.hw - BOX.ox - 1e-4;
-    else if (dx < 0) p.x = hit.x + 1 + BOX.hw - BOX.ox + 1e-4;
-    else if (dy > 0) p.y = hit.y - BOX.hh - BOX.oy - 1e-4;
-    else p.y = hit.y + 1 + BOX.hh - BOX.oy + 1e-4;
+    return false;
+  };
+
+  // Walking: climb slopes and small bumps (up to 6 px) instead of stopping at them.
+  const STEP_UP = 6 * P;
+  const walk = (dx: number) => {
+    if (!moveAxis(dx, 0)) return false;
+    const rest = dx - (p.x - startX);
+    if (p.grounded && p.vy <= 0 && Math.abs(rest) > 1e-6) {
+      for (let up = P; up <= STEP_UP + 1e-6; up += P) {
+        if (freeAt(p.x, p.y + up, true) && freeAt(p.x + rest, p.y + up, true)) {
+          p.y += up;
+          moveAxis(rest, 0);
+          return false;
+        }
+      }
+    }
     return true;
   };
+  let startX = 0;
 
   const overlaps = (b: { x: number; y: number; w: number; h: number }) =>
     Math.abs(p.x + BOX.ox - b.x) < BOX.hw + b.w / 2 && Math.abs(p.y + BOX.oy - b.y) < BOX.hh + b.h / 2;
@@ -275,12 +384,18 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
     const feet = p.y - 1;
     const crown = p.y + 0.5;
     const wasGrounded = p.grounded;
-    p.grounded = rayHits(p.x, feet, -1, 0.5) || rayHits(p.x, feet, 1, 0.5);
+    // Player.cs's two feet rays, plus: resting on any solid pixel (on a slope the rays can pass
+    // under the one corner that touches).
+    p.grounded = rayHits(p.x, feet, -1, 0.5) || rayHits(p.x, feet, 1, 0.5) || (p.vy <= 0 && !freeAt(p.x, p.y - 2 / 16, true));
     if (p.grounded) {
       if (!wasGrounded) void sfx('landing');
       p.airJumps = MAX_AIR_JUMPS;
     }
-    const wall = (rayHits(p.x, crown, -1, WALL_CHECK) && rayHits(p.x, feet, -1, WALL_CHECK)) || (rayHits(p.x, crown, 1, WALL_CHECK) && rayHits(p.x, feet, 1, WALL_CHECK));
+    // Wall cling: Player.cs needs the head and feet rays to both touch the wall. Here any of
+    // head, middle or feet will do, so you can keep wall jumping where only part of you is
+    // against it (up near a wall's top edge, or past a ledge). Wall jumps are unlimited.
+    const touches = (dir: number) => [crown, p.y + BOX.oy, feet].some((y) => rayHits(p.x, y, dir, WALL_CHECK));
+    const wall = !p.grounded && (touches(-1) || touches(1));
     if (jumpQueued && (p.airJumps > 0 || wall)) {
       p.vy = JUMP_DV;
       if (!p.grounded) {
@@ -298,8 +413,21 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
     if (dir < 0) p.facingRight = false;
     else if (dir > 0) p.facingRight = true;
     p.vy += GRAVITY * FIXED_DT;
-    if (moveAxis(p.vx * FIXED_DT, 0)) p.vx = 0;
+    startX = p.x;
+    if (walk(p.vx * FIXED_DT)) p.vx = 0;
+    if (mode !== 'play') return; // walked into lava
+    const wasOnGround = p.grounded && p.vy <= 0;
     if (moveAxis(0, p.vy * FIXED_DT)) p.vy = 0;
+    // Walking down a slope: stay on it instead of skipping down in little hops.
+    else if (wasOnGround && p.vx !== 0) {
+      for (let down = P; down <= STEP_UP + 1e-6; down += P) {
+        if (!freeAt(p.x, p.y - down, true)) {
+          p.y -= down - P;
+          p.vy = 0;
+          break;
+        }
+      }
+    }
     if (mode !== 'play') return; // burnt this step
 
     // Fell out of the world: the lava got you anyway.
@@ -362,7 +490,7 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
   ];
 
   const text = (s: string, x: number, y: number, size: number, color = '#fff', align: CanvasTextAlign = 'center') => {
-    g.font = `800 ${size}px "Nunito Variable", system-ui, sans-serif`;
+    g.font = `800 ${size}px "Nunito Variable", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif`;
     g.textAlign = align;
     g.textBaseline = 'middle';
     g.lineWidth = Math.max(2, size / 6);
@@ -387,7 +515,7 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
       g.drawImage(img, (W - img.width * k) / 2, (H - img.height * k) / 2, img.width * k, img.height * k);
       g.fillStyle = 'rgba(18, 10, 28, 0.35)';
       g.fillRect(0, 0, W, H);
-      if (Math.floor(elapsedReal * 2) % 2 === 0) text('Press A or Space to start', W / 2, H * 0.84, H * 0.06, '#ffd59e');
+      if (Math.floor(elapsedReal * 2) % 2 === 0) text(tr('Press A or Space to start', '按 A 或空格键开始'), W / 2, H * 0.84, H * 0.06, '#ffd59e');
       return;
     }
 
@@ -464,7 +592,7 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
     g.strokeStyle = 'rgba(255, 255, 255, 0.55)';
     g.lineWidth = Math.max(1, H * 0.004);
     g.strokeRect(bx - 2, by - 2, barW + 4, barH + 4);
-    text('ALT', bx + barW / 2, by - H * 0.035, H * 0.032);
+    text(tr('ALT', '高度'), bx + barW / 2, by - H * 0.035, H * 0.032);
     const fill = Math.min(Math.max((p.y - p.lowest) / Math.max(TARGET_ELEVATION - p.lowest, 0.001), 0), 1);
     const blinkOrange = closeToWin && Math.floor(elapsedReal * 2) % 2 === 0;
     g.fillStyle = blinkOrange ? 'rgb(240, 158, 58)' : 'rgb(0, 255, 255)';
@@ -476,16 +604,16 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
       g.fillStyle = `rgba(80, 10, 0, ${Math.min((elapsedReal - modeAt) * 0.8, 0.55)})`;
       g.fillRect(0, 0, W, H);
       if (mode === 'lost') {
-        text('Burnt by the lava!', W / 2, H * 0.42, H * 0.09, '#ff9d4d');
-        text('Press A or Space to try again', W / 2, H * 0.58, H * 0.05);
+        text(tr('Burnt by the lava!', '被岩浆烫到了！'), W / 2, H * 0.42, H * 0.09, '#ff9d4d');
+        text(tr('Press A or Space to try again', '按 A 或空格键再试一次'), W / 2, H * 0.58, H * 0.05);
       }
     }
     if (mode === 'won') {
       g.fillStyle = 'rgba(18, 10, 28, 0.5)';
       g.fillRect(0, 0, W, H);
-      text('You escaped the lava!', W / 2, H * 0.38, H * 0.09, '#ffd59e');
-      text(`Time ${fmtTime(time)}`, W / 2, H * 0.52, H * 0.06);
-      text('Press A or Space to play again', W / 2, H * 0.66, H * 0.045);
+      text(tr('You escaped the lava!', '你逃出了岩浆！'), W / 2, H * 0.38, H * 0.09, '#ffd59e');
+      text(`${tr('Time', '用时')} ${fmtTime(time)}`, W / 2, H * 0.52, H * 0.06);
+      text(tr('Press A or Space to play again', '按 A 或空格键再玩一次'), W / 2, H * 0.66, H * 0.045);
     }
   };
 
@@ -530,6 +658,9 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
     raf = requestAnimationFrame(loop);
   };
   raf = requestAnimationFrame(loop);
+
+  // Dev-only test hook: lets a headless browser place the player and read back where it went.
+  if (import.meta.env.DEV) (window as unknown as { __lava: unknown }).__lava = { player: p, held, press, loadLevel, mode: () => mode };
 
   return {
     press,

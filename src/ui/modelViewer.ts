@@ -20,6 +20,7 @@ import {
 } from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { tr } from '../i18n';
 
 export interface ModelItem {
   name: string;
@@ -32,11 +33,11 @@ const LENGTH = 4; // every boat is fitted to this length, so they compare side b
 export function mountModelViewer(host: HTMLElement, items: ModelItem[]) {
   host.innerHTML = `
     <div class="viewer">
-      <canvas class="viewer__canvas" aria-label="3D model, drag to spin"></canvas>
-      <p class="viewer__hint" aria-hidden="true">Drag to spin</p>
-      <p class="viewer__loading" data-loading>Loading…</p>
+      <canvas class="viewer__canvas" aria-label="${tr('3D model, drag to spin', '3D 模型，拖动旋转')}"></canvas>
+      <p class="viewer__hint" aria-hidden="true">${tr('Drag to spin', '拖动旋转')}</p>
+      <p class="viewer__loading" data-loading>${tr('Loading…', '加载中…')}</p>
     </div>
-    <div class="viewer__picks" role="radiogroup" aria-label="Choose a boat">
+    <div class="viewer__picks" role="radiogroup" aria-label="${tr('Choose a boat', '选一艘船')}">
       ${items.map((m, i) => `<button class="viewer__pick" type="button" role="radio" aria-checked="${i === 0}" data-pick="${i}" style="--c:${m.color}">${m.name}</button>`).join('')}
     </div>
   `;

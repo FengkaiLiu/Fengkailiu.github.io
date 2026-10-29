@@ -5,13 +5,34 @@ import { outsideGuest, type Player } from '../audio/player';
 import { createAnalysis, type Analysis } from '../viz/analysis';
 import { chromagram, spectrogram, spectrum, vectorscope, waveform, type Scope } from '../viz/scopes';
 import { stepAside } from './stepAside';
+import { tr } from '../i18n';
 
 const VIEWS: { id: string; name: string; scope: Scope; about: string }[] = [
-  { id: 'wave', name: 'Wave', scope: waveform, about: 'The raw signal: air pressure over a few milliseconds.' },
-  { id: 'spectrum', name: 'Spectrum', scope: spectrum, about: 'An FFT splits the sound into frequencies; bass on the left, air on the right.' },
-  { id: 'spectrogram', name: 'Spectrogram', scope: spectrogram, about: 'The spectrum over time: each column is one frame, brighter is louder.' },
-  { id: 'stereo', name: 'Stereo', scope: vectorscope, about: 'Left against right. A vertical line is mono; a cloud is wide stereo.' },
-  { id: 'chroma', name: 'Chroma', scope: chromagram, about: 'Energy folded into the 12 notes of the octave; the key is guessed from it.' },
+  { id: 'wave', name: tr('Wave', '波形'), scope: waveform, about: tr('The raw signal: air pressure over a few milliseconds.', '原始信号：几毫秒内的气压变化。') },
+  {
+    id: 'spectrum',
+    name: tr('Spectrum', '频谱'),
+    scope: spectrum,
+    about: tr('An FFT splits the sound into frequencies; bass on the left, air on the right.', 'FFT 把声音拆成各个频率：左边是低音，右边是高频。'),
+  },
+  {
+    id: 'spectrogram',
+    name: tr('Spectrogram', '声谱图'),
+    scope: spectrogram,
+    about: tr('The spectrum over time: each column is one frame, brighter is louder.', '随时间变化的频谱：每一列是一帧，越亮越响。'),
+  },
+  {
+    id: 'stereo',
+    name: tr('Stereo', '立体声'),
+    scope: vectorscope,
+    about: tr('Left against right. A vertical line is mono; a cloud is wide stereo.', '左声道对右声道。一条竖线是单声道，一团云是很宽的立体声。'),
+  },
+  {
+    id: 'chroma',
+    name: tr('Chroma', '音级'),
+    scope: chromagram,
+    about: tr('Energy folded into the 12 notes of the octave; the key is guessed from it.', '把能量折叠到一个八度内的 12 个音上，调性就是据此推测的。'),
+  },
 ];
 
 export function mountScopePanel(player: Player, bar: HTMLElement) {
@@ -21,21 +42,21 @@ export function mountScopePanel(player: Player, bar: HTMLElement) {
   pill.dataset.liquidBezel = '18';
   pill.setAttribute('aria-expanded', 'false');
   pill.setAttribute('aria-controls', 'scope-panel');
-  pill.title = 'See the music: waveform, spectrum, stereo, chroma';
-  pill.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="icon-line" d="M3 12h2.5l2-6 3 12 3-15 3 15 2-6H21" /></svg><span class="pill__label">Scope</span>`;
+  pill.title = tr('See the music: waveform, spectrum, stereo, chroma', '看见音乐：波形、频谱、立体声、音级');
+  pill.innerHTML = `<svg viewBox="0 0 24 24" aria-hidden="true"><path class="icon-line" d="M3 12h2.5l2-6 3 12 3-15 3 15 2-6H21" /></svg><span class="pill__label">${tr('Scope', '示波器')}</span>`;
   bar.append(pill);
 
   const panel = document.createElement('section');
   panel.className = 'scope liquid liquid--pad';
   panel.id = 'scope-panel';
-  panel.setAttribute('aria-label', 'Audio visualizers');
+  panel.setAttribute('aria-label', tr('Audio visualizers', '音频可视化'));
   panel.hidden = true;
   panel.innerHTML = `
     <div class="scope__head">
-      <div class="scope__tabs" role="tablist" aria-label="Visualizer">
+      <div class="scope__tabs" role="tablist" aria-label="${tr('Visualizer', '可视化')}">
         ${VIEWS.map((v, i) => `<button class="scope__tab" type="button" role="tab" data-view="${v.id}" aria-selected="${i === 0}">${v.name}</button>`).join('')}
       </div>
-      <p class="scope__readout" aria-live="polite"><span data-bpm>BPM ·</span><span data-key>Key ·</span></p>
+      <p class="scope__readout" aria-live="polite"><span data-bpm>BPM ·</span><span data-key>${tr('Key', '调')} ·</span></p>
     </div>
     <div class="scope__stage">
       <canvas class="scope__canvas" aria-hidden="true"></canvas>
@@ -117,9 +138,10 @@ export function mountScopePanel(player: Player, bar: HTMLElement) {
     analysis.update(dt, hearing);
     if (open) {
       view.scope.draw(g, canvas.width, canvas.height, analysis, dpr);
-      $('[data-bpm]').textContent = `BPM ${analysis.bpm ?? (hearing ? 'listening…' : '·')}`;
-      $('[data-key]').textContent = `Key ${analysis.key?.name ?? (hearing ? 'listening…' : '·')}`;
-      note.textContent = s.playing ? '' : 'Press play to see the music.';
+      const listening = hearing ? tr('listening…', '聆听中…') : '·';
+      $('[data-bpm]').textContent = `BPM ${analysis.bpm ?? listening}`;
+      $('[data-key]').textContent = `${tr('Key', '调')} ${analysis.key?.name ?? listening}`;
+      note.textContent = s.playing ? '' : tr('Press play to see the music.', '按下播放，看看音乐长什么样。');
     }
     raf = open || s.playing ? requestAnimationFrame(frame) : 0;
     if (!raf) last = 0;

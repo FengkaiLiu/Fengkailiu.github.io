@@ -8,13 +8,14 @@ import { getAudio, unlockAudio } from '../audio/context';
 import { BARS, createKit, type Kit } from '../audio/kit';
 import type { GuestSlot, Player } from '../audio/player';
 import { profile } from '../content/profile';
+import { tr } from '../i18n';
 
 const ROWS = [
-  { id: 'kick', name: 'Kick' },
-  { id: 'snare', name: 'Snare' },
-  { id: 'hat', name: 'Hat' },
-  { id: 'bass', name: 'Bass' },
-  { id: 'keys', name: 'Keys' },
+  { id: 'kick', name: tr('Kick', '底鼓') },
+  { id: 'snare', name: tr('Snare', '军鼓') },
+  { id: 'hat', name: tr('Hat', '踩镲') },
+  { id: 'bass', name: tr('Bass', '贝斯') },
+  { id: 'keys', name: tr('Keys', '键盘') },
 ] as const;
 type Row = (typeof ROWS)[number]['id'];
 const STEPS = 16;
@@ -60,15 +61,15 @@ export function mountBeatbox(slot: HTMLElement, player: Player) {
 
   slot.innerHTML = `
     <div class="beat">
-      ${shared ? '<p class="beat__gift">Someone left you a beat. Press play.</p>' : ''}
+      ${shared ? `<p class="beat__gift">${tr('Someone left you a beat. Press play.', '有人给你留了一段节拍，按播放听听。')}</p>` : ''}
       <div class="beat__bar">
-        <button class="btn beat__play" type="button" data-play aria-pressed="false">Play</button>
-        <label class="beat__tempo"><span>Tempo <output data-bpm-out>${bpm}</output></span><input type="range" min="60" max="120" value="${bpm}" data-bpm /></label>
-        <button class="beat__tool" type="button" data-surprise>Surprise me</button>
-        <button class="beat__tool" type="button" data-clear>Clear</button>
+        <button class="btn beat__play" type="button" data-play aria-pressed="false">${tr('Play', '播放')}</button>
+        <label class="beat__tempo"><span>${tr('Tempo', '速度')} <output data-bpm-out>${bpm}</output></span><input type="range" min="60" max="120" value="${bpm}" data-bpm /></label>
+        <button class="beat__tool" type="button" data-surprise>${tr('Surprise me', '随机来一段')}</button>
+        <button class="beat__tool" type="button" data-clear>${tr('Clear', '清空')}</button>
       </div>
-      <p class="beat__chords"><span class="beat__chords-label">The grid repeats each bar, over a 4-bar loop:</span>${BARS.map((b, i) => `<span class="beat__chord" data-chord="${i}">${b.name}</span>`).join('')}</p>
-      <div class="beat__grid" role="grid" aria-label="Step sequencer: rows are instruments, columns are 16th notes">
+      <p class="beat__chords"><span class="beat__chords-label">${tr('The grid repeats each bar, over a 4-bar loop:', '网格每小节重复一次，底下是 4 小节的和弦循环：')}</span>${BARS.map((b, i) => `<span class="beat__chord" data-chord="${i}">${b.name}</span>`).join('')}</p>
+      <div class="beat__grid" role="grid" aria-label="${tr('Step sequencer: rows are instruments, columns are 16th notes', '步进音序器：每行是一种乐器，每列是一个十六分音符')}">
         ${ROWS.map(
           (r, ri) => `
           <div class="beat__row" role="row">
@@ -76,7 +77,7 @@ export function mountBeatbox(slot: HTMLElement, player: Player) {
             ${Array.from(
               { length: STEPS },
               (_, i) =>
-                `<button class="beat__step" type="button" role="gridcell" data-r="${ri}" data-i="${i}" aria-selected="${grid[ri][i]}" aria-label="${r.name}, step ${i + 1}"></button>`,
+                `<button class="beat__step" type="button" role="gridcell" data-r="${ri}" data-i="${i}" aria-selected="${grid[ri][i]}" aria-label="${tr(`${r.name}, step ${i + 1}`, `${r.name}，第 ${i + 1} 步`)}"></button>`,
             ).join('')}
           </div>`,
         ).join('')}
@@ -84,23 +85,23 @@ export function mountBeatbox(slot: HTMLElement, player: Player) {
 
       <form class="beat__form" data-form>
         <div class="beat__pair">
-          <label class="beat__field"><span>Your name</span><input name="name" autocomplete="name" required /></label>
-          <label class="beat__field"><span>Your email</span><input name="email" type="email" autocomplete="email" required placeholder="so I can write back" /></label>
+          <label class="beat__field"><span>${tr('Your name', '你的名字')}</span><input name="name" autocomplete="name" required /></label>
+          <label class="beat__field"><span>${tr('Your email', '你的邮箱')}</span><input name="email" type="email" autocomplete="email" required placeholder="${tr('so I can write back', '方便我回复你')}" /></label>
         </div>
         <!-- Honeypot: hidden from people, filled in by spam bots, and then ignored. -->
         <input class="beat__honey" name="_honey" tabindex="-1" autocomplete="off" aria-hidden="true" />
-        <label class="beat__field"><span>Message</span><textarea name="message" rows="3" required placeholder="Say hi, ask about a project, or just send the beat."></textarea></label>
-        <label class="beat__check"><input type="checkbox" name="withBeat" checked /> Attach my beat (as a link)</label>
+        <label class="beat__field"><span>${tr('Message', '留言')}</span><textarea name="message" rows="3" required placeholder="${tr('Say hi, ask about a project, or just send the beat.', '打个招呼、问问项目，或者只发节拍也行。')}"></textarea></label>
+        <label class="beat__check"><input type="checkbox" name="withBeat" checked /> ${tr('Attach my beat (as a link)', '附上我的节拍（以链接形式）')}</label>
         <div class="beat__actions">
-          <button class="btn" type="submit" data-send>Send with my beat</button>
-          <button class="beat__tool" type="button" data-copy>Copy beat link</button>
+          <button class="btn" type="submit" data-send>${tr('Send with my beat', '连同节拍一起发送')}</button>
+          <button class="beat__tool" type="button" data-copy>${tr('Copy beat link', '复制节拍链接')}</button>
           <span class="beat__copied" aria-live="polite" data-copied></span>
         </div>
         <p class="beat__status" aria-live="polite" data-status></p>
       </form>
 
       <ul class="beat__links">
-        <li><button class="beat__linkbtn" type="button" data-email>Email: ${esc(profile.links.email)}</button></li>
+        <li><button class="beat__linkbtn" type="button" data-email>${tr('Email', '邮箱')}: ${esc(profile.links.email)}</button></li>
         <li><a href="${esc(profile.links.github)}" target="_blank" rel="noopener">GitHub</a></li>
         <li><a href="${esc(profile.links.linkedin)}" target="_blank" rel="noopener">LinkedIn</a></li>
         <li><a href="${esc(profile.links.instagram)}" target="_blank" rel="noopener">Instagram</a></li>
@@ -221,9 +222,9 @@ export function mountBeatbox(slot: HTMLElement, player: Player) {
     tick();
     timer = window.setInterval(tick, 25);
     // Borrow the turntable: the room's music pauses and the dock shows the beat.
-    turntable = player.host({ id: 'beat', title: 'Your beat', artist: `${bpm} BPM · 4 bars`, inRoom: true }, () => stop(false));
+    turntable = player.host({ id: 'beat', title: tr('Your beat', '你的节拍'), artist: `${bpm} BPM · ${tr('4 bars', '4 小节')}`, inRoom: true }, () => stop(false));
     playBtn.setAttribute('aria-pressed', 'true');
-    playBtn.textContent = 'Stop';
+    playBtn.textContent = tr('Stop', '停止');
     requestAnimationFrame(playhead);
   };
   const stop = (release = true) => {
@@ -231,7 +232,7 @@ export function mountBeatbox(slot: HTMLElement, player: Player) {
     kit?.stop();
     kit = null;
     playBtn.setAttribute('aria-pressed', 'false');
-    playBtn.textContent = 'Play';
+    playBtn.textContent = tr('Play', '播放');
     cells.forEach((c) => c.classList.remove('is-now'));
     slot.querySelectorAll('[data-chord]').forEach((c) => c.classList.remove('is-now'));
     if (release) turntable?.end();
@@ -262,7 +263,7 @@ export function mountBeatbox(slot: HTMLElement, player: Player) {
   $('[data-copy]').addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(link());
-      copied.textContent = 'Link copied.';
+      copied.textContent = tr('Link copied.', '链接已复制。');
     } catch {
       copied.textContent = link();
     }
@@ -273,11 +274,11 @@ export function mountBeatbox(slot: HTMLElement, player: Player) {
   emailBtn.addEventListener('click', async () => {
     try {
       await navigator.clipboard.writeText(profile.links.email);
-      emailBtn.textContent = 'Email address copied';
+      emailBtn.textContent = tr('Email address copied', '邮箱地址已复制');
     } catch {
       emailBtn.textContent = profile.links.email;
     }
-    window.setTimeout(() => (emailBtn.textContent = `Email: ${profile.links.email}`), 2500);
+    window.setTimeout(() => (emailBtn.textContent = `${tr('Email', '邮箱')}: ${profile.links.email}`), 2500);
   });
 
   // Send: posted to FormSubmit, which forwards it to the inbox. No account or mail app needed.
@@ -293,7 +294,7 @@ export function mountBeatbox(slot: HTMLElement, player: Player) {
     const withBeat = Boolean(form.get('withBeat'));
     sendBtn.disabled = true;
     status.className = 'beat__status';
-    status.textContent = 'Sending…';
+    status.textContent = tr('Sending…', '发送中…');
     try {
       const res = await fetch(FORM_ENDPOINT, {
         method: 'POST',
@@ -303,6 +304,8 @@ export function mountBeatbox(slot: HTMLElement, player: Player) {
           email: String(form.get('email') ?? '').trim(),
           message,
           beat: withBeat ? `${link()} (${bpm} BPM)` : 'none attached',
+          // Which language the visitor read the page in, so the reply can match.
+          language: tr('English', '中文'),
           _subject: `Portfolio: a note from ${name || 'a visitor'}`,
           _template: 'table',
           _captcha: 'false',
@@ -311,11 +314,14 @@ export function mountBeatbox(slot: HTMLElement, player: Player) {
       const data = (await res.json().catch(() => ({}))) as { success?: string | boolean };
       if (!res.ok || String(data.success) !== 'true') throw new Error('not sent');
       status.classList.add('is-ok');
-      status.textContent = 'Sent. Thank you, I will write back soon.';
+      status.textContent = tr('Sent. Thank you, I will write back soon.', '已发送。谢谢，我会尽快回复！');
       formEl.reset();
     } catch {
       status.classList.add('is-error');
-      status.textContent = `That didn't go through. You can email ${profile.links.email} directly (the Email button below copies it).`;
+      status.textContent = tr(
+        `That didn't go through. You can email ${profile.links.email} directly (the Email button below copies it).`,
+        `没有发送成功。你可以直接发邮件到 ${profile.links.email}（点下面的邮箱按钮可以复制地址）。`,
+      );
     } finally {
       sendBtn.disabled = false;
     }
