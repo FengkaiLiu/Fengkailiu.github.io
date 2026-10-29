@@ -1,7 +1,7 @@
 // The site speaks English or Simplified Chinese. The language is picked once, before anything
-// renders: a ?lang= link wins (and is remembered), then the visitor's last choice, then the
-// browser's own language. Every module builds its text when it mounts, so switching reloads
-// the page in the other language. Text lives next to its English as tr('English', '中文').
+// renders: a ?lang= link wins (and is remembered), then the visitor's last choice, and
+// otherwise English. Every module builds its text when it mounts, so switching reloads the
+// page in the other language. Text lives next to its English as tr('English', '中文').
 
 export type Lang = 'en' | 'zh';
 
@@ -20,7 +20,7 @@ function pick(): Lang {
     const saved = localStorage.getItem(KEY);
     if (valid(saved)) return saved;
   } catch {}
-  return /^zh\b/i.test(navigator.language) ? 'zh' : 'en';
+  return 'en';
 }
 
 export const lang: Lang = pick();

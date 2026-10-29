@@ -490,7 +490,7 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
   ];
 
   const text = (s: string, x: number, y: number, size: number, color = '#fff', align: CanvasTextAlign = 'center') => {
-    g.font = `800 ${size}px "Nunito Variable", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif`;
+    g.font = `800 ${size}px "Nunito Variable", "ZCOOL KuaiLe Web", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif`;
     g.textAlign = align;
     g.textBaseline = 'middle';
     g.lineWidth = Math.max(2, size / 6);
