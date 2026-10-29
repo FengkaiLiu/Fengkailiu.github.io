@@ -163,6 +163,11 @@
 .langswitch__opt:hover {
   opacity: 1;
 }
+/* On the English page, "中文" is the only Chinese: the system face draws it, so English
+   visitors never download the Chinese fonts. */
+html[lang='en'] .langswitch__opt {
+  font-family: 'Nunito Variable', var(--font-cjk-system), sans-serif;
+}
 .langswitch__opt[aria-current='true'] {
   background: rgba(255, 157, 77, 0.22);
   color: var(--lamp-300);

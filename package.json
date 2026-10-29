@@ -5,8 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "tsc --noEmit && vite build",
-    "preview": "vite preview"
+    "build": "tsc --noEmit && node scripts/check-zh-fonts.mjs && vite build",
+    "preview": "vite preview",
+    "fonts:zh": "python scripts/subset-zh-fonts.py"
   },
   "devDependencies": {
     "@types/three": "^0.186.0",

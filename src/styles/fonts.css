@@ -71,3 +71,23 @@
   src: url('@fontsource-variable/tilt-neon/files/tilt-neon-latin-yrot-normal.woff2') format('woff2-variations');
   unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
 }
+/* Chinese, self-hosted (Google Fonts is out of reach in mainland China) and subset to the
+   characters the site writes, by scripts/subset-zh-fonts.py: about 75 KB and 180 KB. They
+   claim only CJK punctuation, ideographs and full-width forms, so the English page never
+   downloads them. Both SIL Open Font License 1.1. */
+@font-face {
+  font-family: 'ZCOOL KuaiLe Web';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 1000; /* one weight; claiming them all stops the browser smearing a fake bold */
+  src: url('../fonts/zh/zcool-kuaile.woff2') format('woff2');
+  unicode-range: U+3000-303F,U+3400-4DBF,U+4E00-9FFF,U+FF00-FFEF;
+}
+@font-face {
+  font-family: 'LXGW WenKai Web';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 400;
+  src: url('../fonts/zh/lxgw-wenkai.woff2') format('woff2');
+  unicode-range: U+3000-303F,U+3400-4DBF,U+4E00-9FFF,U+FF00-FFEF;
+}

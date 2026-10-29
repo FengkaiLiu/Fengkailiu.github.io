@@ -28,7 +28,7 @@ Dev helpers (dev server only):
 - `/?at=lab` scrolls to a chapter.
 - `/?fps` shows the frame rate and what the adaptive quality governor is doing.
 - `/?nogate&game` opens the Lava Rising console; `game=level2` (or `level3`, `secret`) starts on that level.
-- `/?lang=zh` (or `lang=en`) opens the site in that language and remembers it; without it, the visitor's last choice or the browser's language decides. This also works on the live site, so a `?lang=zh` link is the one to send to Chinese-speaking recruiters.
+- `/?lang=zh` (or `lang=en`) opens the site in that language and remembers it; without it, the visitor's last choice decides, and otherwise it is English. This also works on the live site, so a `?lang=zh` link is the one to send to Chinese-speaking recruiters.
 - `/?nogate&notes=hotfooter` opens a project's liner notes; `&part=3` scrolls to that part of the walkthrough.
 - `/?play` starts the music on load; `/?shot=record` frames the turntable; `/?crate` opens the Liner notes crate; `/?mood=neon` (or `meadow`, `teto`) shows a song scene; `/?scope=spectrum` (or `wave`, `spectrogram`, `stereo`, `chroma`) opens the Scope.
 
@@ -60,7 +60,7 @@ Dev helpers (dev server only):
 | 17 | Extras: command palette, spectrogram easter egg | ⬜ |
 | 18 | Polish: Latin-only fonts, re-encoded videos and JPG covers (18a); room pauses under the game console; reduced motion stills the camera arc, parallax, dust and twinkle; axe-clean (WCAG A/AA), skip link, landmarks; favicon; phone layout fixes | ✅ |
 | 19 | Launch: main fast-forwarded to the redesign, Pages deploys from GitHub Actions, verified live at fengkailiu.github.io | ✅ |
-| 22 | 中文: Simplified Chinese for every visitor-facing line (EN / 中文 switch in the top-left corner, also on the gate), system CJK fonts, `?lang=zh` links | ✅ |
+| 22 | 中文: Simplified Chinese for every visitor-facing line (EN / 中文 switch in the top-left corner, also on the gate), `?lang=zh` links; Chinese fonts ZCOOL KuaiLe (titles) and LXGW WenKai (text), subset to the site's characters. After changing Chinese text, run `npm run fonts:zh` (the build warns if you forget) | ✅ |
 
 ## Assets Fengkai needs to make
 

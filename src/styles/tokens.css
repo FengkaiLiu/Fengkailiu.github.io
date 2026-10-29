@@ -53,14 +53,18 @@
   --radius-pill: 999px;
 
   /* Type */
-  /* Chinese: the system's own CJK face (nothing to download), after the Latin ones, so
-     Latin words inside Chinese text keep Nunito. The hand font falls back to a brush Kai. */
-  --font-cjk: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Noto Sans SC';
-  --font-display: 'Nunito Variable', 'Segoe UI Variable Display', var(--font-cjk), system-ui, sans-serif;
+  /* Chinese, after the Latin faces so Latin words inside Chinese text keep Nunito: ZCOOL
+     KuaiLe (rounded, playful) for titles, buttons and the neon sign; LXGW WenKai (a warm Kai)
+     for everything else. Both are subset to the site's own characters (see fonts.css); the
+     system's CJK face covers anything newer, such as a song title from Spotify. */
+  --font-cjk-system: 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Source Han Sans SC', 'Noto Sans SC';
+  --font-cjk: 'LXGW WenKai Web', var(--font-cjk-system);
+  --font-cjk-display: 'ZCOOL KuaiLe Web', 'LXGW WenKai Web', var(--font-cjk-system);
+  --font-display: 'Nunito Variable', 'Segoe UI Variable Display', var(--font-cjk-display), system-ui, sans-serif;
   --font-body: 'Nunito Variable', 'Segoe UI Variable Text', var(--font-cjk), system-ui, sans-serif;
   --font-mono: 'JetBrains Mono Variable', ui-monospace, 'Cascadia Code', var(--font-cjk), monospace;
-  --font-hand: 'Caveat Variable', 'Segoe Print', 'Kaiti SC', 'STKaiti', 'KaiTi', var(--font-cjk), cursive;
-  --font-neon: 'Tilt Neon Variable', 'Nunito Variable', var(--font-cjk), system-ui, sans-serif;
+  --font-hand: 'Caveat Variable', 'Segoe Print', var(--font-cjk), cursive;
+  --font-neon: 'Tilt Neon Variable', 'Nunito Variable', var(--font-cjk-display), system-ui, sans-serif;
 
   --text-hero: clamp(3.2rem, 9vw, 8.5rem);
   --text-h1: clamp(2.4rem, 5.5vw, 4.75rem);
