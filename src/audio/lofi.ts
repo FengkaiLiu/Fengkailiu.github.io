@@ -57,10 +57,11 @@ export function rhodesNote(ctx: BaseAudioContext, dest: AudioNode, midi: number,
   }
 }
 
-// The rain recording, ready to loop: brought to the level the room's rain has always had,
-// its few loudest drops rounded off so they don't clip, and its end crossfaded into its
-// start so a 12 s clip repeats without a seam.
-const RAIN_RMS = 0.035;
+// The rain recording, ready to loop: brought to a quiet background level (about half as
+// loud to the ear as the old synthesized rain, so it sits under the music), its few
+// loudest drops rounded off so they don't clip, and its end crossfaded into its start so
+// a 12 s clip repeats without a seam.
+const RAIN_RMS = 0.011;
 const RAIN_KNEE = 0.4; // above this a drop is softly limited, never past 1
 const RAIN_XFADE = 1.5; // seconds
 
