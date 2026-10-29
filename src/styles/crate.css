@@ -179,8 +179,6 @@
 .crate__count {
   min-width: 3.5em;
   text-align: center;
-  font-family: var(--font-mono);
-  font-size: var(--text-micro);
   opacity: 0.6;
 }
 
@@ -209,8 +207,6 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  font-family: var(--font-mono);
-  font-size: var(--text-micro);
   line-height: 1.7;
   opacity: 0.7;
 }

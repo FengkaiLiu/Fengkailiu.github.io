@@ -31,10 +31,6 @@
   border-radius: var(--radius-pill);
   background: var(--sun);
   color: var(--ink-900);
-  font-family: var(--font-mono);
-  font-size: var(--text-micro);
-  font-weight: 700;
-  letter-spacing: 0.12em;
 }
 
 .ph__label {

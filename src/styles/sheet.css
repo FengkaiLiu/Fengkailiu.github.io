@@ -160,10 +160,6 @@
   gap: var(--space-2);
 }
 .sheet__section h3 {
-  font-family: var(--font-mono);
-  font-size: var(--text-micro);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
   color: var(--lamp-300);
 }
 .sheet__section p,
@@ -238,8 +234,6 @@
   display: none;
 }
 .sheet__step-no {
-  font-family: var(--font-mono);
-  font-size: var(--text-micro);
   color: var(--lamp-300);
 }
 
@@ -287,9 +281,6 @@
   outline-offset: 2px;
 }
 .sheet__media figcaption {
-  font-family: var(--font-mono);
-  font-size: var(--text-micro);
-  letter-spacing: 0.04em;
   opacity: 0.65;
 }
 @media (max-width: 560px) {
@@ -333,8 +324,6 @@
   box-shadow: 0 30px 60px -20px rgba(0, 0, 0, 0.8);
 }
 .lightbox__frame figcaption {
-  font-family: var(--font-mono);
-  font-size: var(--text-micro);
   opacity: 0.7;
 }
 .lightbox__btn {
@@ -406,8 +395,6 @@
 .viewer__hint,
 .viewer__loading {
   position: absolute;
-  font-family: var(--font-mono);
-  font-size: var(--text-micro);
   color: rgba(12, 30, 48, 0.75);
   pointer-events: none;
 }

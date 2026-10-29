@@ -60,7 +60,7 @@ Dev helpers (dev server only):
 | 17 | Extras: command palette, spectrogram easter egg | ⬜ |
 | 18 | Polish: Latin-only fonts, re-encoded videos and JPG covers (18a); room pauses under the game console; reduced motion stills the camera arc, parallax, dust and twinkle; axe-clean (WCAG A/AA), skip link, landmarks; favicon; phone layout fixes | ✅ |
 | 19 | Launch: main fast-forwarded to the redesign, Pages deploys from GitHub Actions, verified live at fengkailiu.github.io | ✅ |
-| 20 | 中文: Simplified Chinese for every visitor-facing line (EN / 中文 switch in the top-left corner, also on the gate), system CJK fonts, `?lang=zh` links | ✅ |
+| 22 | 中文: Simplified Chinese for every visitor-facing line (EN / 中文 switch in the top-left corner, also on the gate), system CJK fonts, `?lang=zh` links | ✅ |
 
 ## Assets Fengkai needs to make
 

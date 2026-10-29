@@ -61,8 +61,6 @@
 .scope__readout {
   display: flex;
   gap: var(--space-4);
-  font-family: var(--font-mono);
-  font-size: var(--text-micro);
   color: var(--lamp-300);
 }
 

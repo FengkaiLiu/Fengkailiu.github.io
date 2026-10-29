@@ -35,6 +35,9 @@ app.innerHTML = `
         <h1 style="font-size:var(--text-h1)">Heading one</h1>
         <h2 style="font-size:var(--text-h2)">Heading two, Nunito</h2>
         <h3 style="font-size:var(--text-h3)">Heading three</h3>
+        <p style="font-family:var(--font-neon);font-size:var(--text-h2);color:#fff3e4;text-shadow:0 0 1px #fff,0 0 6px rgba(255,213,158,.95),0 0 16px rgba(255,157,77,.85),0 0 34px rgba(255,120,140,.6)">Neon, Tilt Neon</p>
+        <span class="eyebrow">Kicker · mono caps</span>
+        <span class="gate__status">Caption · mono, sentence case</span>
         <p>Body text in Nunito. The quick brown fox jumps over the lazy dog, then exports the stems at 48 kHz.</p>
         <p style="font-family:var(--font-mono);font-size:var(--text-small)">mono · 128 BPM · A minor · -14 LUFS · fft.size = 2048</p>
       </div>

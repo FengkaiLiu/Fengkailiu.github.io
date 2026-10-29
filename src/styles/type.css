@@ -1,0 +1,71 @@
+/* Type roles. Every small line on the site is one of these two voices, so they live here
+   rather than in each component (where they had drifted into five letter-spacings and three
+   fonts). Components still own color, opacity and layout.
+
+   Kicker: the uppercase label above or beside a thing (eyebrows, track numbers, tags).
+   Caption: a quiet one-line note (statuses, captions, readouts, hints, the footer).
+   Longer explanations stay in the body face; buttons and tabs stay in the display face. */
+
+.eyebrow,
+.hero__chip,
+.chapter__track,
+.console__pill,
+.tracknav__side,
+.sheet__section h3,
+.ph__tag {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 600;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.gate__status,
+.gate__hint,
+.gate__silent,
+.footer,
+.roomhint,
+.crate__count,
+.crate__credits,
+.player__time,
+.tracknav__no,
+.sheet__step-no,
+.scope__readout,
+.fft__readout,
+.console__loading,
+.viewer__hint,
+.viewer__loading,
+.sheet__media figcaption,
+.lightbox__frame figcaption,
+.fft__plots figcaption,
+.deep__code figcaption {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  text-transform: none;
+}
+
+/* Neon: lit signage, used twice: the room's name on the gate and the hero tagline. Each sets
+   its lit color (--neon-on), its unlit tube (--neon-off) and its glow (--neon-glow); the
+   flicker below borrows them. Steps, not fades: a tube catching is all or nothing. */
+.gate__title,
+.hero__tagline {
+  font-family: var(--font-neon);
+  font-weight: 400;
+}
+@keyframes neon-ignite {
+  0%, 8%, 14%, 38% {
+    color: var(--neon-off);
+    text-shadow: none;
+  }
+  5%, 11%, 19%, 41%, 100% {
+    color: var(--neon-on);
+    text-shadow: var(--neon-glow);
+  }
+}
+/* An old sign's hum: a quick double dip every so often. */
+@keyframes neon-hum {
+  0%, 93%, 95.5%, 100% { opacity: 1; }
+  94%, 97% { opacity: 0.72; }
+}
