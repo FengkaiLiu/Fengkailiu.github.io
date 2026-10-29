@@ -62,7 +62,7 @@ export const projects: Project[] = [
       {
         caption: tr('Co-op project presentation', 'Co-op 项目展示'),
         items: [
-          { type: 'image', src: '/vrmusicroom/shot-1.jpg', alt: tr('Fengkai in the headset, the room mirrored on the monitor', 'Fengkai 戴着头显，显示器上同步显示 VR 房间') },
+          { type: 'image', src: '/vrmusicroom/shot-1.jpg', alt: tr('Fengkai in the headset, the room mirrored on the monitor', '丰恺戴着头显，显示器上同步显示 VR 房间') },
           { type: 'image', src: '/vrmusicroom/shot-2.jpg', alt: tr('The in-VR song picker shown on the monitor', '显示器上的 VR 内选歌界面') },
           { type: 'image', src: '/vrmusicroom/shot-3.jpg', alt: tr('Presenting the VR room in the lab', '在实验室展示 VR 房间') },
         ],
@@ -91,7 +91,7 @@ export const projects: Project[] = [
         '漂浮的音符道具、木板障碍、首次游玩的操作提示，以及歌曲结束时的返回光圈。',
         '日文 / 英文界面切换，Kiwi Maru 和 Caveat 字体按需本地子集化。',
       ]) },
-      { heading: tr('Credits', '制作人员'), text: tr('Team FBH: Fengkai Liu (lead development, 3D modeling, visual design, QA), Brian Liu (creative direction, coding, QA), and Haolin Wang (original cube-chibi Miku base mesh, used with permission). Per contest guidelines, no generative AI was used for any music, image, illustration, or text in the output.', 'FBH 团队：Fengkai Liu（主程、3D 建模、视觉设计、测试），Brian Liu（创意指导、编程、测试），Haolin Wang（原创方块 Q 版 Miku 基础模型，经授权使用）。按照大赛规定，作品中的音乐、图像、插画和文字均未使用生成式 AI。') },
+      { heading: tr('Credits', '制作人员'), text: tr('Team FBH: Fengkai Liu (lead development, 3D modeling, visual design, QA), Brian Liu (creative direction, coding, QA), and Haolin Wang (original cube-chibi Miku base mesh, used with permission). Per contest guidelines, no generative AI was used for any music, image, illustration, or text in the output.', 'FBH 团队：刘丰恺（主程、3D 建模、视觉设计、测试），Brian Liu（创意指导、编程、测试），Haolin Wang（原创方块 Q 版 Miku 基础模型，经授权使用）。按照大赛规定，作品中的音乐、图像、插画和文字均未使用生成式 AI。') },
     ],
     links: {
       demo: 'https://magical-mirai-2026-sonare-of-the-la.vercel.app/',
@@ -175,7 +175,7 @@ export const projects: Project[] = [
       ]) },
       { heading: tr('The team', '团队'), text: tr('Three of us built it in about six weeks (October to December 2024), working through GitHub and Discord. I made 25 of the project\'s 39 commits. My teammates added the double jump and wall jumps (nbalog7) and the lava, start, win and lose screens (Ava).', '我们三个人用了大约六周（2024 年 10 月到 12 月）完成，通过 GitHub 和 Discord 协作。项目一共 39 次提交，其中 25 次是我的。队友们负责了二段跳和蹬墙跳（nbalog7），以及岩浆、开始、胜利和失败画面（Ava）。') },
       { heading: tr('This browser version', '这个网页版'), text: tr('The game on this page is a port I made from the original Unity project. The levels are read straight from the Unity scene files, and the movement uses the same numbers as the C# code: 4 units per second walking, twice that running, one air jump, and wall jumps whenever the head and feet both touch a wall.', '这个页面上的游戏是我从原版 Unity 项目移植过来的。关卡直接读取自 Unity 场景文件，移动参数也和 C# 代码完全一致：行走每秒 4 个单位，奔跑翻倍，一次空中跳跃，头和脚同时贴墙时可以蹬墙跳。') },
-      { heading: tr('Credits', '制作人员'), text: tr('Soundtrack (title theme, level music, secret level, victory and defeat) by Fengkai Liu, produced with Suno. The original title-screen music is by teammate Ava. Art: the Super Grotto Escape pack by Ansimuz (CC0).', '配乐（标题曲、关卡音乐、隐藏关卡、胜利和失败音乐）由 Fengkai Liu 用 Suno 制作。原版标题画面音乐由队友 Ava 制作。美术素材：Ansimuz 的 Super Grotto Escape 素材包（CC0）。') },
+      { heading: tr('Credits', '制作人员'), text: tr('Soundtrack (title theme, level music, secret level, victory and defeat) by Fengkai Liu, produced with Suno. The original title-screen music is by teammate Ava. Art: the Super Grotto Escape pack by Ansimuz (CC0).', '配乐（标题曲、关卡音乐、隐藏关卡、胜利和失败音乐）由刘丰恺用 Suno 制作。原版标题画面音乐由队友 Ava 制作。美术素材：Ansimuz 的 Super Grotto Escape 素材包（CC0）。') },
       { heading: tr('What I learned', '收获'), text: tr('How to collaborate through version control, and how to pick up and apply new tools quickly under a tight deadline.', '学会了通过版本控制协作，以及如何在紧张的期限内快速上手并用好新工具。') },
     ],
     links: { github: 'https://github.com/GameDevGroup4/Unity-Project' },

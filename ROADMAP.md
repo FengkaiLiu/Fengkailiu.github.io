@@ -28,7 +28,7 @@ Dev helpers (dev server only):
 - `/?at=lab` scrolls to a chapter.
 - `/?fps` shows the frame rate and what the adaptive quality governor is doing.
 - `/?nogate&game` opens the Lava Rising console; `game=level2` (or `level3`, `secret`) starts on that level.
-- `/?lang=zh` (or `lang=en`) opens the site in that language and remembers it; without it, the visitor's last choice decides, and otherwise it is English. This also works on the live site, so a `?lang=zh` link is the one to send to Chinese-speaking recruiters.
+- `/?lang=zh` (or `lang=en`) opens the site in that language. Nothing is stored: without `?lang=zh` the site is always English (the EN / 中文 switch just changes the address). This also works on the live site, so a `?lang=zh` link is the one to send to Chinese-speaking recruiters.
 - `/?nogate&notes=hotfooter` opens a project's liner notes; `&part=3` scrolls to that part of the walkthrough.
 - `/?play` starts the music on load; `/?shot=record` frames the turntable; `/?crate` opens the Liner notes crate; `/?mood=neon` (or `meadow`, `teto`) shows a song scene; `/?scope=spectrum` (or `wave`, `spectrogram`, `stereo`, `chroma`) opens the Scope.
 

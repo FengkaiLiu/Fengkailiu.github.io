@@ -128,7 +128,7 @@ export function mountGameConsole(player: Player, scroll: SmoothScroll, roomSound
         if (!dialog.open) return;
         const { ctx } = getAudio();
         // The game takes the turntable: the room's own music pauses, and the dock shows it.
-        slot = player.host({ id: 'lava-rising', title: 'Lava Rising', artist: tr('Hot Footer soundtrack · Fengkai Liu', 'Hot Footer 配乐 · Fengkai Liu'), inRoom: true }, () => setMuted(true));
+        slot = player.host({ id: 'lava-rising', title: 'Lava Rising', artist: tr('Hot Footer soundtrack · Fengkai Liu', 'Hot Footer 配乐 · 刘丰恺'), inRoom: true }, () => setMuted(true));
         const startLevel = import.meta.env.DEV ? (new URLSearchParams(location.search).get('game') ?? undefined) : undefined;
         const g = await mountLavaRising(canvas, { ctx, output: getMusicBus().input, startLevel });
         if (!dialog.open) {

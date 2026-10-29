@@ -162,3 +162,8 @@ button {
 :lang(zh) i {
   font-style: normal;
 }
+/* The hero name in Chinese (刘丰恺): characters want a little air, not Nunito's tight tracking. */
+:lang(zh) .hero__name {
+  letter-spacing: 0.04em;
+  line-height: 1.1;
+}

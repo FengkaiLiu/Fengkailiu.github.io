@@ -27,12 +27,12 @@ import { mountTrackNav } from './ui/trackNav';
 import { coverLabel } from './room/textures';
 import { mountLangSwitch, tr } from './i18n';
 
-document.title = tr('Fengkai Liu · CS + Music Technology', 'Fengkai Liu · 计算机科学 + 音乐科技');
+document.title = tr('Fengkai Liu · CS + Music Technology', '刘丰恺 Fengkai Liu · 计算机科学 + 音乐科技');
 document.querySelector('meta[name="description"]')?.setAttribute(
   'content',
   tr(
     'Portfolio of Fengkai Liu, a Computer Science and Music Technology student building audio, XR, and interactive web experiences.',
-    'Fengkai Liu 的作品集。计算机科学与音乐科技专业学生，做音频、XR 和交互式网页体验。',
+    '刘丰恺（Fengkai Liu）的作品集。计算机科学与音乐科技专业学生，做音频、XR 和交互式网页体验。',
   ),
 );
 
@@ -122,7 +122,7 @@ app.innerHTML = `
       )
       .join('')}
   </main>
-  <footer class="footer">${tr(`Built from scratch by ${profile.name} · lights off at your own risk`, `由 ${profile.name} 从零搭建 · 关灯后果自负`)}</footer>
+  <footer class="footer">${tr(`Built from scratch by ${profile.name} · lights off at your own risk`, `由${profile.name}（${profile.nameLatin}）从零搭建 · 关灯后果自负`)}</footer>
 `;
 mountLangSwitch();
 
@@ -318,7 +318,7 @@ showGate(
   ],
   {
     eyebrow: tr('Portfolio · CS + Music Technology', '作品集 · 计算机科学 + 音乐科技'),
-    title: tr("Fengkai's Room", 'Fengkai 的房间'),
+    title: tr("Fengkai's Room", '丰恺的房间'),
     hint: tr('best with headphones', '戴上耳机效果更好'),
     ready: tr('Ready. Turn on the lamp', '准备好了，打开台灯吧'),
   },

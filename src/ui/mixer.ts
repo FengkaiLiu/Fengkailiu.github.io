@@ -56,7 +56,7 @@ export function mountMixer(slot: HTMLElement) {
           <div class="strip__meter" aria-hidden="true"><span data-meter></span></div>
         </div>
         <p class="strip__db" aria-hidden="true">0.0 dB</p>
-        <p class="strip__name">${profile.name.split(' ')[0]}</p>
+        <p class="strip__name">${profile.firstName}</p>
       </section>
     </div>
     <p class="chapter__text mixer__after">${profile.bio[1]}</p>
