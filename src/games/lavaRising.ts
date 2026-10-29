@@ -3,6 +3,8 @@
 // The rules follow the original C#: Player.cs (movement, double jump, wall jump, lava),
 // LevelManager.cs (level order, timer, music), CameraFollow.cs and GUIManager.cs (HUD).
 
+import { tr } from '../i18n';
+
 const BASE = '/hotfooter/game/';
 
 // ---------- Numbers straight from Player.cs and the project settings ----------
@@ -19,7 +21,10 @@ const BOX = { ox: 0.025, oy: -0.22, hw: 0.525, hh: 0.725 };
 const LAVA_TILE = 'tileset_23';
 
 type LevelId = 'level1' | 'level2' | 'level3' | 'secret';
-const LEVEL_NAMES: Record<LevelId, string> = { level1: 'Level 1', level2: 'Level 2', level3: 'Level 3', secret: 'Secret level' };
+const LEVEL_NAMES: Record<LevelId, string> = tr(
+  { level1: 'Level 1', level2: 'Level 2', level3: 'Level 3', secret: 'Secret level' },
+  { level1: '第 1 关', level2: '第 2 关', level3: '第 3 关', secret: '隐藏关卡' },
+);
 // LevelManager.NextLevel: Level 1's door -> Level 2 -> Level 3, whose gate wins the game.
 // Level 2 hides a terminal that leads to the secret level; its back door returns to Level 3.
 const NEXT: Partial<Record<LevelId, LevelId>> = { level1: 'level2', level2: 'level3' };
@@ -485,7 +490,7 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
   ];
 
   const text = (s: string, x: number, y: number, size: number, color = '#fff', align: CanvasTextAlign = 'center') => {
-    g.font = `800 ${size}px "Nunito Variable", system-ui, sans-serif`;
+    g.font = `800 ${size}px "Nunito Variable", "PingFang SC", "Microsoft YaHei", system-ui, sans-serif`;
     g.textAlign = align;
     g.textBaseline = 'middle';
     g.lineWidth = Math.max(2, size / 6);
@@ -510,7 +515,7 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
       g.drawImage(img, (W - img.width * k) / 2, (H - img.height * k) / 2, img.width * k, img.height * k);
       g.fillStyle = 'rgba(18, 10, 28, 0.35)';
       g.fillRect(0, 0, W, H);
-      if (Math.floor(elapsedReal * 2) % 2 === 0) text('Press A or Space to start', W / 2, H * 0.84, H * 0.06, '#ffd59e');
+      if (Math.floor(elapsedReal * 2) % 2 === 0) text(tr('Press A or Space to start', '按 A 或空格键开始'), W / 2, H * 0.84, H * 0.06, '#ffd59e');
       return;
     }
 
@@ -587,7 +592,7 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
     g.strokeStyle = 'rgba(255, 255, 255, 0.55)';
     g.lineWidth = Math.max(1, H * 0.004);
     g.strokeRect(bx - 2, by - 2, barW + 4, barH + 4);
-    text('ALT', bx + barW / 2, by - H * 0.035, H * 0.032);
+    text(tr('ALT', '高度'), bx + barW / 2, by - H * 0.035, H * 0.032);
     const fill = Math.min(Math.max((p.y - p.lowest) / Math.max(TARGET_ELEVATION - p.lowest, 0.001), 0), 1);
     const blinkOrange = closeToWin && Math.floor(elapsedReal * 2) % 2 === 0;
     g.fillStyle = blinkOrange ? 'rgb(240, 158, 58)' : 'rgb(0, 255, 255)';
@@ -599,16 +604,16 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
       g.fillStyle = `rgba(80, 10, 0, ${Math.min((elapsedReal - modeAt) * 0.8, 0.55)})`;
       g.fillRect(0, 0, W, H);
       if (mode === 'lost') {
-        text('Burnt by the lava!', W / 2, H * 0.42, H * 0.09, '#ff9d4d');
-        text('Press A or Space to try again', W / 2, H * 0.58, H * 0.05);
+        text(tr('Burnt by the lava!', '被岩浆烫到了！'), W / 2, H * 0.42, H * 0.09, '#ff9d4d');
+        text(tr('Press A or Space to try again', '按 A 或空格键再试一次'), W / 2, H * 0.58, H * 0.05);
       }
     }
     if (mode === 'won') {
       g.fillStyle = 'rgba(18, 10, 28, 0.5)';
       g.fillRect(0, 0, W, H);
-      text('You escaped the lava!', W / 2, H * 0.38, H * 0.09, '#ffd59e');
-      text(`Time ${fmtTime(time)}`, W / 2, H * 0.52, H * 0.06);
-      text('Press A or Space to play again', W / 2, H * 0.66, H * 0.045);
+      text(tr('You escaped the lava!', '你逃出了岩浆！'), W / 2, H * 0.38, H * 0.09, '#ffd59e');
+      text(`${tr('Time', '用时')} ${fmtTime(time)}`, W / 2, H * 0.52, H * 0.06);
+      text(tr('Press A or Space to play again', '按 A 或空格键再玩一次'), W / 2, H * 0.66, H * 0.045);
     }
   };
 

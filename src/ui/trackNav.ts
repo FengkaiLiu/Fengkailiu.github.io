@@ -2,6 +2,7 @@
 // you are on ("A3 · Sonare of the Lake") with a thin progress line, and opens the full
 // list, Side A and Side B, to jump anywhere.
 import type { SmoothScroll } from './scroll';
+import { tr } from '../i18n';
 
 export interface NavTrack {
   id: string;
@@ -12,20 +13,20 @@ export interface NavTrack {
 export function mountTrackNav(tracks: NavTrack[], scroll: SmoothScroll) {
   const nav = document.createElement('nav');
   nav.className = 'tracknav';
-  nav.setAttribute('aria-label', 'Chapters');
+  nav.setAttribute('aria-label', tr('Chapters', '章节'));
   const sides = ['A', 'B'].map((side) => ({ side, items: tracks.filter((t) => t.track.startsWith(side)) })).filter((s) => s.items.length);
   nav.innerHTML = `
     <button class="tracknav__pill liquid liquid--pill" type="button" data-liquid-bezel="16" aria-expanded="false" aria-controls="tracknav-list">
-      <span class="tracknav__now"><span class="tracknav__no" data-no>♪</span><span class="tracknav__title" data-title>Track list</span></span>
+      <span class="tracknav__now"><span class="tracknav__no" data-no>♪</span><span class="tracknav__title" data-title>${tr('Track list', '曲目表')}</span></span>
       <svg class="tracknav__chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
       <span class="tracknav__progress" aria-hidden="true"><span data-progress></span></span>
     </button>
     <div class="tracknav__list liquid liquid--pad" id="tracknav-list" hidden>
-      <a class="tracknav__item tracknav__item--top" href="#top" data-go="top"><span class="tracknav__no">↑</span>Back to the room</a>
+      <a class="tracknav__item tracknav__item--top" href="#top" data-go="top"><span class="tracknav__no">↑</span>${tr('Back to the room', '回到房间')}</a>
       ${sides
         .map(
           (s) => `
-        <p class="tracknav__side">Side ${s.side}</p>
+        <p class="tracknav__side">${tr(`Side ${s.side}`, `${s.side} 面`)}</p>
         <ol class="tracknav__tracks">
           ${s.items.map((t) => `<li><a class="tracknav__item" href="#${t.id}" data-go="${t.id}"><span class="tracknav__no">${t.track}</span>${t.title}</a></li>`).join('')}
         </ol>`,
@@ -82,7 +83,7 @@ export function mountTrackNav(tracks: NavTrack[], scroll: SmoothScroll) {
     if (found !== current) {
       current = found;
       no.textContent = found ? found.track : '♪';
-      title.textContent = found ? found.title : 'Track list';
+      title.textContent = found ? found.title : tr('Track list', '曲目表');
       list.querySelectorAll<HTMLElement>('[data-go]').forEach((a) => a.setAttribute('aria-current', String(a.dataset.go === found?.id)));
     }
     const max = document.documentElement.scrollHeight - window.innerHeight;

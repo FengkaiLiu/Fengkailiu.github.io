@@ -150,3 +150,20 @@ button {
 .skip-link:focus-visible {
   transform: translate(-50%, 0);
 }
+
+/* Chinese: CJK glyphs fill the whole em box, so they want looser lines, no negative
+   tracking (it crowds the characters together) and no faux italics. */
+:where(:lang(zh)) :is(h1, h2, h3, h4) {
+  line-height: 1.25;
+}
+/* The name stays in Latin letters and keeps its tight display tracking. */
+:lang(zh) :is(h1, h2, h3, h4):not(.hero__name) {
+  letter-spacing: 0;
+}
+:lang(zh) body {
+  line-height: 1.75;
+}
+:lang(zh) em,
+:lang(zh) i {
+  font-style: normal;
+}

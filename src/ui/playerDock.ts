@@ -4,6 +4,7 @@
 import { getMusicBus, type Bands } from '../audio/bus';
 import { setMasterVolume } from '../audio/context';
 import { stepAside } from './stepAside';
+import { tr } from '../i18n';
 import { outsideGuest, type Player, type PlayerState } from '../audio/player';
 
 const BARS = 18;
@@ -16,12 +17,12 @@ export function mountPlayerDock(
   const bar = document.createElement('div');
   bar.className = 'dockbar';
   bar.setAttribute('role', 'region'); // a landmark, so screen readers can jump to the player
-  bar.setAttribute('aria-label', 'Room controls: music, volume, rain, record crackle and scope');
+  bar.setAttribute('aria-label', tr('Room controls: music, volume, rain, record crackle and scope', '房间控制：音乐、音量、雨声、唱片底噪和示波器'));
   const dock = document.createElement('div');
   dock.className = 'player liquid liquid--pill';
   dock.dataset.liquidBezel = '18';
   dock.setAttribute('role', 'region');
-  dock.setAttribute('aria-label', 'Music player');
+  dock.setAttribute('aria-label', tr('Music player', '音乐播放器'));
   dock.innerHTML = `
     <span class="player__disc" aria-hidden="true"></span>
     <span class="player__meta">
@@ -31,9 +32,9 @@ export function mountPlayerDock(
     <canvas class="player__bars" width="${BARS * 6}" height="28" aria-hidden="true"></canvas>
     <span class="player__time" data-time></span>
     <span class="player__controls">
-      <button class="player__btn" type="button" data-prev aria-label="Previous track">${icon('prev')}</button>
-      <button class="player__btn player__btn--main" type="button" data-toggle aria-label="Play">${icon('play')}</button>
-      <button class="player__btn" type="button" data-next aria-label="Next track">${icon('next')}</button>
+      <button class="player__btn" type="button" data-prev aria-label="${tr('Previous track', '上一首')}">${icon('prev')}</button>
+      <button class="player__btn player__btn--main" type="button" data-toggle aria-label="${tr('Play', '播放')}">${icon('play')}</button>
+      <button class="player__btn" type="button" data-next aria-label="${tr('Next track', '下一首')}">${icon('next')}</button>
     </span>
   `;
 
@@ -43,8 +44,8 @@ export function mountPlayerDock(
   vol.className = 'pill pill--volume liquid liquid--pill';
   vol.dataset.liquidBezel = '18';
   vol.innerHTML = `
-    <button class="player__btn" type="button" data-mute aria-label="Mute" title="Mute"></button>
-    <input class="pill__slider" type="range" min="0" max="1" step="0.01" aria-label="Volume" data-volume />
+    <button class="player__btn" type="button" data-mute aria-label="${tr('Mute', '静音')}" title="${tr('Mute', '静音')}"></button>
+    <input class="pill__slider" type="range" min="0" max="1" step="0.01" aria-label="${tr('Volume', '音量')}" data-volume />
   `;
 
   const rain = document.createElement('button');
@@ -52,8 +53,8 @@ export function mountPlayerDock(
   rain.className = 'pill pill--rain liquid liquid--pill';
   rain.dataset.liquidBezel = '18';
   rain.setAttribute('aria-pressed', 'true');
-  rain.title = 'Rain on the window, and its sound if audio is on';
-  rain.innerHTML = `${icon('rain')}<span class="pill__label" data-rain-label>Rain on</span>`;
+  rain.title = tr('Rain on the window, and its sound if audio is on', '窗上的雨，开着声音时还有雨声');
+  rain.innerHTML = `${icon('rain')}<span class="pill__label" data-rain-label>${tr('Rain on', '雨：开')}</span>`;
 
   // Record crackle: the vinyl noise under everything. With rain off, crackle off and the
   // volume muted, the page is silent.
@@ -62,8 +63,8 @@ export function mountPlayerDock(
   crackle.className = 'pill pill--rain pill--crackle liquid liquid--pill';
   crackle.dataset.liquidBezel = '18';
   crackle.setAttribute('aria-pressed', 'true');
-  crackle.title = 'The record crackle under the room';
-  crackle.innerHTML = `${icon('vinyl')}<span class="pill__label" data-crackle-label>Crackle on</span>`;
+  crackle.title = tr('The record crackle under the room', '房间里的黑胶底噪');
+  crackle.innerHTML = `${icon('vinyl')}<span class="pill__label" data-crackle-label>${tr('Crackle on', '底噪：开')}</span>`;
 
   bar.append(dock, vol, rain, crackle);
   document.body.append(bar);
@@ -78,13 +79,13 @@ export function mountPlayerDock(
   rain.addEventListener('click', () => {
     const on = rain.getAttribute('aria-pressed') !== 'true';
     rain.setAttribute('aria-pressed', String(on));
-    rain.querySelector('[data-rain-label]')!.textContent = on ? 'Rain on' : 'Rain off';
+    rain.querySelector('[data-rain-label]')!.textContent = on ? tr('Rain on', '雨：开') : tr('Rain off', '雨：关');
     opts.onRain(on);
   });
   crackle.addEventListener('click', () => {
     const on = crackle.getAttribute('aria-pressed') !== 'true';
     crackle.setAttribute('aria-pressed', String(on));
-    crackle.querySelector('[data-crackle-label]')!.textContent = on ? 'Crackle on' : 'Crackle off';
+    crackle.querySelector('[data-crackle-label]')!.textContent = on ? tr('Crackle on', '底噪：开') : tr('Crackle off', '底噪：关');
     opts.onCrackle(on);
   });
 
@@ -103,7 +104,7 @@ export function mountPlayerDock(
     slider.value = String(v);
     slider.style.setProperty('--fill', `${v * 100}%`);
     muteBtn.innerHTML = icon(v === 0 ? 'muted' : v < 0.5 ? 'low' : 'loud');
-    muteBtn.setAttribute('aria-label', v === 0 ? 'Unmute' : 'Mute');
+    muteBtn.setAttribute('aria-label', v === 0 ? tr('Unmute', '取消静音') : tr('Mute', '静音'));
     try {
       localStorage.setItem('room-volume', String(v));
     } catch {}
@@ -117,13 +118,13 @@ export function mountPlayerDock(
   const render = (s: PlayerState) => {
     dock.classList.toggle('is-playing', s.playing);
     $('[data-title]').textContent = s.track.title;
-    $('[data-artist]').textContent = outsideGuest(s.guest) ? `${s.track.artist} · via Spotify` : s.track.artist;
+    $('[data-artist]').textContent = outsideGuest(s.guest) ? `${s.track.artist} · ${tr('via Spotify', '来自 Spotify')}` : s.track.artist;
     dock.classList.toggle('is-guest', Boolean(s.guest));
     // Spotify sets its own volume inside its frame, so the slider steps aside while it plays.
     stepAside(vol, outsideGuest(s.guest));
-    $('[data-time]').textContent = s.time === null ? (s.playing ? 'live' : '') : `${fmt(s.time)}${s.duration ? ` / ${fmt(s.duration)}` : ''}`;
+    $('[data-time]').textContent = s.time === null ? (s.playing ? tr('live', '实时') : '') : `${fmt(s.time)}${s.duration ? ` / ${fmt(s.duration)}` : ''}`;
     toggleBtn.innerHTML = icon(s.playing ? 'pause' : 'play');
-    toggleBtn.setAttribute('aria-label', s.playing ? 'Pause' : 'Play');
+    toggleBtn.setAttribute('aria-label', s.playing ? tr('Pause', '暂停') : tr('Play', '播放'));
   };
   player.onChange(render);
   render(player.state());

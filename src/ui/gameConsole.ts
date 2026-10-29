@@ -6,6 +6,7 @@ import { getAudio, unlockAudio } from '../audio/context';
 import { getMusicBus } from '../audio/bus';
 import type { Player, GuestSlot } from '../audio/player';
 import type { SmoothScroll } from './scroll';
+import { tr } from '../i18n';
 import type { Button, LavaRising } from '../games/lavaRising';
 
 export interface GameConsole {
@@ -21,42 +22,44 @@ export interface RoomSounds {
 export function mountGameConsole(player: Player, scroll: SmoothScroll, roomSounds?: RoomSounds): GameConsole {
   const dialog = document.createElement('dialog');
   dialog.className = 'console';
-  dialog.setAttribute('aria-label', 'Lava Rising, playable');
+  dialog.setAttribute('aria-label', tr('Lava Rising, playable', 'Lava Rising，可以直接玩'));
   dialog.innerHTML = `
     <div class="console__body">
-      <button class="console__close" type="button" aria-label="Close the game" data-close>&times;</button>
+      <button class="console__close" type="button" aria-label="${tr('Close the game', '关闭游戏')}" data-close>&times;</button>
       <div class="console__shoulder console__shoulder--l" aria-hidden="true"></div>
       <div class="console__shoulder console__shoulder--r" aria-hidden="true"></div>
       <div class="console__left">
-        <div class="console__dpad" role="group" aria-label="Move">
-          <button type="button" class="console__dir console__dir--up" data-btn="jump" aria-label="Jump"></button>
-          <button type="button" class="console__dir console__dir--left" data-btn="left" aria-label="Left"></button>
+        <div class="console__dpad" role="group" aria-label="${tr('Move', '移动')}">
+          <button type="button" class="console__dir console__dir--up" data-btn="jump" aria-label="${tr('Jump', '跳跃')}"></button>
+          <button type="button" class="console__dir console__dir--left" data-btn="left" aria-label="${tr('Left', '向左')}"></button>
           <span class="console__dir console__dir--mid" aria-hidden="true"></span>
-          <button type="button" class="console__dir console__dir--right" data-btn="right" aria-label="Right"></button>
+          <button type="button" class="console__dir console__dir--right" data-btn="right" aria-label="${tr('Right', '向右')}"></button>
           <span class="console__dir console__dir--down" aria-hidden="true"></span>
         </div>
       </div>
       <div class="console__screen">
         <canvas class="console__canvas" tabindex="-1"></canvas>
-        <p class="console__loading" data-loading>Inserting cartridge…</p>
+        <p class="console__loading" data-loading>${tr('Inserting cartridge…', '正在插入卡带…')}</p>
       </div>
       <div class="console__right">
         <div class="console__ab">
-          <button type="button" class="console__btn console__btn--b" data-btn="run" aria-label="B: hold to run"><span>B</span></button>
-          <button type="button" class="console__btn console__btn--a" data-btn="jump" aria-label="A: jump"><span>A</span></button>
+          <button type="button" class="console__btn console__btn--b" data-btn="run" aria-label="${tr('B: hold to run', 'B：按住奔跑')}"><span>B</span></button>
+          <button type="button" class="console__btn console__btn--a" data-btn="jump" aria-label="${tr('A: jump', 'A：跳跃')}"><span>A</span></button>
         </div>
         <div class="console__grille" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
       </div>
       <div class="console__pills">
-        <button type="button" class="console__pill" data-mute aria-pressed="false"><span>Sound</span></button>
-        <button type="button" class="console__pill" data-btn="start"><span>Start</span></button>
+        <button type="button" class="console__pill" data-mute aria-pressed="false"><span>${tr('Sound', '声音')}</span></button>
+        <button type="button" class="console__pill" data-btn="start"><span>${tr('Start', '开始')}</span></button>
       </div>
       <p class="console__brand" aria-hidden="true">HOT FOOTER</p>
     </div>
-    <p class="console__help">
-      <kbd>←</kbd><kbd>→</kbd> move · <kbd>Shift</kbd> or <b>B</b> run · <kbd>Space</kbd> or <b>A</b> jump, again in the air, and off walls ·
-      climb to the door, don't touch the lava · <kbd>Esc</kbd> to close
-    </p>
+    <p class="console__help">${tr(
+      `<kbd>←</kbd><kbd>→</kbd> move · <kbd>Shift</kbd> or <b>B</b> run · <kbd>Space</kbd> or <b>A</b> jump, again in the air, and off walls ·
+      climb to the door, don't touch the lava · <kbd>Esc</kbd> to close`,
+      `<kbd>←</kbd><kbd>→</kbd> 移动 · <kbd>Shift</kbd> 或 <b>B</b> 奔跑 · <kbd>空格</kbd> 或 <b>A</b> 跳跃，空中能再跳一次，贴墙能蹬墙跳 ·
+      爬到门口，别碰岩浆 · <kbd>Esc</kbd> 关闭`,
+    )}</p>
   `;
   document.body.append(dialog);
 
@@ -71,7 +74,7 @@ export function mountGameConsole(player: Player, scroll: SmoothScroll, roomSound
   const setMuted = (m: boolean) => {
     muted = m;
     muteBtn.setAttribute('aria-pressed', String(m));
-    muteBtn.querySelector('span')!.textContent = m ? 'Muted' : 'Sound';
+    muteBtn.querySelector('span')!.textContent = m ? tr('Muted', '静音') : tr('Sound', '声音');
     game?.setMuted(m);
   };
   muteBtn.addEventListener('click', () => setMuted(!muted));
@@ -125,7 +128,7 @@ export function mountGameConsole(player: Player, scroll: SmoothScroll, roomSound
         if (!dialog.open) return;
         const { ctx } = getAudio();
         // The game takes the turntable: the room's own music pauses, and the dock shows it.
-        slot = player.host({ id: 'lava-rising', title: 'Lava Rising', artist: 'Hot Footer soundtrack · Fengkai Liu', inRoom: true }, () => setMuted(true));
+        slot = player.host({ id: 'lava-rising', title: 'Lava Rising', artist: tr('Hot Footer soundtrack · Fengkai Liu', 'Hot Footer 配乐 · Fengkai Liu'), inRoom: true }, () => setMuted(true));
         const startLevel = import.meta.env.DEV ? (new URLSearchParams(location.search).get('game') ?? undefined) : undefined;
         const g = await mountLavaRising(canvas, { ctx, output: getMusicBus().input, startLevel });
         if (!dialog.open) {
@@ -137,7 +140,7 @@ export function mountGameConsole(player: Player, scroll: SmoothScroll, roomSound
         loading.hidden = true;
       })().catch((err) => {
         console.error('[lava rising]', err);
-        loading.textContent = "The cartridge didn't load. Try again in a moment.";
+        loading.textContent = tr("The cartridge didn't load. Try again in a moment.", '卡带没能读取，请稍后再试。');
       });
     },
   };

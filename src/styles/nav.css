@@ -142,3 +142,41 @@
 .tracknav__item--top {
   opacity: 0.8;
 }
+
+/* Language switch: EN | 中文, a small glass pill in the top-left corner. It sits above the
+   gate too, so a visitor can pick before turning on the lamp. */
+.langswitch {
+  position: fixed;
+  top: max(16px, env(safe-area-inset-top));
+  left: max(16px, env(safe-area-inset-left));
+  z-index: calc(var(--z-gate) + 1);
+  display: flex;
+  gap: 2px;
+  padding: 4px;
+  font-size: var(--text-micro);
+  font-weight: 800;
+}
+.langswitch__opt {
+  padding: 7px 11px;
+  border-radius: var(--radius-pill);
+  color: var(--white);
+  text-decoration: none;
+  opacity: 0.6;
+  transition:
+    opacity var(--dur-fast) var(--ease-out),
+    background var(--dur-fast) var(--ease-out);
+}
+.langswitch__opt:hover {
+  opacity: 1;
+}
+.langswitch__opt[aria-current='true'] {
+  background: rgba(255, 157, 77, 0.22);
+  color: var(--lamp-300);
+  opacity: 1;
+}
+/* Under an open liner notes sheet or the game, the switch steps back. */
+html.has-sheet .langswitch,
+html.has-console .langswitch {
+  opacity: 0;
+  pointer-events: none;
+}

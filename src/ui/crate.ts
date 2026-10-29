@@ -6,6 +6,7 @@ import { records, resolvePick, type RecordPick, type ResolvedPick } from '../con
 import type { GuestSlot, Player } from '../audio/player';
 import { createSpotifyPlayer, type PlaybackUpdate, type SpotifyController } from '../audio/spotify';
 import { placeholder } from './placeholder';
+import { tr } from '../i18n';
 
 export interface CrateHooks {
   /** Show this cover on the turntable label, or null to restore the house label. */
@@ -42,10 +43,10 @@ export function mountCrate(slot: HTMLElement, player: Player, hooks: CrateHooks)
       <div class="sleeves" aria-hidden="true">
         ${records.map((r, i) => `<span class="sleeve" style="--tint:${r.tint};--i:${i}" data-sleeve="${r.id}"></span>`).join('')}
       </div>
-      <button class="btn crate__toggle" type="button" aria-expanded="false" aria-controls="crate-body">Open the crate</button>
+      <button class="btn crate__toggle" type="button" aria-expanded="false" aria-controls="crate-body">${tr('Open the crate', '打开唱片箱')}</button>
       <div class="crate__body" id="crate-body" inert>
         <div class="crate__inner">
-          <div class="crate__stack" role="group" aria-roledescription="carousel" aria-label="Recommended records">
+          <div class="crate__stack" role="group" aria-roledescription="carousel" aria-label="${tr('Recommended records', '推荐唱片')}">
             <div class="crate__deck">
               ${records
                 .map(
@@ -59,9 +60,9 @@ export function mountCrate(slot: HTMLElement, player: Player, hooks: CrateHooks)
             </div>
           </div>
           <div class="crate__nav">
-            <button class="crate__arrow" type="button" data-step="-1" aria-label="Previous record">‹</button>
+            <button class="crate__arrow" type="button" data-step="-1" aria-label="${tr('Previous record', '上一张')}">‹</button>
             <p class="crate__count" aria-live="polite" data-count></p>
-            <button class="crate__arrow" type="button" data-step="1" aria-label="Next record">›</button>
+            <button class="crate__arrow" type="button" data-step="1" aria-label="${tr('Next record', '下一张')}">›</button>
           </div>
           <div class="crate__info">
             <h3 class="crate__title" data-title></h3>
@@ -110,7 +111,10 @@ export function mountCrate(slot: HTMLElement, player: Player, hooks: CrateHooks)
       spotify = createSpotifyPlayer($<HTMLElement>('[data-embed]'), uri);
       spotify.then((c) => c.addListener('playback_update', (e) => onUpdate(e.data))).catch(() => {
         spotify = null;
-        hint.textContent = 'The Spotify player could not load. Check your connection or content blocker.';
+        hint.textContent = tr(
+          'The Spotify player could not load. Check your connection or content blocker.',
+          'Spotify 播放器没能加载。请检查网络连接或内容拦截插件。',
+        );
       });
     } else if (loadedUri !== uri) {
       loadedUri = uri;
@@ -183,7 +187,7 @@ export function mountCrate(slot: HTMLElement, player: Player, hooks: CrateHooks)
   const setOpen = (open: boolean) => {
     card.classList.toggle('is-expanded', open);
     toggle.setAttribute('aria-expanded', String(open));
-    toggle.textContent = open ? 'Close the crate' : 'Open the crate';
+    toggle.textContent = open ? tr('Close the crate', '合上唱片箱') : tr('Open the crate', '打开唱片箱');
     body.inert = !open;
     if (open) void render();
   };
