@@ -135,7 +135,7 @@ export function mountPlayerDock(
   let quietFor = 0;
   const freq = new Uint8Array(BARS);
   const frame = (now: number) => {
-    const dt = Math.min((now - last) / 1000, 0.1);
+    const dt = Math.min(Math.max((now - last) / 1000, 0), 0.1); // never negative (see room.ts)
     last = now;
     const bus = getMusicBus();
     const { playing, guest } = player.state();

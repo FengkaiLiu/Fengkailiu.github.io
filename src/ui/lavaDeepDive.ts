@@ -199,7 +199,7 @@ export function mountLavaDeepDive(host: HTMLElement): { dispose(): void } {
   let raf = 0;
   let last = performance.now();
   const loop = (now: number) => {
-    const dt = Math.min((now - last) / 1000, 0.1);
+    const dt = Math.min(Math.max((now - last) / 1000, 0), 0.1); // never negative (see room.ts)
     last = now;
     for (const fn of frameFns) fn(dt, now);
     raf = requestAnimationFrame(loop);

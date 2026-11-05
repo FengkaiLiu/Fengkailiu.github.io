@@ -463,7 +463,10 @@ export function initRoom(
       requestAnimationFrame(loop);
       return;
     }
-    const dt = Math.min((now - last) / 1000, 0.1);
+    // Never negative: the first frame's timestamp can come from before the room was built
+    // (setup took a while), and a negative step ran every fade backwards, so all three song
+    // scenes popped in and faded out over the first half second.
+    const dt = Math.min(Math.max((now - last) / 1000, 0), 0.1);
     last = now;
 
     // Lights fade up after the switch.

@@ -628,7 +628,7 @@ export async function mountLavaRising(canvas: HTMLCanvasElement, opts: LavaRisin
   } else void playMusic('title', 0.4);
   const loop = (now: number) => {
     if (disposed) return;
-    const dt = Math.min((now - last) / 1000, 0.25);
+    const dt = Math.min(Math.max((now - last) / 1000, 0), 0.25); // never negative (see room.ts)
     last = now;
     elapsedReal += dt;
 

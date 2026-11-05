@@ -138,7 +138,10 @@ export function startAmbience(opts: { rain?: boolean; crackle?: boolean } = {}):
   crackleHp.type = 'highpass';
   crackleHp.frequency.value = 900;
   const crackleGain = ctx.createGain();
-  crackleGain.gain.setValueAtTime(0, ctx.currentTime);
+  // Silent from the start, set directly. (A scheduled zero wasn't enough: ramp() cancels
+  // pending events and fades from the param's value, still a new gain's 1, so the crackle
+  // began about 25 dB too loud and sank to its level over the first two seconds.)
+  crackleGain.gain.value = 0;
   loop(ctx, crackleBuffer(ctx, 5)).connect(crackleHp).connect(crackleGain).connect(master);
 
   const rainBus = ctx.createGain();
