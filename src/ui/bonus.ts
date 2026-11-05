@@ -155,6 +155,8 @@ export function mountBonus(slot: HTMLElement, items: SideProject[], track: strin
     scroll.stop(); // the page (and the camera) stay put while the sheet is open
     dialog.showModal();
     document.documentElement.classList.add('has-sheet');
+    // A row that was already open fires no toggle, but its walkthrough was torn down on close.
+    dialog.querySelectorAll<HTMLDetailsElement>('details[open]').forEach((d) => syncDeep(d));
     const item = id ? dialog.querySelector<HTMLElement>(`#bonus-${id}`) : null;
     if (item) requestAnimationFrame(() => item.scrollIntoView({ block: 'start', behavior: reducedMotion() ? 'auto' : 'smooth' }));
   };
@@ -197,19 +199,23 @@ export function mountBonus(slot: HTMLElement, items: SideProject[], track: strin
     deeps.delete(host);
     host.replaceChildren();
   };
-  dialog.addEventListener('toggle', (e) => {
-    const d = e.target as HTMLDetailsElement;
-    if (!(d instanceof HTMLDetailsElement)) return;
-    d.querySelectorAll('video').forEach((v) => (d.open && !reducedMotion() ? void v.play().catch(() => {}) : v.pause()));
+  /** Mounts a row's walkthrough while the row and the page are open, and tears it down otherwise. */
+  const syncDeep = (d: HTMLDetailsElement) => {
     const host = d.querySelector<HTMLElement>('[data-deep]');
     if (!host) return;
     if (!d.open || !dialog.open) return closeDeep(host);
     if (deeps.has(host)) return;
     deeps.set(host, 'loading');
     void import('./dspLab').then(({ mountDspLab }) => {
-      if (deeps.get(host) !== 'loading' || !d.open) return; // closed while it loaded
+      if (deeps.get(host) !== 'loading' || !d.open || !dialog.open) return; // closed while it loaded
       deeps.set(host, mountDspLab(host, player));
     });
+  };
+  dialog.addEventListener('toggle', (e) => {
+    const d = e.target as HTMLDetailsElement;
+    if (!(d instanceof HTMLDetailsElement)) return;
+    d.querySelectorAll('video').forEach((v) => (d.open && !reducedMotion() ? void v.play().catch(() => {}) : v.pause()));
+    syncDeep(d);
   }, true);
 
   // ---------- Songs on the turntable ----------
