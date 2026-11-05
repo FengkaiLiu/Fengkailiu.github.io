@@ -2,6 +2,7 @@ import './styles/index.css';
 import './styles/site.css';
 import { profile } from './content/profile';
 import { projects } from './content/projects';
+import { sideProjects } from './content/sideProjects';
 import { placeholder } from './ui/placeholder';
 import { initSheen } from './ui/sheen';
 import { initLiquidGlass } from './ui/liquidGlass';
@@ -18,6 +19,7 @@ import { mountPlayerDock } from './ui/playerDock';
 import { mountCrate } from './ui/crate';
 import { mountMixer } from './ui/mixer';
 import { mountProjectSheet } from './ui/projectSheet';
+import { mountBonus } from './ui/bonus';
 import { mountGameConsole } from './ui/gameConsole';
 import { mountLab } from './ui/lab';
 import { mountBeatbox } from './ui/beatbox';
@@ -56,13 +58,24 @@ interface Chapter {
   floor?: string;
   needs?: readonly string[];
   /** Built content instead of a placeholder. */
-  custom?: 'crate' | 'mixer' | 'project' | 'lab' | 'beat';
+  custom?: 'crate' | 'mixer' | 'project' | 'lab' | 'beat' | 'bonus';
 }
 
 // Chapters read like a record's track list. Each one is replaced by its floor (see ROADMAP.md).
+const BONUS_TRACK = `A${projects.length + 2}`; // right after the last project
 const chapters: Chapter[] = [
   { id: 'about', shot: 'about', track: 'A1', nav: tr('About', '关于我'), title: tr('Code on one screen, sound on the other.', '一块屏幕写代码，另一块做声音。'), text: profile.bio[0], custom: 'mixer' },
   ...projects.map((p, i) => ({ id: p.id, shot: p.id, track: `A${i + 2}`, nav: p.title, title: p.title, text: p.subtitle, tags: p.tags, custom: 'project' as const })),
+  // The smaller projects, together on one page (see ui/bonus.ts).
+  {
+    id: 'bonus',
+    shot: 'bonus',
+    track: BONUS_TRACK,
+    nav: tr('Bonus tracks', '附赠曲目'),
+    title: tr('Bonus tracks.', '附赠曲目。'),
+    text: tr('Smaller things I made along the way: a kawaii bass track in FL Studio, and a starship game in Max that plays music as you fly.', '一路上做的小东西：FL Studio 里做的一首 Kawaii Bass，还有一个在 Max 里做的、边飞边奏乐的飞船游戏。'),
+    custom: 'bonus',
+  },
   {
     id: 'records',
     shot: 'record',
@@ -108,7 +121,7 @@ app.innerHTML = `
     ${chapters
       .map(
         (c) => `
-      <section class="chapter${c.custom === 'project' ? ' chapter--pinned' : ''}" id="${c.id}" data-shot="${c.shot}">
+      <section class="chapter${c.custom === 'project' || c.custom === 'bonus' ? ' chapter--pinned' : ''}" id="${c.id}" data-shot="${c.shot}">
         <div class="chapter__pin">
         <article class="chapter__card liquid liquid--pad">
           <span class="chapter__track">${c.track}</span>
@@ -236,6 +249,7 @@ const sheet = mountProjectSheet(
   projects.map((p, i) => ({ project: p, track: `A${i + 2}` })),
   scroll,
 );
+const bonus = mountBonus(document.querySelector<HTMLElement>('#bonus .chapter__slot')!, sideProjects, BONUS_TRACK, player, scroll);
 document.addEventListener('click', (e) => {
   const id = (e.target as HTMLElement).closest<HTMLElement>('[data-sheet]')?.dataset.sheet;
   if (id) sheet.open(id);
@@ -334,7 +348,8 @@ showGate(
   if (import.meta.env.DEV && new URLSearchParams(location.search).has('game')) gameConsole.open();
   // Dev helper: /?nogate&notes=hotfooter opens that project's liner notes.
   const notes = import.meta.env.DEV ? new URLSearchParams(location.search).get('notes') : null;
-  if (notes) sheet.open(notes);
+  if (notes === 'bonus') bonus.open();
+  else if (notes) sheet.open(notes);
   // ...and &part=3 scrolls it to that part of the Hot Footer walkthrough.
   const part = import.meta.env.DEV ? Number(new URLSearchParams(location.search).get('part')) : 0;
   if (part) setTimeout(() => document.querySelectorAll('.deep__part')[part - 1]?.scrollIntoView({ block: 'start' }), 1500);

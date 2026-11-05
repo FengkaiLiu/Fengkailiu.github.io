@@ -247,10 +247,9 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
     close();
   });
   dialog.addEventListener('click', (e) => {
-    // A click on the backdrop (outside the panel's box) closes it.
-    const r = dialog.getBoundingClientRect();
-    const outside = e.clientX < r.left || e.clientX > r.right || e.clientY < r.top || e.clientY > r.bottom;
-    if (outside || (e.target as HTMLElement).closest('[data-close]')) close();
+    // A click on the backdrop closes it. The panel's content fills the dialog, so only a backdrop
+    // click lands on the dialog itself. (Not a coordinate test: Enter or Space clicks at 0, 0.)
+    if (e.target === dialog || (e.target as HTMLElement).closest('[data-close]')) close();
   });
   for (const btn of [prevBtn, nextBtn]) {
     btn.addEventListener('click', () => {

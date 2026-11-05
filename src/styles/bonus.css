@@ -1,0 +1,278 @@
+/* Bonus tracks (A7): the smaller projects, as a short list in the card and as rows that open
+   in place on their own page (a .sheet, see sheet.css). */
+
+/* ---------- In the chapter card ---------- */
+.bonus__list {
+  display: grid;
+  gap: 2px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bonus__row {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: baseline;
+  gap: var(--space-3);
+  width: 100%;
+  padding: 10px 12px;
+  border: 0;
+  border-radius: 12px;
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.05);
+  font: inherit;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease-out);
+}
+.bonus__row:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+.bonus__row:focus-visible,
+.bonus__summary:focus-visible,
+.bonus__play:focus-visible {
+  outline: 2px solid var(--lamp-300);
+  outline-offset: 2px;
+}
+
+.bonus__no,
+.bonus__kind {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  letter-spacing: 0.04em;
+}
+.bonus__no {
+  color: var(--lamp-300);
+}
+.bonus__kind {
+  opacity: 0.65;
+  white-space: nowrap;
+}
+
+/* ---------- On the page: rows that open in place ---------- */
+.bonus__items {
+  display: grid;
+  gap: var(--space-3);
+  margin-top: var(--space-3);
+}
+.bonus__item {
+  border-radius: 16px;
+  background: rgba(10, 8, 24, 0.4);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+  scroll-margin-top: 72px; /* clear the sheet's sticky header */
+}
+.bonus__item[open] {
+  background: rgba(10, 8, 24, 0.55);
+  box-shadow: inset 0 0 0 1px rgba(255, 213, 158, 0.28);
+}
+.bonus__summary {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  align-items: center;
+  gap: var(--space-3) var(--space-4);
+  padding: var(--space-4) var(--space-5);
+  border-radius: 16px;
+  list-style: none;
+  cursor: pointer;
+}
+.bonus__summary::-webkit-details-marker {
+  display: none;
+}
+.bonus__name {
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+.bonus__summary .bonus__title {
+  font-family: var(--font-display);
+  font-size: 1.15rem;
+  font-weight: 800;
+}
+.bonus__blurb {
+  opacity: 0.75;
+}
+.bonus__chev {
+  width: 20px;
+  height: 20px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.7;
+  transition: transform var(--dur) var(--ease-spring);
+}
+.bonus__item[open] .bonus__chev {
+  transform: rotate(180deg);
+}
+.bonus__body {
+  display: grid;
+  gap: var(--space-3);
+  padding: 0 var(--space-5) var(--space-5);
+}
+.bonus__body p,
+.bonus__body li {
+  line-height: 1.6;
+  opacity: 0.9;
+}
+.bonus__body ul {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding-left: 1.2em;
+}
+.bonus__body li::marker {
+  color: var(--lamp-300);
+}
+.bonus__soon {
+  font-style: italic;
+  opacity: 0.7 !important;
+}
+.bonus__media video,
+.bonus__media img {
+  display: block;
+  width: 100%;
+  border-radius: 12px;
+  background: #0d0a1c;
+}
+.bonus__media video {
+  aspect-ratio: 16 / 9;
+  object-fit: cover;
+}
+/* One per row: these are screenshots, readable only at full width. */
+.bonus__media {
+  grid-template-columns: 1fr;
+}
+/* Pictures keep their own shape: a screenshot cropped to 16:9 loses its edges. */
+.bonus__media img {
+  height: auto;
+}
+.bonus__links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3) var(--space-4);
+}
+
+/* Songs: a play button each; they play on the room's turntable. */
+.bonus__songs {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bonus__song {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 6px 10px 6px 6px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+.bonus__play {
+  display: grid;
+  place-items: center;
+  width: 36px;
+  height: 36px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  color: var(--night-900);
+  background: var(--lamp-300);
+  cursor: pointer;
+}
+.bonus__play svg {
+  width: 16px;
+  height: 16px;
+  fill: currentColor;
+}
+.bonus__play.is-playing {
+  background: var(--lamp-500);
+}
+.bonus__song-title {
+  font-weight: 700;
+}
+/* The song's sections: each jumps there. */
+.bonus__marks {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  padding: 2px 0 4px 2px;
+}
+.bonus__mark {
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-pill);
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.04);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out);
+}
+.bonus__mark span {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  color: var(--lamp-300);
+}
+.bonus__mark:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.bonus__mark.is-current {
+  border-color: var(--lamp-300);
+  background: rgba(255, 213, 158, 0.16);
+}
+.bonus__mark:focus-visible {
+  outline: 2px solid var(--lamp-300);
+  outline-offset: 2px;
+}
+
+.bonus__course {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  letter-spacing: 0.04em;
+  color: var(--lamp-300);
+  opacity: 1 !important;
+}
+
+/* A picture's place, held until the file arrives. */
+.bonus__slot {
+  display: grid;
+  place-items: center;
+  aspect-ratio: 16 / 9;
+  padding: var(--space-4);
+  border: 2px dashed rgba(255, 255, 255, 0.22);
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.03);
+  text-align: center;
+}
+.bonus__slot span {
+  max-width: 32ch;
+  font-size: var(--text-small);
+  opacity: 0.6;
+}
+
+.bonus__song-time {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  opacity: 0.65;
+}
+
+@media (max-width: 560px) {
+  .bonus__summary {
+    grid-template-columns: auto 1fr auto;
+    padding: var(--space-4);
+  }
+  .bonus__summary .bonus__kind {
+    display: none;
+  }
+  .bonus__body {
+    padding: 0 var(--space-4) var(--space-4);
+  }
+}

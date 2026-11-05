@@ -266,6 +266,21 @@ export function buildRoom(
   handle.position.set(1.575, deskY + 0.07, -2.95);
   root.add(handle);
 
+  // A little stack of demo tapes at the desk's corner (Bonus tracks): the smaller projects.
+  const tapeColors = ['#7fb8ff', '#ffd166', '#ff8fb1', '#6ee7a8'];
+  const tapeShell = std('#2b2836', { roughness: 0.45 });
+  const tapeWindow = std('#17151f', { roughness: 0.2, metalness: 0.3 });
+  tapeColors.forEach((c, i) => {
+    const tape = new Group();
+    tape.position.set(2.12 + (i % 2 ? 0.012 : -0.008), deskY + 0.011 + i * 0.022, -2.93);
+    tape.rotation.y = [0.25, -0.08, 0.16, -0.2][i];
+    tape.add(box(0.2, 0.02, 0.13, tapeShell, 0, 0, 0, 0.006));
+    tape.add(box(0.17, 0.003, 0.07, std(c, { roughness: 0.8 }), 0, 0.011, -0.012, 0.001)); // label
+    tape.add(box(0.08, 0.004, 0.022, tapeWindow, 0, 0.012, -0.012, 0.002)); // reel window
+    root.add(shadowed(tape));
+  });
+  anchors.bonus = new Vector3(2.12, deskY + 0.05, -2.93);
+
   // Desk lamp: the warm key light of the whole room
   const lampMat = std('#f2c14e', { roughness: 0.4 });
   const lampBase = cyl(0.12, 0.13, 0.04, lampMat, 1.95, deskY + 0.02, -3.3);
