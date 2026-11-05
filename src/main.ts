@@ -167,10 +167,14 @@ projects.forEach((p) => {
   if (!clip) return;
   const video = document.createElement('video');
   video.className = 'chapter__preview';
+  // As attributes too: iOS checks these before it lets a video play on its own.
   video.muted = true;
+  video.setAttribute('muted', '');
   video.loop = true;
   video.playsInline = true;
+  video.setAttribute('playsinline', '');
   video.preload = 'none';
+  if (p.cover) video.poster = p.cover; // shown until the first frame, or if autoplay is off (Low Power Mode)
   video.setAttribute('aria-hidden', 'true');
   video.dataset.src = clip.src;
   document.querySelector(`#${p.id} .chapter__slot`)!.before(video);
@@ -178,13 +182,41 @@ projects.forEach((p) => {
   new IntersectionObserver(
     ([entry]) => {
       if (entry.isIntersecting) {
-        if (!video.src) video.src = video.dataset.src!; // load on first approach
+        if (!video.src) video.src = video.dataset.src!; // load on first approach (if the gate hasn't)
         if (!still.matches) void video.play().catch(() => {});
       } else video.pause();
     },
     { threshold: 0.25 },
   ).observe(video);
 });
+
+/**
+ * Behind the gate: give every preview its first frame. iOS loads a video only once it plays, so
+ * each one plays muted until it has a frame, then pauses. Capped, so a slow connection never
+ * holds the lamp; whatever isn't ready by then keeps its cover and loads when it scrolls into view.
+ */
+const primePreviews = () => {
+  const save = (navigator as Navigator & { connection?: { saveData?: boolean } }).connection?.saveData;
+  if (save) return Promise.resolve();
+  const each = Object.values(previews).map(
+    (video) =>
+      new Promise<void>((resolve) => {
+        if (!video.src) video.src = video.dataset.src!;
+        video.preload = 'auto';
+        const done = () => {
+          video.removeEventListener('loadeddata', done);
+          video.removeEventListener('error', done);
+          video.pause(); // its chapter plays it when it scrolls into view
+          resolve();
+        };
+        if (video.readyState >= 2) return done();
+        video.addEventListener('loadeddata', done);
+        video.addEventListener('error', done);
+        void video.play().catch(() => done()); // autoplay refused: the cover stays
+      }),
+  );
+  return Promise.race([Promise.all(each).then(() => undefined), new Promise<void>((r) => setTimeout(r, 6000))]);
+};
 
 const sections = [...document.querySelectorAll<HTMLElement>('[data-shot]')].map((el) => ({ el, shot: el.dataset.shot! }));
 const covers: Record<string, string> = Object.fromEntries(projects.filter((p) => p.cover).map((p) => [p.id, p.cover]));
@@ -254,20 +286,29 @@ document.addEventListener('click', (e) => {
   const id = (e.target as HTMLElement).closest<HTMLElement>('[data-sheet]')?.dataset.sheet;
   if (id) sheet.open(id);
 });
-// Hot Footer: the shelf's handheld, life-size and playable.
-// While Hot Footer plays, the room goes quiet: its music, the rain and the crackle pause,
-// and come back as they were when the console closes.
-let musicBeforeGame = false;
+// Rain and crackle belong with the room's own music. Anything else on the turntable (a Liner
+// notes pick, a bonus track, a DSP demo, your beat) and the game get the room to themselves:
+// the ambience fades out, and fades back in with the room's music once they're done (the
+// player brings the music back; see host() in audio/player.ts).
+let gameOpen = false;
+let quiet = false;
+const syncQuiet = () => {
+  const q = Boolean(player.state().guest) || gameOpen;
+  if (q === quiet) return;
+  quiet = q;
+  ambience?.setPaused(q);
+};
+player.onChange(syncQuiet);
+
+// Hot Footer: the shelf's handheld, life-size and playable. It takes the turntable while open.
 const gameConsole = mountGameConsole(player, scroll, {
   pause() {
-    const s = player.state();
-    musicBeforeGame = s.playing && !s.guest; // the room's own record, not a borrowed one
-    ambience?.setPaused(true);
+    gameOpen = true;
+    syncQuiet();
   },
   resume() {
-    ambience?.setPaused(false);
-    if (musicBeforeGame && !player.state().playing) void player.play();
-    musicBeforeGame = false;
+    gameOpen = false;
+    syncQuiet();
   },
 });
 document.addEventListener('click', (e) => {
@@ -329,6 +370,7 @@ showGate(
   [
     { label: tr('Fonts unpacked', '字体已就位'), run: document.fonts.ready },
     { label: tr('Room assembled', '房间已布置好'), run: room?.ready ?? Promise.resolve() },
+    { label: tr('Recordings loaded', '录像已就位'), run: primePreviews() },
   ],
   {
     eyebrow: tr('Portfolio · CS + Music Technology', '作品集 · 计算机科学 + 音乐科技'),
@@ -363,6 +405,7 @@ showGate(
   if (sound) {
     playLightsOnChord();
     ambience = startAmbience({ rain: rainOn, crackle: crackleOn });
+    if (quiet) ambience.setPaused(true); // something else already has the room
     // The record drops in once the lights-on chord has rung out.
     window.setTimeout(() => {
       if (!player.state().playing) void player.play();

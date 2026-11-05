@@ -58,6 +58,16 @@ export function createPlayer(tracks: Track[]): Player {
   let demo: DemoBeat | null = null;
   let el: HTMLAudioElement | null = null;
   let fade: GainNode | null = null;
+  /** The room's own music on its way to the bus, so it can fade back in after a guest. */
+  let roomOut: GainNode | null = null;
+  const room = () => {
+    if (roomOut) return roomOut;
+    roomOut = getAudio().ctx.createGain();
+    roomOut.connect(getMusicBus().input);
+    return roomOut;
+  };
+  /** The room's music was playing when the first guest arrived: it comes back when they leave. */
+  let resumeAfterGuest = false;
   const listeners: ((s: PlayerState) => void)[] = [];
 
   const usingElement = () => Boolean(tracks[index].src);
@@ -77,7 +87,7 @@ export function createPlayer(tracks: Track[]): Player {
     el.preload = 'auto';
     const { ctx } = getAudio();
     fade = ctx.createGain();
-    ctx.createMediaElementSource(el).connect(fade).connect(getMusicBus().input);
+    ctx.createMediaElementSource(el).connect(fade).connect(room());
     el.addEventListener('ended', () => void step(1));
     el.addEventListener('timeupdate', emit);
     el.addEventListener('loadedmetadata', emit);
@@ -100,10 +110,19 @@ export function createPlayer(tracks: Track[]): Player {
     if (pauseIt) stop?.();
   };
 
-  const play = async () => {
+  /** `fadeIn` (seconds) brings the music up from silence, for its return after a guest. */
+  const play = async (fadeIn = 0) => {
     await unlockAudio(); // first press may also be the first user gesture, if the gate was entered silently
     stopSound();
+    resumeAfterGuest = false;
     dropGuest(true);
+    const { ctx } = getAudio();
+    const out = room();
+    out.gain.cancelScheduledValues(ctx.currentTime);
+    if (fadeIn > 0) {
+      out.gain.setValueAtTime(0, ctx.currentTime);
+      out.gain.linearRampToValueAtTime(1, ctx.currentTime + fadeIn);
+    } else out.gain.setValueAtTime(1, ctx.currentTime);
     const track = tracks[index];
     if (track.src) {
       const a = audioEl();
@@ -111,7 +130,7 @@ export function createPlayer(tracks: Track[]): Player {
       if (!a.src.endsWith(track.src)) a.src = track.src;
       await a.play();
     } else {
-      demo = startDemoBeat(getAudio().ctx, getMusicBus().input);
+      demo = startDemoBeat(ctx, out);
     }
     playing = true;
     updateMediaSession();
@@ -119,6 +138,7 @@ export function createPlayer(tracks: Track[]): Player {
   };
 
   const host = (g: Guest, stop: () => void): GuestSlot => {
+    if (!guest) resumeAfterGuest = playing; // a guest after a guest keeps the first one's answer
     stopSound();
     dropGuest(true); // a different guest was on: pause it
     guest = g;
@@ -133,16 +153,21 @@ export function createPlayer(tracks: Track[]): Player {
         guestDuration = duration;
         emit();
       },
+      // The guest is done (it finished, or was stopped from its own controls): the room's
+      // music, if it was playing before, fades back in.
       end() {
         if (!mine()) return;
         dropGuest(false);
         playing = false;
         emit();
+        if (resumeAfterGuest) void play(2.5);
       },
     };
   };
 
+  /** The visitor paused (the dock, media keys, the record): nothing comes back on its own. */
   const pause = () => {
+    resumeAfterGuest = false;
     dropGuest(true);
     stopSound();
     playing = false;

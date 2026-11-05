@@ -298,8 +298,12 @@ export function mountBonus(slot: HTMLElement, items: SideProject[], track: strin
     }
     const ref = t.closest<HTMLElement>('[data-song]')?.dataset.song;
     if (!ref) return;
-    if (ref === current && el && !el.paused) player.pause(); // hands the turntable back; the guest's stop() pauses the song
-    else void start(ref);
+    if (ref === current && el && !el.paused) {
+      // Done listening: the song stops and hands the turntable back, so the room's music returns.
+      const t = turntable;
+      stop();
+      t?.end();
+    } else void start(ref);
   });
 
   return { open };

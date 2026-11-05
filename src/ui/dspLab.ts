@@ -1093,7 +1093,11 @@ export function mountDspLab(host: HTMLElement, player: Player): { dispose(): voi
   const play = async (processed: boolean) => {
     const which = processed ? 'out' : 'in';
     if (playing === which) {
-      player.pause(); // hands the turntable back; its stop() ends the sound
+      // Done listening: stop, and hand the turntable back so the room's music returns.
+      const s = slot;
+      slot = null;
+      stop();
+      s?.end();
       return;
     }
     const ch = chapters[index];
@@ -1140,8 +1144,11 @@ export function mountDspLab(host: HTMLElement, player: Player): { dispose(): voi
       disposed = true;
       cancelAnimationFrame(raf);
       resize.disconnect();
-      if (src) player.pause();
+      // Closing the walkthrough mid-sound counts as done listening: the room's music returns.
+      const s = src ? slot : null;
+      slot = null;
       stop();
+      s?.end();
     },
   };
 }

@@ -700,11 +700,19 @@ export function buildRoom(
       }
       focusId = id;
       const mat = id ? posterMats[id] : undefined;
-      if (id && posterVideo[id] && mat) {
-        coverMaps[id] ??= mat.map;
-        mat.map = mat.emissiveMap = posterVideo[id];
+      if (!id || !posterVideo[id] || !mat) return;
+      coverMaps[id] ??= mat.map;
+      // Only once the recording has a frame: until then the cover stays (a video that hasn't
+      // loaded draws black, which on iOS, where videos load late, was most of the time).
+      const tex = posterVideo[id];
+      const video = tex.image as HTMLVideoElement;
+      const swap = () => {
+        if (focusId !== id) return;
+        mat.map = mat.emissiveMap = tex;
         mat.needsUpdate = true;
-      }
+      };
+      if (video.readyState >= 2) swap();
+      else video.addEventListener('loadeddata', swap, { once: true });
     },
     setLabel(texture) {
       labelMat.map = texture ?? label;

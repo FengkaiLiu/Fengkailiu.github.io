@@ -18,13 +18,13 @@ export interface SheetTrack {
 const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').matches;
 
 /** A captioned media group: videos loop muted (with controls), photos open in the lightbox. */
-const mediaGroup = (g: MediaGroup, gi: number) => `
+const mediaGroup = (g: MediaGroup, gi: number, poster = '') => `
   <figure class="sheet__media sheet__media--${g.items[0]?.type === 'video' ? 'video' : 'photos'}" data-group="${gi}">
     <div class="sheet__media-grid" data-count="${g.items.length}">
       ${g.items
         .map((m, i) =>
           m.type === 'video'
-            ? `<video src="${esc(m.src)}" muted loop playsinline controls preload="metadata" aria-label="${esc(m.alt)}"${reducedMotion() ? '' : ' autoplay'}></video>`
+            ? `<video src="${esc(m.src)}"${poster ? ` poster="${esc(poster)}"` : ''} muted loop playsinline controls preload="metadata" aria-label="${esc(m.alt)}"${reducedMotion() ? '' : ' autoplay'}></video>`
             : `<button class="sheet__photo" type="button" data-photo="${gi}:${i}" aria-label="${tr('Enlarge', '放大')}: ${esc(m.alt)}"><img src="${esc(m.src)}" alt="${esc(m.alt)}" loading="lazy" /></button>`,
         )
         .join('')}
@@ -88,7 +88,7 @@ export function mountProjectSheet(tracks: SheetTrack[], scroll: SmoothScroll) {
       ${
         // Recordings say more than a cover: lead with them when there are any.
         videoGroups.length
-          ? videoGroups.map(([g, gi]) => mediaGroup(g, gi)).join('')
+          ? videoGroups.map(([g, gi]) => mediaGroup(g, gi, p.cover)).join('')
           : p.cover
             ? `<figure class="sheet__cover"><img src="${esc(p.cover)}" alt="${esc(tr(`${p.title} cover`, `${p.title} 封面`))}" loading="lazy" /></figure>`
             : ''

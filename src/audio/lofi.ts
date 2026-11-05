@@ -168,7 +168,8 @@ export function startAmbience(opts: { rain?: boolean; crackle?: boolean } = {}):
     },
     setPaused(paused) {
       amb.paused = paused;
-      ramp(master.gain, paused ? 0 : 1, paused ? 0.4 : 1.2);
+      // Out quickly, back slowly: the same 2.5 s the room's music takes to fade back in.
+      ramp(master.gain, paused ? 0 : 1, paused ? 0.4 : 2.5);
     },
   };
   amb.setRain(opts.rain ?? true);
