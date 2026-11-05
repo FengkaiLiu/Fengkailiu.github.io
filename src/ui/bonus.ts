@@ -17,6 +17,29 @@ const reducedMotion = () => matchMedia('(prefers-reduced-motion: reduce)').match
 
 const clock = (s: number) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 
+/** A sound board: one row per family of sounds, one column per level, plus a longer sample. */
+const board = (p: SideProject) => {
+  const b = p.board!;
+  const cell = (ref: string, label: string, name: string) =>
+    `<button class="bonus__cell" type="button" data-song="${ref}" aria-label="${tr('Play', '播放')}: ${esc(name)}"><span class="bonus__cell-icon" data-icon>${playIcon}</span><span>${esc(label)}</span></button>`;
+  return `
+    <figure class="bonus__board">
+      <div class="bonus__board-grid" role="group" aria-label="${esc(b.caption)}">
+        ${b.sets
+          .map(
+            (s, r) => `
+          <div class="bonus__board-row">
+            <span class="bonus__board-name">${esc(s.name)}${s.note ? `<span>${esc(s.note)}</span>` : ''}</span>
+            ${b.levels.map((lvl, c) => (s.sounds[c] ? cell(`${p.id}:b${r}.${c}`, lvl, `${s.name} · ${lvl}`) : '<span></span>')).join('')}
+            ${s.sample ? cell(`${p.id}:b${r}.s`, tr('Sample', '示例'), `${s.name} · ${tr('Sample', '示例')}`) : ''}
+          </div>`,
+          )
+          .join('')}
+      </div>
+      <figcaption>${esc(b.caption)}</figcaption>
+    </figure>`;
+};
+
 const row = (p: SideProject, i: number) => `
   <details class="bonus__item" id="bonus-${p.id}" data-bonus-item="${p.id}">
     <summary class="bonus__summary">
@@ -29,7 +52,7 @@ const row = (p: SideProject, i: number) => `
       <svg class="bonus__chev" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 9l6 6 6-6" /></svg>
     </summary>
     <div class="bonus__body">
-      ${p.course ? `<p class="bonus__course">${tr('Made for', '课程')}: ${esc(p.course)}</p>` : ''}
+      ${p.course ? `<p class="bonus__course">${tr('Made for', '出自')}:${esc(p.course)}</p>` : ''}
       ${p.tags?.length ? `<div class="chapter__tags">${p.tags.map((t) => `<span class="chip">${esc(t)}</span>`).join('')}</div>` : ''}
       ${
         p.placeholder
@@ -59,6 +82,7 @@ const row = (p: SideProject, i: number) => `
               .join('')}</ol>`
           : ''
       }
+      ${p.board ? board(p) : ''}
       ${
         p.media?.length
           ? `<div class="sheet__media-grid bonus__media">${p.media
@@ -196,14 +220,22 @@ export function mountBonus(slot: HTMLElement, items: SideProject[], track: strin
     });
     return el;
   };
-  const song = (ref: string) => {
+  /** "id:2" is a song in the list; "id:b1.0" is a board cell (row 1, level 0) and "id:b1.s" that row's sample. */
+  const song = (ref: string): { title: string; src: string } | undefined => {
     const [id, i] = ref.split(':');
-    return items.find((p) => p.id === id)?.audio?.[Number(i)];
+    const p = items.find((x) => x.id === id);
+    if (!i.startsWith('b')) return p?.audio?.[Number(i)];
+    const [r, c] = i.slice(1).split('.');
+    const set = p?.board?.sets[Number(r)];
+    if (!set || !p?.board) return undefined;
+    if (c === 's') return set.sample ? { title: `${set.name} · ${tr('Sample', '示例')}`, src: set.sample } : undefined;
+    const src = set.sounds[Number(c)];
+    return src ? { title: `${set.name} · ${p.board.levels[Number(c)]}`, src } : undefined;
   };
   const mark = () =>
     dialog.querySelectorAll<HTMLButtonElement>('[data-song]').forEach((b) => {
       const on = b.dataset.song === current && Boolean(el && !el.paused);
-      b.innerHTML = on ? pauseIcon : playIcon;
+      (b.querySelector('[data-icon]') ?? b).innerHTML = on ? pauseIcon : playIcon;
       b.classList.toggle('is-playing', on);
       const s = song(b.dataset.song!);
       b.setAttribute('aria-label', `${on ? tr('Pause', '暂停') : tr('Play', '播放')}: ${s?.title ?? ''}`);

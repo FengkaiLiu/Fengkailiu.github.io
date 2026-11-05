@@ -19,6 +19,9 @@ export interface SideProject {
   /** Songs that play on the room's turntable, so the speakers and the scope hear them too.
    *  `markers` are the song's sections (seconds); each one jumps there. */
   audio?: { title: string; src: string; markers?: { label: string; at: number }[] }[];
+  /** A sound board: one row per family of sounds, one column per level (`sounds` lines up
+   *  with `levels`; null leaves a gap), plus an optional longer sample at the row's end. */
+  board?: { caption: string; levels: string[]; sets: { name: string; note?: string; sounds: (string | null)[]; sample?: string }[] };
   /** `slot` holds a picture's place until the file arrives (alt is its note). */
   media?: { type: 'video' | 'image' | 'slot'; src?: string; alt: string }[];
   links?: { label: string; href: string }[];
@@ -118,5 +121,51 @@ export const sideProjects: SideProject[] = [
       },
     ],
     links: [{ label: tr('Read the paper (PDF, 2 pages)', '阅读论文（PDF，2 页）'), href: '/bonus/max-starship-paper.pdf' }],
+  },
+  {
+    id: 'alerts',
+    title: tr('Gentler alert sounds', '更温和的提示音'),
+    kind: tr('Sound design', '声音设计'),
+    year: '2025',
+    course: 'Sonification Lab @ Northeastern University',
+    blurb: tr('Four families of alert sounds for a glucose monitor: as hard to miss as an alarm, without the alarm.', '为血糖仪设计的四组提示音：像警报一样不会错过，却不像警报那样刺耳。'),
+    text: tr(
+      'The Dexcom G7 glucose monitor sends a reading every five minutes, and when glucose goes out of range the phone app sounds an alert. Those alerts are loud and jarring, and they go off just when a low can leave someone anxious and irritable. The lab\'s idea: someone who wears the monitor around the clock can learn any sound, so an alert doesn\'t have to sound like an alarm. It only has to be impossible to miss. I designed four families of alerts, each with three levels of urgency, shaped by research on what makes a sound stand out.',
+      'Dexcom G7 血糖仪每五分钟发送一次读数，血糖超出范围时，手机应用会响起提示音。这些提示音又响又刺耳，而且偏偏在低血糖让人焦虑、烦躁的时候响起。实验室的想法是：一直戴着血糖仪的人可以学会任何声音，所以提示音不必听起来像警报，只要不会被忽略就行。我设计了四组提示音，每组三个紧急程度，设计依据是关于「什么样的声音最容易被注意到」的研究。',
+    ),
+    bullets: tr(
+      [
+        'Built on a review of 14 papers on auditory warnings: keep alerts in the 500 to 2,500 Hz band where hearing is most sensitive, use smooth envelopes so they don\'t startle, and carry urgency mostly in timing (speed and repetition) rather than pitch alone.',
+        'Each family shares one timbre, so the set is recognizable as a set, while every level stays distinct within it.',
+        'Melodies that match their meaning. In the Frutiger Aero set, Confirm is a major third up (E5 to G5), Caution rises and settles (F5, A5, G5), and Warning climbs (E5, F♯5, A5).',
+        'Frutiger Aero is FM synthesis in Serum: a sine carrier with a sine modulator two to three octaves up, a 15 ms attack and 600 ms decay, a slow 0.3 Hz pitch drift for shimmer, then a 1.8 kHz EQ boost, plate reverb and light compression.',
+        'The other three families carry the same rules into other moods: lo-fi, dreamcore and 24/7 Synth.',
+      ],
+      [
+        '基于对 14 篇听觉警报相关论文的整理：提示音放在人耳最敏感的 500 到 2,500 Hz 频段，用平滑的包络避免吓人一跳，紧急程度主要靠节奏（速度和重复）来表达，而不只靠音高。',
+        '每组提示音共用一种音色，听得出是同一套；同一组里的每个等级又各不相同。',
+        '旋律和含义对得上。在 Frutiger Aero 这组里，Confirm 是上行大三度（E5 到 G5），Caution 先升后落（F5、A5、G5），Warning 一路上行（E5、F♯5、A5）。',
+        'Frutiger Aero 用 Serum 做 FM 合成：正弦波载波，加一个高两到三个八度的正弦波调制器，15 毫秒起音、600 毫秒衰减，0.3 Hz 的缓慢音高漂移带来微光感，再加 1.8 kHz 的 EQ 提升、板式混响和轻度压缩。',
+        '另外三组把同样的原则带进了不同的氛围：lo-fi、dreamcore 和 24/7 Synth。',
+      ],
+    ),
+    tags: [tr('Psychoacoustics', '心理声学'), 'Serum', tr('FM synthesis', 'FM 合成'), 'FL Studio'],
+    board: {
+      caption: tr('Every alert, from the calmest level to the most urgent. Each plays on the room\'s turntable.', '每一个提示音，从最平静到最紧急。点一下就会在房间的唱机上播放。'),
+      levels: [tr('Info', '提示'), tr('Caution', '注意'), tr('Warning', '警告')],
+      sets: [
+        { name: 'Frutiger Aero', sounds: ['/bonus/alerts/aero-info.mp3', '/bonus/alerts/aero-caution.mp3', '/bonus/alerts/aero-warning.mp3'], sample: '/bonus/alerts/aero-sample.mp3' },
+        { name: 'Lo-fi', sounds: ['/bonus/alerts/lofi-info.mp3', '/bonus/alerts/lofi-caution.mp3', '/bonus/alerts/lofi-warning.mp3'], sample: '/bonus/alerts/lofi-sample.mp3' },
+        { name: 'Dreamcore', sounds: ['/bonus/alerts/dream-info.mp3', '/bonus/alerts/dream-caution.mp3', '/bonus/alerts/dream-warning.mp3'], sample: '/bonus/alerts/dream-sample.mp3' },
+        { name: '24/7 Synth', sounds: ['/bonus/alerts/synth-info.mp3', '/bonus/alerts/synth-caution.mp3', '/bonus/alerts/synth-warning.mp3'], sample: '/bonus/alerts/synth-sample.mp3' },
+      ],
+    },
+    media: [
+      {
+        type: 'image',
+        src: '/bonus/alerts/aero-serum.webp',
+        alt: tr('The Frutiger Aero patch in Serum 2 inside FL Studio: a sine carrier, an FM modulator two octaves up, and the short decay envelope.', 'FL Studio 里 Serum 2 中的 Frutiger Aero 音色：正弦波载波、高两个八度的 FM 调制器，以及短衰减包络。'),
+      },
+    ],
   },
 ];

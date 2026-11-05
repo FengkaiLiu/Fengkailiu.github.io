@@ -195,6 +195,98 @@
 .bonus__song-title {
   font-weight: 700;
 }
+/* A sound board: a row per family, a button per level. */
+.bonus__board {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+}
+.bonus__board-grid {
+  display: grid;
+  gap: 6px;
+}
+.bonus__board-row {
+  display: grid;
+  grid-template-columns: minmax(7.5em, 1.2fr) repeat(4, minmax(0, 1fr));
+  align-items: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.05);
+}
+.bonus__board-name {
+  display: grid;
+  padding-left: 6px;
+  font-weight: 800;
+}
+.bonus__board-name span {
+  font-size: var(--text-small);
+  font-weight: 500;
+  opacity: 0.65;
+}
+.bonus__cell {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding: 7px 10px 7px 7px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-pill);
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.04);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out);
+}
+.bonus__cell:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.bonus__cell:focus-visible {
+  outline: 2px solid var(--lamp-300);
+  outline-offset: 2px;
+}
+.bonus__cell-icon {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  color: var(--night-900);
+  background: var(--lamp-300);
+}
+.bonus__cell-icon svg {
+  width: 11px;
+  height: 11px;
+  fill: currentColor;
+}
+.bonus__cell.is-playing {
+  border-color: var(--lamp-300);
+  background: rgba(255, 213, 158, 0.16);
+}
+.bonus__cell.is-playing .bonus__cell-icon {
+  background: var(--lamp-500);
+}
+.bonus__board figcaption {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  letter-spacing: 0.04em;
+  opacity: 0.65;
+}
+@media (max-width: 640px) {
+  /* Phones: the family's name on its own line, the four buttons in two pairs under it. */
+  .bonus__board-row {
+    grid-template-columns: 1fr 1fr;
+  }
+  .bonus__board-name {
+    grid-column: 1 / -1;
+    padding: 2px 4px 0;
+  }
+}
+
 /* The song's sections: each jumps there. */
 .bonus__marks {
   grid-column: 1 / -1;
