@@ -166,6 +166,7 @@ export function initRoom(
   const base = { sky: hemi.color.clone(), ground: hemi.groundColor.clone(), fill: fairyFill.color.clone(), moon: moon.color.clone(), poster: posterLight.color.clone() };
 
   const room = buildRoom(covers, videos, shelfBoat);
+  room.useRenderer(renderer);
   scene.add(room.root);
 
   // ---------- Post-processing ----------

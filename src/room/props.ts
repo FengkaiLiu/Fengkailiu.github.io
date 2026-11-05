@@ -35,6 +35,7 @@ import {
   type Material,
   type Object3D,
   type Texture,
+  type WebGLRenderer,
 } from 'three';
 import { RoundedBoxGeometry } from 'three/addons/geometries/RoundedBoxGeometry.js';
 import { mergeGeometries } from 'three/addons/utils/BufferGeometryUtils.js';
@@ -91,6 +92,8 @@ export interface RoomProps {
   setPlaying(on: boolean): void;
   /** Light up the project on screen (its frame and the wall behind it); null for none. */
   setFocus(id: string | null): void;
+  /** The laptop screen uploads only what each typing step changed, through this renderer. */
+  useRenderer(renderer: WebGLRenderer): void;
   /** Show a song cover on the record label; null restores the house label. */
   setLabel(texture: Texture | null): void;
   /** `eye` is the camera position: the laptop only types while it is close enough to read. */
@@ -681,6 +684,9 @@ export function buildRoom(
     setSpectrum(bands) {
       spectrum = bands;
     },
+    useRenderer(renderer) {
+      screen.useRenderer(renderer);
+    },
     setFocus(id) {
       if (id === focusId) return;
       // A focused project with a recording plays it on its poster; leaving restores the cover.
@@ -725,7 +731,7 @@ export function buildRoom(
         const rate = target > bulbLevel[k] ? 18 : 3.5;
         bulbLevel[k] += (target - bulbLevel[k]) * (1 - Math.exp(-dt * rate));
       }
-      // Each typed character re-uploads a 1600x1000 texture; skip it when nobody can read it.
+      // Typing only means anything up close: farther away, the screen holds still.
       if (!screenDrawn || eye.distanceToSquared(LAPTOP) < 3.2 * 3.2) {
         screen.tick(now, spectrum, music);
         screenDrawn = true;

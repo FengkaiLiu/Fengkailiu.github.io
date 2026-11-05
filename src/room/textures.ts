@@ -1,5 +1,5 @@
 // Procedural textures for the room: no image files needed except the project covers.
-import { CanvasTexture, Color, RepeatWrapping, SRGBColorSpace, ShaderMaterial, TextureLoader, type Texture } from 'three';
+import { CanvasTexture, Color, RepeatWrapping, SRGBColorSpace, ShaderMaterial, Texture, TextureLoader, Vector2, type WebGLRenderer } from 'three';
 
 function canvas(w: number, h: number) {
   const c = document.createElement('canvas');
@@ -37,6 +37,59 @@ export function codeScreen() {
   const total = lines.reduce((n, l) => n + l.reduce((m, [, s]) => m + s.length, 0), 0);
   let typed = Math.floor(total * 0.6); // start mid-thought so the screen reads at a glance
   let lastStep = 0;
+  let cursorLine = 0;
+
+  // ---------- Uploading only what changed ----------
+  // Sending the whole 1600x1000 canvas to the GPU takes about 17 ms, a whole frame, and the
+  // screen types 11 characters a second. A step only changes the line being typed (and the line
+  // the cursor left), and the FFT pane only its corner, so those strips are copied into a small
+  // canvas and uploaded into place: about 0.1 ms each. The full upload is kept for the first
+  // frame and for a renderer that hasn't been handed over yet.
+  let renderer: WebGLRenderer | null = null;
+  let fullPending = true; // a full upload is queued (needsUpdate) and hasn't happened yet
+  texture.onUpdate = () => (fullPending = false);
+  const px = (v: number) => Math.round(v * scale);
+  /** A fixed-size strip of the canvas and the little texture that carries it to the GPU. */
+  const strip = (w: number, h: number) => {
+    const canvasEl = document.createElement('canvas');
+    canvasEl.width = w;
+    canvasEl.height = h;
+    const sctx = canvasEl.getContext('2d')!;
+    sctx.globalCompositeOperation = 'copy';
+    return { canvasEl, sctx, tex: new Texture(canvasEl) };
+  };
+  // Lines sit 50 apart from a baseline at 100; each strip runs from its cap height to below
+  // the descenders and the cursor. A 2 px overlap between neighbours is harmless.
+  const LINE_H = px(50) + 2;
+  const lineStrip = strip(c.width, LINE_H);
+  const lineTop = (li: number) => Math.min(px(62 + li * 50), c.height - LINE_H);
+  // The FFT pane, with a margin for its outline.
+  const FFT = { x: px(676), y: px(62), w: px(328), h: px(198) };
+  const fftStrip = strip(FFT.w, FFT.h);
+  const at = new Vector2();
+  const upload = (s: ReturnType<typeof strip>, x: number, y: number, w: number, h: number, mips: boolean) => {
+    s.sctx.drawImage(c, x, y, w, h, 0, 0, w, h);
+    // The screen texture flips its rows on upload, so a strip's place counts from the bottom.
+    at.set(x, c.height - y - h);
+    texture.generateMipmaps = mips; // rebuilt once, after the last strip of the step
+    renderer!.copyTextureToTexture(s.tex, texture, null, at);
+    texture.generateMipmaps = true;
+  };
+  let fftOnScreen = false;
+  /** Sends this step's changes: whole lines that changed, and the FFT corner if it shows (or just left). */
+  const send = (dirty: Set<number>, fft: boolean) => {
+    if (!renderer || fullPending) {
+      texture.needsUpdate = true; // the renderer will upload all of it
+      fullPending = true;
+      fftOnScreen = fft;
+      return;
+    }
+    const rects: [ReturnType<typeof strip>, number, number, number, number][] = [...dirty].map((li) => [lineStrip, 0, lineTop(li), c.width, LINE_H]);
+    // The pane sits over the first lines, so it goes last and wins where they overlap.
+    if (fft || fftOnScreen) rects.push([fftStrip, FFT.x, FFT.y, FFT.w, FFT.h]);
+    fftOnScreen = fft;
+    rects.forEach(([s, x, y, w, h], i) => upload(s, x, y, w, h, i === rects.length - 1));
+  };
 
   const draw = (now: number) => {
     ctx.setTransform(scale, 0, 0, scale, 0, 0);
@@ -71,7 +124,7 @@ export function codeScreen() {
       ctx.fillStyle = '#ffcb6b';
       ctx.fillRect(cursor.x + 2, cursor.y - 26, 14, 32);
     }
-    texture.needsUpdate = true;
+    cursorLine = (cursor.y - 100) / 50;
   };
 
   // While music plays, a small "fft · live" window floats in the editor's empty top-right
@@ -114,15 +167,25 @@ export function codeScreen() {
       const live = amount > 0.01 && bands;
       // Typing steps redraw at ~11 fps; the FFT pane at ~30 fps while it shows.
       if (!typing && !(live && now - fftDrawn > 33)) return;
+      let restart = false;
       if (typing) {
         lastStep = now;
-        typed = typed >= total + 70 ? 0 : typed + 1; // hold the finished code a few seconds, then retype
+        restart = typed >= total + 70; // hold the finished code a few seconds, then retype
+        typed = restart ? 0 : typed + 1;
       }
+      const left = cursorLine;
       draw(now);
       if (live) {
         drawFft(bands, amount);
         fftDrawn = now;
       }
+      // What changed: the cursor's line (the new character, the blink) and the line it left.
+      // Starting over clears every line.
+      send(restart ? new Set(lines.keys()) : new Set([left, cursorLine]), Boolean(live));
+    },
+    /** Hands over the renderer, so steps can upload just what they changed. */
+    useRenderer(r: WebGLRenderer) {
+      renderer = r;
     },
   };
 }
