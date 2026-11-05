@@ -83,6 +83,7 @@ const row = (p: SideProject, i: number) => `
           : ''
       }
       ${p.board ? board(p) : ''}
+      ${p.deepDive ? `<div class="bonus__deep" data-deep="${p.deepDive}"></div>` : ''}
       ${
         p.media?.length
           ? `<div class="sheet__media-grid bonus__media">${p.media
@@ -173,6 +174,7 @@ export function mountBonus(slot: HTMLElement, items: SideProject[], track: strin
   });
   dialog.addEventListener('close', () => {
     dialog.querySelectorAll('video').forEach((v) => v.pause());
+    for (const host of [...deeps.keys()]) closeDeep(host);
     document.documentElement.classList.remove('has-sheet');
     scroll.start();
     opener?.focus({ preventScroll: true });
@@ -187,10 +189,27 @@ export function mountBonus(slot: HTMLElement, items: SideProject[], track: strin
     if (e.target === dialog || (e.target as HTMLElement).closest('[data-close]')) close();
   });
   // Videos play only while their row is open.
+  // A row's walkthrough (dsp.h) loads the first time it opens and is torn down when it closes.
+  const deeps = new Map<HTMLElement, { dispose(): void } | 'loading'>();
+  const closeDeep = (host: HTMLElement) => {
+    const m = deeps.get(host);
+    if (m && m !== 'loading') m.dispose();
+    deeps.delete(host);
+    host.replaceChildren();
+  };
   dialog.addEventListener('toggle', (e) => {
     const d = e.target as HTMLDetailsElement;
     if (!(d instanceof HTMLDetailsElement)) return;
     d.querySelectorAll('video').forEach((v) => (d.open && !reducedMotion() ? void v.play().catch(() => {}) : v.pause()));
+    const host = d.querySelector<HTMLElement>('[data-deep]');
+    if (!host) return;
+    if (!d.open || !dialog.open) return closeDeep(host);
+    if (deeps.has(host)) return;
+    deeps.set(host, 'loading');
+    void import('./dspLab').then(({ mountDspLab }) => {
+      if (deeps.get(host) !== 'loading' || !d.open) return; // closed while it loaded
+      deeps.set(host, mountDspLab(host, player));
+    });
   }, true);
 
   // ---------- Songs on the turntable ----------

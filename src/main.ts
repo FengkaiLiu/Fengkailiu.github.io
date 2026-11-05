@@ -73,7 +73,7 @@ const chapters: Chapter[] = [
     track: BONUS_TRACK,
     nav: tr('Bonus tracks', '附赠曲目'),
     title: tr('Bonus tracks.', '附赠曲目。'),
-    text: tr('Smaller things I made along the way: a kawaii bass track in FL Studio, a starship game in Max that plays music as you fly, and gentler alert sounds for a glucose monitor.', '一路上做的小东西：FL Studio 里做的一首 Kawaii Bass，一个在 Max 里做的、边飞边奏乐的飞船游戏，还有给血糖仪设计的更温和的提示音。'),
+    text: tr('Smaller things I made along the way: a kawaii bass track, a starship game in Max that plays music as you fly, gentler alert sounds for a glucose monitor, and a DSP library in C.', '一路上做的小东西：一首 Kawaii Bass，一个在 Max 里做的、边飞边奏乐的飞船游戏，给血糖仪设计的更温和的提示音，还有一个用 C 写的 DSP 库。'),
     custom: 'bonus',
   },
   {

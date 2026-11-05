@@ -22,6 +22,8 @@ export interface SideProject {
   /** A sound board: one row per family of sounds, one column per level (`sounds` lines up
    *  with `levels`; null leaves a gap), plus an optional longer sample at the row's end. */
   board?: { caption: string; levels: string[]; sets: { name: string; note?: string; sounds: (string | null)[]; sample?: string }[] };
+  /** An interactive walkthrough mounted inside the row, loaded only when it opens (src/ui/dspLab.ts). */
+  deepDive?: 'dsp';
   /** `slot` holds a picture's place until the file arrives (alt is its note). */
   media?: { type: 'video' | 'image' | 'slot'; src?: string; alt: string }[];
   links?: { label: string; href: string }[];
@@ -167,5 +169,19 @@ export const sideProjects: SideProject[] = [
         alt: tr('The Frutiger Aero patch in Serum 2 inside FL Studio: a sine carrier, an FM modulator two octaves up, and the short decay envelope.', 'FL Studio 里 Serum 2 中的 Frutiger Aero 音色：正弦波载波、高两个八度的 FM 调制器，以及短衰减包络。'),
       },
     ],
+  },
+  {
+    id: 'dsp',
+    title: tr('dsp.h: a DSP library in C', 'dsp.h：用 C 写的 DSP 库'),
+    kind: 'C · DSP',
+    year: '2025',
+    course: 'Digital Signal Processing and Analysis @ Northeastern University',
+    blurb: tr('One header file, written project by project over a semester: levels, fades, oscillators, modulation, a flanger, FIR and IIR filters.', '一个头文件，一个项目接一个项目，写了一整个学期：电平、淡变、振荡器、调制、镶边，还有 FIR 和 IIR 滤波器。'),
+    text: tr(
+      'The course had one rule: every project goes into a single file, dsp.h, in plain C with no dependencies (two late routines borrow JUCE for its FFT). Pick a routine below. At the top are its core lines, exactly as they are in dsp.h; under them, the same math ported line for line to JavaScript and drawn live. Listen runs it on a short sound and plays the result through the room.',
+      '这门课只有一条规矩：每个项目都写进同一个文件 dsp.h，用纯 C，不依赖任何库（后期有两个函数借用了 JUCE 的 FFT）。在下面选一个函数：上面是它的核心代码，和 dsp.h 里一字不差；下面是把同样的数学逐行移植到 JavaScript 后实时画出来的图。点「试听」会用一小段声音跑一遍，再通过房间播放出来。',
+    ),
+    tags: ['C', 'DSP', tr('Synthesis', '合成'), tr('Filters', '滤波器'), 'JUCE'],
+    deepDive: 'dsp',
   },
 ];

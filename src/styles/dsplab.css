@@ -1,0 +1,160 @@
+/* dsp.h, routine by routine (src/ui/dspLab.ts). The code panel and the highlighter colors
+   come from the Hot Footer walkthrough (deepdive.css). */
+
+.dsp {
+  display: grid;
+  gap: var(--space-3);
+}
+.dsp__tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.dsp__tab {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  padding: 6px 11px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+  border-radius: var(--radius-pill);
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.04);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--dur) var(--ease-out), border-color var(--dur) var(--ease-out);
+}
+.dsp__tab span {
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  font-weight: 500;
+  color: var(--lamp-300);
+}
+.dsp__tab:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+.dsp__tab[aria-selected='true'] {
+  border-color: var(--lamp-300);
+  background: rgba(255, 213, 158, 0.16);
+}
+.dsp__tab:focus-visible,
+.dsp__choice button:focus-visible {
+  outline: 2px solid var(--lamp-300);
+  outline-offset: 2px;
+}
+
+.dsp__panel {
+  display: grid;
+  gap: var(--space-3);
+}
+.dsp__blurb {
+  margin: 0;
+}
+.dsp .deep__code pre {
+  max-height: 420px;
+}
+.dsp__viz {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.dsp__canvas {
+  display: block;
+  width: 100%;
+  height: 300px;
+  border-radius: 12px;
+  background: #0d0a1c;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+.dsp__readout {
+  min-height: 2.6em;
+  margin: 0;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  letter-spacing: 0.02em;
+  line-height: 1.5;
+  color: var(--lamp-300);
+}
+
+.dsp__controls {
+  display: grid;
+  gap: 8px;
+}
+.dsp__control {
+  display: grid;
+  grid-template-columns: 7.5em minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+  font-size: var(--text-small);
+  font-weight: 700;
+}
+.dsp__control output {
+  min-width: 5.5em;
+  font-family: var(--font-mono);
+  font-size: var(--text-micro);
+  text-align: right;
+  opacity: 0.75;
+}
+.dsp__control input[type='range'] {
+  width: 100%;
+  accent-color: var(--lamp-500);
+}
+.dsp__choice {
+  grid-column: 2 / -1;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+.dsp__choice button {
+  padding: 4px 10px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: var(--radius-pill);
+  color: var(--white);
+  background: rgba(255, 255, 255, 0.04);
+  font: inherit;
+  font-size: var(--text-small);
+  font-weight: 700;
+  cursor: pointer;
+}
+.dsp__choice button[aria-checked='true'] {
+  border-color: var(--lamp-300);
+  background: rgba(255, 213, 158, 0.16);
+}
+
+.dsp__listen {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: 4px;
+}
+.dsp__listen .btn--ghost {
+  --btn-a: rgba(255, 255, 255, 0.14);
+  --btn-b: rgba(255, 255, 255, 0.06);
+  --btn-glow: transparent;
+}
+.dsp__listen [hidden] {
+  display: none;
+}
+
+/* The code above the diagram, always: the sheet is too narrow for both side by side. */
+.dsp .deep__split {
+  grid-template-columns: 1fr;
+}
+@media (max-width: 560px) {
+  .dsp__control {
+    grid-template-columns: 1fr auto;
+  }
+  .dsp__control > span {
+    grid-column: 1 / -1;
+  }
+  .dsp__control input[type='range'] {
+    grid-column: 1;
+  }
+  .dsp__choice {
+    grid-column: 1 / -1;
+  }
+  .dsp__canvas {
+    height: 260px;
+  }
+}
