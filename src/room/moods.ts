@@ -458,6 +458,10 @@ function meadowScene(): Scene {
   const white = c('#ffffff');
   flowerSpots.forEach((_, i) => heads.setColorAt(i, i % 6 === 0 ? yellow : white));
   root.add(stems, heads);
+  // Never culled: an InstancedMesh's bounds are measured once, from its instances at the time,
+  // and the meadow first draws with every blade and flower at zero height. Those flat bounds
+  // then hid the whole field once it grew. It all stands around the record player anyway.
+  grass.frustumCulled = stems.frustumCulled = heads.frustumCulled = false;
 
   const tip = new Vector3();
   let lastW = -1;

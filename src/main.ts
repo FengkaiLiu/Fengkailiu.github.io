@@ -415,7 +415,7 @@ showGate(
 
 if (import.meta.env.DEV) {
   // Test hook for headless checks of the room's sound state.
-  (window as unknown as { __room: unknown }).__room = { player, ambience: () => ambience };
+  (window as unknown as { __room: unknown }).__room = { player, ambience: () => ambience, setMood: (m: Parameters<NonNullable<typeof room>['setMood']>[0]) => room?.setMood(m) };
   // /?play starts the music right away (headless needs --autoplay-policy=no-user-gesture-required).
   if (new URLSearchParams(location.search).has('play')) setTimeout(() => void player.play(), 800);
 }
