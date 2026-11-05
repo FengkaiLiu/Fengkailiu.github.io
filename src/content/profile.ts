@@ -24,12 +24,12 @@ export const profile = {
   ),
   skills: {
     code: ['Java', 'Python', 'C#', 'C (DSP)', 'TypeScript', 'HTML/CSS', 'Three.js', 'Unity'],
-    sound: ['Max/MSP', 'FL Studio', 'DSP', tr('Sound Design', '声音设计')],
+    sound: ['Max/MSP', 'FL Studio', 'Logic Pro', 'Pro Tools', 'DSP', tr('Sound Design', '声音设计')],
     visual: ['Blender', 'Adobe PS/PR', tr('Photography', '摄影')],
   },
   stats: [
     { value: '5+', label: tr('Projects', '项目') },
-    { value: '2', label: tr('Intern / Co-op', '实习 / Co-op') },
+    { value: '1', label: tr('Intern / Co-op', '实习 / Co-op') },
     { value: '∞', label: tr('Curiosity', '好奇心') },
   ],
   links: {
